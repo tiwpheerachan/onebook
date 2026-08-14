@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { verifyIdToken, exchangeCode, fetchUserinfo, isGoodhrConfigured, mapAppRole, trustAppRole } from '@/lib/goodhr';
+import { verifyIdToken, exchangeCode, fetchUserinfo, isGoodhrConfigured, mapAppRole, trustAppRole, appOrigin } from '@/lib/goodhr';
 
 export const dynamic = 'force-dynamic';
 
+// ต้องอ้างโดเมนจริง ไม่ใช่ req.url — ดูคำอธิบายที่ appOrigin()
 const back = (req: Request, reason: string) =>
-  NextResponse.redirect(new URL(`/login?sso=${reason}`, req.url));
+  NextResponse.redirect(new URL(`/login?sso=${reason}`, appOrigin(req)));
 
 /**
  * รับผู้ใช้กลับจาก GoodHR แล้วเปิดเซสชันของ ONEBOOK
@@ -119,7 +120,7 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.redirect(new URL('/dashboard', req.url));
+    return NextResponse.redirect(new URL('/dashboard', appOrigin(req)));
   } catch (e: any) {
     console.error('[goodhr] callback failed:', e?.message);
     return back(req, 'failed');

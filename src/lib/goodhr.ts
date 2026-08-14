@@ -52,6 +52,24 @@ export function redirectUri(): string {
   return `${base}/api/auth/callback/goodhr`;
 }
 
+/**
+ * โดเมนจริงของแอปสำหรับสร้าง URL ส่งผู้ใช้กลับ
+ *
+ * ห้ามใช้ new URL(req.url).origin เด็ดขาด — บน Render เซิร์ฟเวอร์ผูกกับ 0.0.0.0:10000
+ * ค่าที่ได้จะกลายเป็น http://0.0.0.0:10000 ซึ่งเบราว์เซอร์เปิดไม่ได้
+ */
+export function appOrigin(req: Request): string {
+  const fromEnv = process.env.APP_ORIGIN?.replace(/\/+$/, '');
+  if (fromEnv) return fromEnv;
+
+  const first = (v: string | null) => v?.split(',')[0]?.trim() || '';
+  const proto = first(req.headers.get('x-forwarded-proto'));
+  const host = first(req.headers.get('x-forwarded-host')) || first(req.headers.get('host'));
+  if (host) return `${proto || 'https'}://${host}`;
+
+  return new URL(req.url).origin;
+}
+
 const b64url = (b: Buffer) => b.toString('base64url');
 
 export function randomToken(bytes = 32): string {

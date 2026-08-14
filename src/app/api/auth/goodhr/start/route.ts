@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { isGoodhrConfigured, randomToken, pkceChallenge, buildAuthorizeUrl } from '@/lib/goodhr';
+import { isGoodhrConfigured, randomToken, pkceChallenge, buildAuthorizeUrl, appOrigin } from '@/lib/goodhr';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(req: Request) {
   if (!isGoodhrConfigured()) {
-    return NextResponse.redirect(new URL('/login?sso=not_configured', req.url));
+    return NextResponse.redirect(new URL('/login?sso=not_configured', appOrigin(req)));
   }
 
   const verifier = randomToken(32);
