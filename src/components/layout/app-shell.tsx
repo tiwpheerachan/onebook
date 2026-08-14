@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Search, Sparkles, CalendarCheck, ClipboardCheck, ScanLine,
-  TrendingUp, Wallet, Layers,
+  TrendingUp, Wallet, Layers, BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Sidebar } from './sidebar';
@@ -104,6 +104,15 @@ export function AppShell({
             </button>
 
             {actions.length > 0 && <span className="mx-1 h-5 w-px shrink-0 bg-ink-200" />}
+
+            <Link
+              href="/help"
+              title={d.ui.help.subtitle}
+              className="flex shrink-0 items-center gap-2 rounded-full border border-transparent px-3 py-1.5 text-[13px] text-ink-600 transition hover:border-ink-200 hover:bg-ink-50 hover:text-ink-900"
+            >
+              <BookOpen className="h-3.5 w-3.5 text-ink-400" strokeWidth={1.8} />
+              {d.ui.help.title}
+            </Link>
 
             {actions.map((a) => {
               const Icon = ACTION_ICONS[a.icon] || Layers;

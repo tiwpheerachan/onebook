@@ -92,6 +92,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
       items: [
         { href: '/settings', label: d.ui.overview.settings, resource: 'documents' },
         { href: '/settings/profile', label: d.ui.overview.profile, resource: 'documents' },
+        { href: '/help', label: d.ui.help.title, resource: 'documents' },
         { href: '/settings/companies', label: d.nav.companies, resource: 'settings.companies' },
         { href: '/settings/users', label: d.nav.users, resource: 'settings.users' },
         { href: '/settings/roles', label: d.nav.roles, resource: 'settings.roles' },

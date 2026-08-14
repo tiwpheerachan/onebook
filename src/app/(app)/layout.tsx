@@ -5,6 +5,8 @@ import { buildNav } from '@/components/layout/nav-config';
 import { AppShell, type QuickAction } from '@/components/layout/app-shell';
 import { CompanySwitcher, LanguageSwitcher, UserMenu, LockBanner } from '@/components/layout/switchers';
 import { localeDate } from '@/lib/format';
+import { HELP } from '@/lib/help/content';
+import { tx } from '@/lib/help/types';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getSessionContext();
@@ -18,6 +20,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // รายชื่อหน้าสำหรับช่องค้นหา — กรองสิทธิ์แล้วตั้งแต่ตรงนี้ จึงกระโดดไปหน้าที่ไม่มีสิทธิ์ไม่ได้
   const pages = groups.flatMap((g) => g.items.map((i) => ({ href: i.href, label: i.label, group: g.label })));
+
+  // บทความในคู่มือค้นได้จากช่อง ⌘K ด้วย คนมักค้นด้วยคำถามมากกว่าชื่อเมนู
+  const helpPages = HELP.flatMap((c) =>
+    c.articles
+      .filter((a) => !a.resource || can(ctx, a.resource, 'view'))
+      .map((a) => ({
+        href: `/help/${c.slug}/${a.slug}`,
+        label: tx(a.title, locale),
+        group: `${d.ui.help.title} · ${tx(c.title, locale)}`,
+      }))
+  );
 
   // แถบนวัตกรรม : ทางลัดไปงานที่ทำบ่อยและช่วยให้ทำงานเร็วขึ้น
   const actions: QuickAction[] = ([
@@ -53,7 +66,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <AppShell
       groups={groups}
       appName={d.app.name}
-      pages={pages}
+      pages={[...pages, ...helpPages]}
       actions={actions}
       header={header}
       footer={footer}
