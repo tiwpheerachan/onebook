@@ -14,7 +14,7 @@ import { docTitle, isPurchase } from './doc-meta';
 
 export async function DocumentList({
   slug, searchParams,
-}: { slug: string; searchParams: { q?: string; status?: string } }) {
+}: { slug: string; searchParams: { q?: string; status?: string; contact?: string } }) {
   const ctx = await requirePermission('documents', 'view');
   const d = t();
   const locale = currentLocale();
@@ -24,7 +24,7 @@ export async function DocumentList({
 
   let query = supabase
     .from('documents')
-    .select('id, doc_number, doc_date, due_date, grand_total, net_payable, paid_amount, status, contacts(name)')
+    .select('id, doc_number, doc_date, due_date, grand_total, net_payable, paid_amount, status, contact_id, contacts(name)')
     .eq('company_id', ctx.company.id)
     .eq('kind', kind)
     .order('doc_date', { ascending: false })
@@ -32,6 +32,7 @@ export async function DocumentList({
 
   if (searchParams.q) query = query.ilike('doc_number', `%${searchParams.q}%`);
   if (searchParams.status) query = query.eq('status', searchParams.status);
+  if (searchParams.contact) query = query.eq('contact_id', searchParams.contact);
 
   const { data, error } = await query;
   const rows = (data || []) as any[];

@@ -1,4 +1,5 @@
 import 'server-only';
+import { askJson } from './ai-client';
 
 /** ผลตรวจหนึ่งข้อจาก rpt_close_check */
 export interface Finding {
@@ -78,59 +79,26 @@ export function ruleCloseBrief(c: CloseCheck): CloseBrief {
   return { lines, actions, byAi: false };
 }
 
-function isConfigured() {
-  return !!(process.env.AI_API_KEY && process.env.AI_API_URL);
-}
-
 /** ให้ AI เรียบเรียงจากผลตรวจชุดเดียวกัน ตัวเลขยังมาจากฐานข้อมูลเสมอ */
 export async function aiCloseBrief(c: CloseCheck): Promise<CloseBrief> {
   const fallback = ruleCloseBrief(c);
-  if (!isConfigured()) {
-    return { ...fallback, note: 'ยังไม่ได้ตั้งค่า AI — ตั้ง AI_API_URL และ AI_API_KEY ใน .env.local เพื่อให้ AI ช่วยเรียบเรียง' };
-  }
 
-  try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 20_000);
-    const res = await fetch(`${process.env.AI_API_URL}/chat/completions`, {
-      method: 'POST',
-      signal: ctrl.signal,
-      cache: 'no-store',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.AI_API_KEY}` },
-      body: JSON.stringify({
-        model: process.env.AI_MODEL || 'gpt-4o-mini',
-        temperature: 0.3,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          {
-            role: 'user',
-            content: JSON.stringify({
-              งวด: c.period,
-              ต้องแก้: c.errors, ควรตรวจ: c.warnings, ข้อเสนอแนะ: c.infos,
-              รายการที่พบ: c.findings.map((f) => ({
-                ระดับ: f.severity, หมวด: f.category, เรื่อง: f.title, จำนวน: f.count, มูลค่า: f.amount,
-              })),
-            }),
-          },
-        ],
-      }),
-    });
-    clearTimeout(timer);
-    if (!res.ok) return { ...fallback, note: `เรียก AI ไม่สำเร็จ (HTTP ${res.status}) จึงใช้สรุปอัตโนมัติแทน` };
+  const res = await askJson(
+    SYSTEM_PROMPT,
+    JSON.stringify({
+      งวด: c.period,
+      ต้องแก้: c.errors, ควรตรวจ: c.warnings, ข้อเสนอแนะ: c.infos,
+      รายการที่พบ: c.findings.map((f) => ({
+        ระดับ: f.severity, หมวด: f.category, เรื่อง: f.title, จำนวน: f.count, มูลค่า: f.amount,
+      })),
+    })
+  );
 
-    const json: any = await res.json();
-    const raw = json?.choices?.[0]?.message?.content;
-    if (!raw) return { ...fallback, note: 'AI ไม่ได้ตอบกลับ จึงใช้สรุปอัตโนมัติแทน' };
+  if (!res.ok) return { ...fallback, note: res.note };
 
-    const parsed = JSON.parse(raw);
-    const lines = Array.isArray(parsed.lines) ? parsed.lines.filter((x: any) => typeof x === 'string') : [];
-    const actions = Array.isArray(parsed.actions) ? parsed.actions.filter((x: any) => typeof x === 'string') : [];
-    if (!lines.length) return { ...fallback, note: 'AI ตอบไม่ครบ จึงใช้สรุปอัตโนมัติแทน' };
+  const lines = Array.isArray(res.data?.lines) ? res.data.lines.filter((x: any) => typeof x === 'string') : [];
+  const actions = Array.isArray(res.data?.actions) ? res.data.actions.filter((x: any) => typeof x === 'string') : [];
+  if (!lines.length) return { ...fallback, note: 'AI ตอบไม่ครบ จึงใช้สรุปอัตโนมัติแทน' };
 
-    return { lines, actions, byAi: true };
-  } catch (e: any) {
-    const reason = e?.name === 'AbortError' ? 'AI ตอบช้าเกินไป' : 'เรียก AI ไม่สำเร็จ';
-    return { ...fallback, note: `${reason} จึงใช้สรุปอัตโนมัติแทน` };
-  }
+  return { lines, actions, byAi: true };
 }

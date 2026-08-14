@@ -2,13 +2,36 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Eye, EyeOff, Lock, ShieldCheck } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-export function LoginForm({ labels }: { labels: Record<string, string> }) {
+/** ข้อความอธิบายเหตุผลที่ล็อกอินด้วย GoodHR ไม่ผ่าน — บอกให้ชัดว่าต้องทำอะไรต่อ */
+const SSO_ERROR: Record<string, string> = {
+  no_access: 'บัญชี GoodHR ของคุณยังไม่ได้รับอนุญาตให้เข้าใช้ ONEBOOK — กรุณาแจ้งผู้ดูแลระบบให้เพิ่มสิทธิ์ก่อน',
+  suspended: 'บัญชีของคุณถูกระงับการใช้งานในระบบนี้ กรุณาติดต่อผู้ดูแล',
+  inactive: 'บัญชีพนักงานของคุณใน GoodHR ไม่ได้อยู่ในสถานะทำงานแล้ว',
+  denied: 'คุณไม่ได้กดอนุญาตให้ ONEBOOK เข้าถึงข้อมูล',
+  state_mismatch: 'การเข้าสู่ระบบไม่ปลอดภัย (state ไม่ตรง) กรุณาลองใหม่',
+  expired: 'ลิงก์เข้าสู่ระบบหมดอายุ กรุณากดเข้าสู่ระบบใหม่',
+  no_email: 'บัญชี GoodHR ของคุณไม่มีอีเมล ระบบจึงสร้างบัญชีให้ไม่ได้',
+  not_configured: 'ยังไม่ได้ตั้งค่าการเชื่อมต่อ GoodHR กรุณาติดต่อผู้ดูแลระบบ',
+  session_failed: 'ยืนยันตัวตนสำเร็จ แต่เปิดเซสชันไม่ได้ กรุณาลองใหม่',
+  create_failed: 'สร้างบัญชีผู้ใช้ไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ',
+  link_failed: 'เชื่อมบัญชีไม่สำเร็จ กรุณาติดต่อผู้ดูแลระบบ',
+  failed: 'เข้าสู่ระบบด้วย GoodHR ไม่สำเร็จ กรุณาลองใหม่',
+  error: 'เกิดข้อผิดพลาดระหว่างเชื่อมต่อ GoodHR',
+};
+
+export function LoginForm({
+  labels, ssoEnabled, passwordEnabled,
+}: {
+  labels: Record<string, string>;
+  ssoEnabled: boolean;
+  passwordEnabled: boolean;
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState('');
@@ -16,6 +39,7 @@ export function LoginForm({ labels }: { labels: Record<string, string> }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const ssoError = params.get('sso');
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,6 +57,39 @@ export function LoginForm({ labels }: { labels: Record<string, string> }) {
   }
 
   return (
+    <div className="flex flex-col gap-5">
+      {ssoError && (
+        <p className="rounded-lg bg-rose-50 px-3.5 py-2.5 text-xs leading-relaxed text-rose-700 ring-1 ring-inset ring-rose-200">
+          {SSO_ERROR[ssoError] || SSO_ERROR.failed}
+        </p>
+      )}
+
+      {ssoEnabled && (
+        <a
+          href="/api/auth/goodhr/start"
+          className="flex w-full items-center justify-center gap-2.5 rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-800"
+        >
+          <ShieldCheck className="h-4 w-4" strokeWidth={2} />
+          เข้าสู่ระบบด้วย GoodHR
+        </a>
+      )}
+
+      {ssoEnabled && passwordEnabled && (
+        <div className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-ink-200" />
+          <span className="text-xxs text-ink-400">หรือเข้าด้วยอีเมล</span>
+          <span className="h-px flex-1 bg-ink-200" />
+        </div>
+      )}
+
+      {!passwordEnabled && ssoEnabled && (
+        <p className="text-center text-xxs leading-relaxed text-ink-400">
+          ระบบนี้ให้เข้าสู่ระบบด้วยบัญชี GoodHR เท่านั้น
+          <br />สิทธิ์การใช้งานกำหนดโดยผู้ดูแลระบบของ ONEBOOK
+        </p>
+      )}
+
+      {passwordEnabled && (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
       <FieldGroup>
         <Field>
@@ -97,5 +154,7 @@ export function LoginForm({ labels }: { labels: Record<string, string> }) {
         </Field>
       </FieldGroup>
     </form>
+      )}
+    </div>
   );
 }

@@ -19,6 +19,8 @@ export interface EditorProps {
   accounts: Option[];
   doc: any | null;
   lines: any[];
+  /** ผู้ติดต่อตั้งต้นเมื่อเปิดจากหน้าผู้ติดต่อ */
+  initialContactId?: string;
   perms: { create: boolean; edit: boolean; approve: boolean; void: boolean };
   lockedThrough: string | null;
   labels: Record<string, string>;
@@ -57,7 +59,7 @@ export function DocumentEditor(p: EditorProps) {
 
   const [docDate, setDocDate] = useState<string>(p.doc?.doc_date || new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState<string>(p.doc?.due_date || '');
-  const [contactId, setContactId] = useState<string>(p.doc?.contact_id || '');
+  const [contactId, setContactId] = useState<string>(p.doc?.contact_id || p.initialContactId || '');
   const [reference, setReference] = useState<string>(p.doc?.reference || '');
   const [notes, setNotes] = useState<string>(p.doc?.notes || '');
   const [headerDiscount, setHeaderDiscount] = useState<number>(0);

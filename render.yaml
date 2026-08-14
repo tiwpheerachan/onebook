@@ -58,9 +58,28 @@ services:
 
       # ---------- ไม่บังคับ : เปิดเมื่อพร้อมใช้ ----------
       # ผู้ช่วย AI สรุปงาน — ไม่ตั้งค่าระบบก็สรุปด้วยกฎได้ตามปกติ
+      # ใช้ Claude : AI_API_URL = https://api.anthropic.com/v1
+      # ใช้ OpenAI : AI_API_URL = https://api.openai.com/v1
       - key: AI_API_URL
         sync: false
       - key: AI_API_KEY
         sync: false
       - key: AI_MODEL
-        value: "gpt-4o-mini"
+        sync: false
+
+      # เข้าสู่ระบบด้วย GoodHR (SSO) — ตั้งครบ 3 ตัวแล้วปุ่มจะโผล่เอง
+      - key: GOODHR_ISSUER
+        sync: false
+      - key: OAUTH_CLIENT_ID
+        sync: false
+      - key: OAUTH_CLIENT_SECRET
+        sync: false
+      # ต้องตรงเป๊ะกับที่ลงทะเบียนไว้กับ GoodHR
+      - key: OAUTH_REDIRECT_URI
+        sync: false
+      # false = ผู้ดูแล ONEBOOK อนุญาตรายคนเอง (แนะนำ)
+      - key: GOODHR_TRUST_APP_ROLE
+        value: "false"
+      # เปิดทางเข้าสำรองด้วยรหัสผ่านไว้ก่อน ค่อยปิดเมื่อ SSO นิ่งแล้ว
+      - key: ALLOW_PASSWORD_LOGIN
+        value: "true"

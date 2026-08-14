@@ -6,6 +6,7 @@ import { SearchBox } from '@/components/forms/search-box';
 import { ContactManager } from '@/components/forms/contact-manager';
 import { ContactGroupRail, type GroupRow } from '@/components/forms/contact-groups';
 import { ContactTable, type ContactRow } from '@/components/forms/contact-table';
+import { ContactToolbar } from '@/components/forms/contact-toolbar';
 import { ExportCsvButton } from '@/components/ui/export-csv';
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function ContactsPage({
   searchParams,
 }: {
-  searchParams: { q?: string; t?: string; g?: string };
+  searchParams: { q?: string; t?: string; g?: string; sort?: string; dir?: string; page?: string; per?: string };
 }) {
   const ctx = await requirePermission('contacts', 'view');
   const d = t();
@@ -35,7 +36,19 @@ export default async function ContactsPage({
   }));
 
   // ผู้ติดต่อตามตัวกรองที่เลือก
-  let q = supabase.from('contacts').select('*').eq('company_id', ctx.company.id).order('code').limit(1000);
+  const SORTABLE = ['code', 'name', 'credit_days'];
+  const sort = SORTABLE.includes(searchParams.sort || '') ? searchParams.sort! : 'code';
+  const asc = searchParams.dir !== 'desc';
+  const perPage = [10, 25, 50, 100].includes(Number(searchParams.per)) ? Number(searchParams.per) : 10;
+  const page = Math.max(1, Number(searchParams.page) || 1);
+
+  // count: exact เพื่อให้ตัวแบ่งหน้ารู้จำนวนจริงโดยไม่ต้องดึงข้อมูลทั้งหมด
+  let q = supabase
+    .from('contacts')
+    .select('*', { count: 'exact' })
+    .eq('company_id', ctx.company.id)
+    .order(sort, { ascending: asc })
+    .range((page - 1) * perPage, page * perPage - 1);
   if (searchParams.q) {
     q = q.or(`name.ilike.%${searchParams.q}%,code.ilike.%${searchParams.q}%,tax_id.ilike.%${searchParams.q}%`);
   }
@@ -53,8 +66,9 @@ export default async function ContactsPage({
     q = q.eq('is_active', true);
   }
 
-  const { data } = await q;
+  const { data, count } = await q;
   const raw = (data || []) as any[];
+  const total = count ?? raw.length;
 
   const groupById = new Map(groups.map((g) => [g.id, g]));
   const rows: ContactRow[] = raw.map((r) => ({
@@ -88,23 +102,10 @@ export default async function ContactsPage({
     <>
       <PageHeader
         title={d.nav.contacts}
-        subtitle={`${ctx.company.name_th} · แสดง ${rows.length} ราย`}
+        subtitle={`${ctx.company.name_th} · ${total.toLocaleString('th-TH')} ราย`}
         action={
           <>
             <SearchBox placeholder={d.common.search} defaultValue={searchParams.q} />
-            {can(ctx, 'contacts', 'export') && (
-              <ExportCsvButton
-                label={d.common.export}
-                filename="contacts.csv"
-                rows={[
-                  ['รหัส','ชื่อ','เลขภาษี','ประเภท','กลุ่ม','โทร','เครดิต(วัน)'],
-                  ...rows.map((r) => [
-                    r.code, r.name, r.tax_id || '', r.kind,
-                    r.groups.map((g) => g.name).join(' / '), r.phone || '', r.credit_days,
-                  ]),
-                ]}
-              />
-            )}
             <ContactManager canCreate={can(ctx, 'contacts', 'create')} canEdit={canEdit} labels={labels} />
           </>
         }
@@ -113,12 +114,37 @@ export default async function ContactsPage({
       <div className="grid gap-5 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <ContactGroupRail groups={groups} canEdit={canEdit} counts={counts} />
         <div className="min-w-0">
+          <ContactToolbar
+            groups={groups}
+            canEdit={canEdit}
+            canImport={can(ctx, 'contacts', 'create')}
+            exportButton={
+              can(ctx, 'contacts', 'export') ? (
+                <ExportCsvButton
+                  label="ส่งออกหน้านี้เป็น CSV"
+                  filename="contacts.csv"
+                  rows={[
+                    ['รหัส','ชื่อ','เลขภาษี','ประเภท','กลุ่ม','โทร','เครดิต(วัน)'],
+                    ...rows.map((r) => [
+                      r.code, r.name, r.tax_id || '', r.kind,
+                      r.groups.map((g) => g.name).join(' / '), r.phone || '', r.credit_days,
+                    ]),
+                  ]}
+                />
+              ) : null
+            }
+          />
           <ContactTable
             rows={rows}
             groups={groups}
             currentGroup={searchParams.g}
+            groupName={groups.find((g) => g.id === searchParams.g)?.name}
             canEdit={canEdit}
+            canCreateDoc={can(ctx, 'documents', 'create')}
             labels={labels}
+            page={page}
+            perPage={perPage}
+            total={total}
           />
         </div>
       </div>

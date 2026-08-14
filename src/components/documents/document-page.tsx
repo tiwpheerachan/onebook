@@ -14,7 +14,14 @@ import { ConvertButton } from './convert-button';
 import { AttachmentPanel } from './attachment-panel';
 import { docTitle, isPurchase } from './doc-meta';
 
-export async function DocumentPage({ slug, id }: { slug: string; id: string }) {
+export async function DocumentPage({
+  slug, id, initialContactId,
+}: {
+  slug: string;
+  id: string;
+  /** ผู้ติดต่อที่เลือกมาจากหน้าอื่น เช่น กด "ทำรายการ" จากหน้าผู้ติดต่อ */
+  initialContactId?: string;
+}) {
   const kind = KIND_SLUG[slug];
   if (!kind) notFound();
   const isNew = id === 'new';
@@ -100,6 +107,7 @@ export async function DocumentPage({ slug, id }: { slug: string; id: string }) {
         accounts={(accounts || []).map((a: any) => ({ id: a.id, label: `${a.code} ${a.name_th}` }))}
         doc={doc}
         lines={lines}
+        initialContactId={initialContactId}
         perms={{
           create: can(ctx, 'documents', 'create'),
           edit: can(ctx, 'documents', 'edit'),

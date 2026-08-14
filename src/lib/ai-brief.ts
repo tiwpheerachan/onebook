@@ -1,4 +1,5 @@
 import 'server-only';
+import { askJson, isAiConfigured as aiReady } from './ai-client';
 
 /**
  * สรุปงานประจำวัน
@@ -32,7 +33,7 @@ export interface Brief {
 }
 
 export function isAiConfigured(): boolean {
-  return !!(process.env.AI_API_KEY && process.env.AI_API_URL);
+  return aiReady();
 }
 
 const nf = (n: number) => n.toLocaleString('th-TH');
@@ -113,64 +114,28 @@ const SYSTEM_PROMPT = `คุณเป็นผู้ช่วยหัวหน
 /** ให้ AI เรียบเรียงจากตัวเลขชุดเดียวกัน — ถ้าล้มเหลวจะคืนสรุปแบบกฎแทน */
 export async function aiBrief(s: TaskSummary): Promise<Brief> {
   const fallback = ruleBrief(s);
-  if (!isAiConfigured()) {
-    return { ...fallback, note: 'ยังไม่ได้ตั้งค่า AI — ตั้ง AI_API_URL และ AI_API_KEY ใน .env.local เพื่อให้ AI ช่วยเรียบเรียง' };
-  }
 
-  try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 20_000);
+  const res = await askJson(
+    SYSTEM_PROMPT,
+    JSON.stringify({
+      งานค้าง: s.counts,
+      เลยกำหนด: s.overdue_count,
+      งานเลยกำหนด5รายการแรก: s.overdue.slice(0, 5).map((o) => ({
+        ชื่องาน: o.title, เลยมากี่วัน: o.days_late, ความสำคัญ: o.priority,
+      })),
+      ครบกำหนดวันนี้: s.due_today,
+      ครบกำหนดใน7วัน: s.due_week,
+      ยังไม่มอบหมาย: s.unassigned,
+      ปิดไปใน7วัน: s.done_last_7_days,
+      ภาระงานรายคน: s.workload.slice(0, 6),
+    })
+  );
 
-    const res = await fetch(`${process.env.AI_API_URL}/chat/completions`, {
-      method: 'POST',
-      signal: ctrl.signal,
-      cache: 'no-store',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${process.env.AI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: process.env.AI_MODEL || 'gpt-4o-mini',
-        temperature: 0.3,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          {
-            role: 'user',
-            content: JSON.stringify({
-              งานค้าง: s.counts,
-              เลยกำหนด: s.overdue_count,
-              งานเลยกำหนด5รายการแรก: s.overdue.slice(0, 5).map((o) => ({
-                ชื่องาน: o.title, เลยมากี่วัน: o.days_late, ความสำคัญ: o.priority,
-              })),
-              ครบกำหนดวันนี้: s.due_today,
-              ครบกำหนดใน7วัน: s.due_week,
-              ยังไม่มอบหมาย: s.unassigned,
-              ปิดไปใน7วัน: s.done_last_7_days,
-              ภาระงานรายคน: s.workload.slice(0, 6),
-            }),
-          },
-        ],
-      }),
-    });
-    clearTimeout(timer);
+  if (!res.ok) return { ...fallback, note: res.note };
 
-    if (!res.ok) {
-      return { ...fallback, note: `เรียก AI ไม่สำเร็จ (HTTP ${res.status}) จึงใช้สรุปอัตโนมัติแทน` };
-    }
+  const lines = Array.isArray(res.data?.lines) ? res.data.lines.filter((x: any) => typeof x === 'string') : [];
+  const actions = Array.isArray(res.data?.actions) ? res.data.actions.filter((x: any) => typeof x === 'string') : [];
+  if (!lines.length) return { ...fallback, note: 'AI ตอบไม่ครบ จึงใช้สรุปอัตโนมัติแทน' };
 
-    const json: any = await res.json();
-    const raw = json?.choices?.[0]?.message?.content;
-    if (!raw) return { ...fallback, note: 'AI ไม่ได้ตอบกลับ จึงใช้สรุปอัตโนมัติแทน' };
-
-    const parsed = JSON.parse(raw);
-    const lines = Array.isArray(parsed.lines) ? parsed.lines.filter((x: any) => typeof x === 'string') : [];
-    const actions = Array.isArray(parsed.actions) ? parsed.actions.filter((x: any) => typeof x === 'string') : [];
-    if (!lines.length) return { ...fallback, note: 'AI ตอบไม่ครบ จึงใช้สรุปอัตโนมัติแทน' };
-
-    return { lines, actions, byAi: true };
-  } catch (e: any) {
-    const reason = e?.name === 'AbortError' ? 'AI ตอบช้าเกินไป' : 'เรียก AI ไม่สำเร็จ';
-    return { ...fallback, note: `${reason} จึงใช้สรุปอัตโนมัติแทน` };
-  }
+  return { lines, actions, byAi: true };
 }

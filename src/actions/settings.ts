@@ -213,3 +213,55 @@ export async function saveDocSequence(form: {
   revalidatePath('/settings/numbering');
   return { ok: true };
 }
+
+/* ─────────────────── อนุญาตพนักงาน GoodHR เข้าใช้เป็นรายคน ─────────────────── */
+
+/**
+ * อนุญาตล่วงหน้าก่อนพนักงานเคยล็อกอิน
+ * ระบุด้วยรหัสพนักงานหรืออีเมล พร้อมเลือกบทบาทในบริษัทนี้
+ * เมื่อเขาล็อกอินด้วย GoodHR ครั้งแรก ระบบจะให้สิทธิ์ตามนี้ทันที
+ */
+export async function inviteSsoUser(form: {
+  employee_code?: string;
+  email?: string;
+  role_id: string;
+  can_view_subsidiaries?: boolean;
+  note?: string;
+}) {
+  const ctx = await getSessionContext();
+  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!can(ctx, 'settings.users', 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์อนุญาตผู้ใช้' };
+
+  const code = String(form.employee_code || '').trim();
+  const email = String(form.email || '').trim().toLowerCase();
+  if (!code && !email) return { ok: false, error: 'ระบุรหัสพนักงานหรืออีเมลอย่างน้อยหนึ่งอย่าง' };
+  if (!form.role_id) return { ok: false, error: 'กรุณาเลือกบทบาท' };
+
+  const supabase = createClient();
+  const { error } = await supabase.from('sso_invitations').insert({
+    company_id: ctx.company.id,
+    employee_code: code || null,
+    email: email || null,
+    role_id: form.role_id,
+    can_view_subsidiaries: !!form.can_view_subsidiaries,
+    note: form.note || null,
+    invited_by: ctx.userId,
+  });
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath('/settings/users');
+  return { ok: true };
+}
+
+export async function cancelSsoInvitation(id: string) {
+  const ctx = await getSessionContext();
+  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!can(ctx, 'settings.users', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์ยกเลิก' };
+
+  const supabase = createClient();
+  const { error } = await supabase.from('sso_invitations').delete().eq('id', id);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath('/settings/users');
+  return { ok: true };
+}

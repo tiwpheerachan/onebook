@@ -1,3 +1,4 @@
+import { isGoodhrConfigured } from '@/lib/goodhr';
 import { LoginForm } from './login-form';
 import { GradientMesh } from '@/components/ui/gradient-mesh';
 import { LanguageSwitcher } from '@/components/layout/switchers';
@@ -7,6 +8,10 @@ import { ShieldCheck, Building2, TrendingUp, KeyRound } from 'lucide-react';
 export const metadata = { title: 'เข้าสู่ระบบ · ONEBOOK' };
 
 export default function LoginPage() {
+  const ssoEnabled = isGoodhrConfigured();
+  // ปิดล็อกอินด้วยรหัสผ่านอัตโนมัติเมื่อเปิด SSO แล้ว
+  // เว้นแต่ตั้ง ALLOW_PASSWORD_LOGIN=true ไว้เป็นทางเข้าสำรองตอน GoodHR ล่ม
+  const passwordEnabled = !ssoEnabled || process.env.ALLOW_PASSWORD_LOGIN === 'true';
   const d = t();
   const locale = currentLocale();
 
@@ -35,10 +40,14 @@ export default function LoginPage() {
           <div className="w-full max-w-sm">
             <div className="mb-7 flex flex-col gap-1.5">
               <h1 className="text-2xl font-semibold tracking-tight text-ink-900">{d.auth.title}</h1>
-              <p className="text-sm text-ink-500">{d.auth.subtitle}</p>
+              <p className="text-sm text-ink-500">
+                {passwordEnabled ? d.auth.subtitle : 'ใช้บัญชีพนักงาน GoodHR ของคุณเข้าสู่ระบบ'}
+              </p>
             </div>
 
             <LoginForm
+            ssoEnabled={ssoEnabled}
+            passwordEnabled={passwordEnabled}
               labels={{
                 email: d.auth.email,
                 password: d.auth.password,
