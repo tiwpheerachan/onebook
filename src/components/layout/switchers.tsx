@@ -1,7 +1,8 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useTransition, useState } from 'react';
-import { Building2, Languages, LogOut, Lock, ChevronDown } from 'lucide-react';
+import Link from 'next/link';
+import { Building2, Languages, LogOut, Lock, ChevronDown, UserCog } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { LOCALE_LABEL, LOCALES } from '@/i18n/config';
 import { setCompanyAction, setLocaleAction, signOutAction } from '@/actions/session';
@@ -127,6 +128,13 @@ export function UserMenu({ name, email, isGroupAdmin }: { name: string; email: s
                 <span className="chip mt-1.5 bg-brand-50 text-brand-700 ring-brand-200">Group Admin</span>
               )}
             </div>
+            <Link
+              href="/settings/profile"
+              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-sm text-ink-700 hover:bg-ink-50"
+            >
+              <UserCog className="h-4 w-4 text-ink-400" strokeWidth={1.8} /> ตั้งค่าโปรไฟล์
+            </Link>
             <form action={signOutAction}>
               <button type="submit" className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-sm text-rose-600 hover:bg-rose-50">
                 <LogOut className="h-4 w-4" strokeWidth={1.8} /> ออกจากระบบ

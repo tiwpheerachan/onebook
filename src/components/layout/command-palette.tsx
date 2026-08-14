@@ -1,0 +1,267 @@
+'use client';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Search, FileText, Users, Package, CheckSquare, CornerDownLeft,
+  Sparkles, ArrowRight, Loader2,
+} from 'lucide-react';
+import { cn } from '@/lib/cn';
+import { money } from '@/lib/format';
+import { STATUS_STYLE } from '@/lib/constants';
+import {
+  EMPTY_RESULT, docHref, countResults,
+  DOC_KIND_TH, CONTACT_KIND_TH, TASK_STATUS_TH,
+  type SearchResult,
+} from '@/lib/search-meta';
+
+export interface PageEntry { href: string; label: string; group: string }
+
+interface Row {
+  key: string;
+  href: string;
+  icon: any;
+  title: string;
+  sub?: string;
+  right?: React.ReactNode;
+  section: string;
+}
+
+/**
+ * ช่องค้นหาทุกอย่าง (⌘K)
+ *
+ * ค้นได้ทั้งหน้าจอในระบบ · เอกสารทุกใบ · ผู้ติดต่อ · สินค้า · งาน
+ * ผลลัพธ์ถูกกรองด้วย RLS ที่ฐานข้อมูลอยู่แล้ว จึงเห็นเฉพาะสิ่งที่ตัวเองมีสิทธิ์
+ */
+export function CommandPalette({
+  open, onClose, pages, onAskAi,
+}: {
+  open: boolean;
+  onClose: () => void;
+  pages: PageEntry[];
+  onAskAi?: (q: string) => void;
+}) {
+  const router = useRouter();
+  const [q, setQ] = useState('');
+  const [res, setRes] = useState<SearchResult>(EMPTY_RESULT);
+  const [loading, setLoading] = useState(false);
+  const [cursor, setCursor] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setQ(''); setRes(EMPTY_RESULT); setCursor(0);
+      setTimeout(() => inputRef.current?.focus(), 20);
+    }
+  }, [open]);
+
+  // หน่วงไว้ก่อนยิง เพื่อไม่ให้พิมพ์ 1 ตัวยิง 1 ครั้ง
+  useEffect(() => {
+    if (!open) return;
+    const term = q.trim();
+    if (term.length < 2) { setRes(EMPTY_RESULT); setLoading(false); return; }
+
+    setLoading(true);
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/search?q=${encodeURIComponent(term)}`, { signal: ctrl.signal });
+        setRes(r.ok ? await r.json() : EMPTY_RESULT);
+      } catch { /* ยกเลิกเพราะพิมพ์ต่อ ไม่ต้องทำอะไร */ }
+      finally { setLoading(false); }
+    }, 220);
+
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  }, [q, open]);
+
+  /* ---------- รวมผลลัพธ์เป็นรายการเดียวเพื่อเลื่อนด้วยคีย์บอร์ด ---------- */
+  const rows: Row[] = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    const out: Row[] = [];
+
+    const matched = term
+      ? pages.filter((p) => p.label.toLowerCase().includes(term) || p.group.toLowerCase().includes(term))
+      : pages.slice(0, 8);
+    for (const p of matched.slice(0, 6)) {
+      out.push({ key: `p:${p.href}`, href: p.href, icon: ArrowRight, title: p.label, sub: p.group, section: 'หน้าในระบบ' });
+    }
+
+    for (const d of res.documents) {
+      out.push({
+        key: `d:${d.id}`, href: docHref(d.kind, d.id), icon: FileText,
+        title: `${d.doc_number} · ${DOC_KIND_TH[d.kind] || d.kind}`,
+        sub: [d.contact, d.doc_date].filter(Boolean).join(' · '),
+        right: (
+          <span className="flex items-center gap-2">
+            <span className="tabular-nums text-ink-700">{money(d.grand_total)}</span>
+            <span className={cn('chip', STATUS_STYLE[d.status])}>{d.status}</span>
+          </span>
+        ),
+        section: 'เอกสาร',
+      });
+    }
+
+    for (const c of res.contacts) {
+      out.push({
+        key: `c:${c.id}`, href: `/contacts?q=${encodeURIComponent(c.code)}`, icon: Users,
+        title: c.name,
+        sub: [c.code, CONTACT_KIND_TH[c.kind] || c.kind, c.tax_id, c.phone].filter(Boolean).join(' · '),
+        section: 'ผู้ติดต่อ',
+      });
+    }
+
+    for (const p of res.products) {
+      out.push({
+        key: `pr:${p.id}`, href: `/products?q=${encodeURIComponent(p.sku)}`, icon: Package,
+        title: p.name,
+        sub: `${p.sku} · ${p.unit}${p.is_active ? '' : ' · เลิกใช้แล้ว'}`,
+        right: <span className="tabular-nums text-ink-600">{money(p.sale_price)}</span>,
+        section: 'สินค้า/บริการ',
+      });
+    }
+
+    for (const t of res.tasks) {
+      out.push({
+        key: `t:${t.id}`, href: `/tasks?q=${encodeURIComponent(t.title)}`, icon: CheckSquare,
+        title: t.title,
+        sub: [TASK_STATUS_TH[t.status] || t.status, t.due_at ? `ครบกำหนด ${t.due_at.slice(0, 10)}` : null]
+          .filter(Boolean).join(' · '),
+        section: 'งาน',
+      });
+    }
+
+    return out;
+  }, [res, pages, q]);
+
+  const askRow = onAskAi && q.trim().length >= 2;
+  const total = rows.length + (askRow ? 1 : 0);
+
+  useEffect(() => { setCursor(0); }, [rows.length]);
+
+  const go = (i: number) => {
+    if (askRow && i === rows.length) { onAskAi!(q.trim()); onClose(); return; }
+    const r = rows[i];
+    if (!r) return;
+    onClose();
+    router.push(r.href);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setCursor((c) => (total ? (c + 1) % total : 0)); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); setCursor((c) => (total ? (c - 1 + total) % total : 0)); }
+    if (e.key === 'Enter') { e.preventDefault(); go(cursor); }
+  };
+
+  // เลื่อนรายการที่เลือกให้อยู่ในสายตาเสมอ
+  useEffect(() => {
+    listRef.current?.querySelector<HTMLElement>('[data-active="1"]')
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [cursor]);
+
+  if (!open) return null;
+
+  let lastSection = '';
+  const found = countResults(res);
+
+  return (
+    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="ค้นหาทุกอย่าง">
+      <div className="absolute inset-0 bg-ink-900/25 backdrop-blur-[2px]" onClick={onClose} />
+
+      <div className="absolute left-1/2 top-[12vh] w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2">
+        <div className="overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-2xl">
+          {/* ---------- ช่องพิมพ์ ---------- */}
+          <div className="flex items-center gap-3 border-b border-ink-100 px-4">
+            {loading
+              ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-brand-500" strokeWidth={2} />
+              : <Search className="h-4 w-4 shrink-0 text-ink-400" strokeWidth={1.8} />}
+            <input
+              ref={inputRef}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder="ค้นเลขที่เอกสาร ชื่อลูกค้า สินค้า งาน หรือยอดเงิน…"
+              className="h-12 flex-1 bg-transparent text-[15px] text-ink-900 outline-none placeholder:text-ink-400"
+            />
+            <kbd className="rounded border border-ink-200 px-1.5 py-0.5 font-mono text-xxs text-ink-400">esc</kbd>
+          </div>
+
+          {/* ---------- ผลลัพธ์ ---------- */}
+          <div ref={listRef} className="max-h-[52vh] overflow-y-auto py-1.5">
+            {rows.map((r, i) => {
+              const header = r.section !== lastSection ? r.section : null;
+              lastSection = r.section;
+              const Icon = r.icon;
+              const active = i === cursor;
+              return (
+                <div key={r.key}>
+                  {header && (
+                    <p className="px-4 pb-1 pt-2.5 text-xxs font-semibold uppercase tracking-wide text-ink-400">
+                      {header}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    data-active={active ? '1' : '0'}
+                    onMouseEnter={() => setCursor(i)}
+                    onClick={() => go(i)}
+                    className={cn(
+                      'flex w-full items-center gap-3 px-4 py-2 text-left',
+                      active ? 'bg-brand-50' : 'hover:bg-ink-50'
+                    )}
+                  >
+                    <Icon className={cn('h-4 w-4 shrink-0', active ? 'text-brand-600' : 'text-ink-400')} strokeWidth={1.8} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm text-ink-900">{r.title}</span>
+                      {r.sub && <span className="block truncate text-xs text-ink-500">{r.sub}</span>}
+                    </span>
+                    {r.right && <span className="shrink-0 text-xs">{r.right}</span>}
+                    {active && <CornerDownLeft className="h-3.5 w-3.5 shrink-0 text-brand-400" strokeWidth={1.8} />}
+                  </button>
+                </div>
+              );
+            })}
+
+            {/* ---------- ถาม AI ---------- */}
+            {askRow && (
+              <button
+                type="button"
+                data-active={cursor === rows.length ? '1' : '0'}
+                onMouseEnter={() => setCursor(rows.length)}
+                onClick={() => go(rows.length)}
+                className={cn(
+                  'mt-1 flex w-full items-center gap-3 border-t border-ink-100 px-4 py-2.5 text-left',
+                  cursor === rows.length ? 'bg-brand-50' : 'hover:bg-ink-50'
+                )}
+              >
+                <Sparkles className="h-4 w-4 shrink-0 text-brand-500" strokeWidth={1.8} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm text-ink-900">ถาม AI ว่า “{q.trim()}”</span>
+                  <span className="block text-xs text-ink-500">ให้ AI ช่วยหาและสรุปให้ — อ่านอย่างเดียว ไม่แก้ไขข้อมูล</span>
+                </span>
+              </button>
+            )}
+
+            {q.trim().length >= 2 && !loading && found === 0 && rows.length === 0 && (
+              <p className="px-4 py-8 text-center text-sm text-ink-400">
+                ไม่พบอะไรที่ตรงกับ “{q.trim()}”
+              </p>
+            )}
+            {q.trim().length < 2 && (
+              <p className="px-4 pb-3 pt-1 text-xs text-ink-400">
+                พิมพ์อย่างน้อย 2 ตัวอักษร — ค้นได้ทั้งเลขที่เอกสาร ชื่อลูกค้า เลขผู้เสียภาษี เบอร์โทร รหัสสินค้า หรือยอดเงิน
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-4 border-t border-ink-100 bg-ink-50/60 px-4 py-2 text-xxs text-ink-400">
+            <span><kbd className="font-mono">↑↓</kbd> เลือก</span>
+            <span><kbd className="font-mono">↵</kbd> เปิด</span>
+            <span><kbd className="font-mono">esc</kbd> ปิด</span>
+            <span className="ml-auto">เห็นเฉพาะข้อมูลที่คุณมีสิทธิ์เข้าถึง</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -91,6 +91,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
       id: 'settings', label: d.nav.settings, icon: 'Settings',
       items: [
         { href: '/settings', label: 'ภาพรวมการตั้งค่า', resource: 'documents' },
+        { href: '/settings/profile', label: 'โปรไฟล์ของฉัน', resource: 'documents' },
         { href: '/settings/companies', label: d.nav.companies, resource: 'settings.companies' },
         { href: '/settings/users', label: d.nav.users, resource: 'settings.users' },
         { href: '/settings/roles', label: d.nav.roles, resource: 'settings.roles' },
