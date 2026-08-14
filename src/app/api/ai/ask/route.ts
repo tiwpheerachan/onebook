@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { getSessionContext } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { askJson, isAiConfigured } from '@/lib/ai-client';
-import { docHref, DOC_KIND_TH, type SearchResult } from '@/lib/search-meta';
+import { docHref, docKindLabel, type SearchResult } from '@/lib/search-meta';
 import { EMPTY_RESULT } from '@/lib/search-meta';
+import { getDictionary, type Dictionary } from '@/i18n';
+import { LOCALES, type Locale } from '@/i18n/config';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,14 +20,18 @@ export const dynamic = 'force-dynamic';
  * ต่อให้มีคนพยายามหลอกให้ AI "แก้เอกสาร" ก็ทำไม่ได้ เพราะไม่มีทางให้เขียน
  */
 
-const SYSTEM = `คุณคือผู้ช่วยในระบบบัญชี ONEBOOK ของบริษัทไทย
+const ANSWER_LANG: Record<string, string> = {
+  th: 'ภาษาไทย', en: 'English', zh: '简体中文',
+};
+
+const system = (lang: string) => `คุณคือผู้ช่วยในระบบบัญชี ONEBOOK ของบริษัทไทย
 
 หน้าที่ของคุณคือช่วย "หาและอธิบาย" ข้อมูลที่ผู้ใช้ถาม จากข้อมูลที่ให้มาเท่านั้น
 คุณไม่มีสิทธิ์และไม่มีความสามารถในการสร้าง แก้ไข อนุมัติ หรือลบเอกสารใด ๆ
 ถ้าผู้ใช้ขอให้แก้ไขข้อมูล ให้บอกว่าทำให้ไม่ได้ แล้วชี้ทางว่าต้องไปทำที่หน้าไหนเอง
 
 กติกา
-- ตอบเป็นภาษาไทย กระชับ ตรงประเด็น
+- ตอบด้วย ${lang} เสมอ ไม่ว่าคำถามจะเขียนด้วยภาษาใดก็ตาม กระชับ ตรงประเด็น
 - ใช้ได้เฉพาะข้อมูลใน CONTEXT ห้ามเดาตัวเลขหรือแต่งเอกสารที่ไม่มีอยู่
 - ถ้าข้อมูลไม่พอ ให้บอกตรง ๆ ว่าไม่พบ แล้วแนะนำคำค้นที่น่าจะได้ผลกว่า
 - ยอดเงินให้ใส่เครื่องหมายคั่นหลักพันและระบุสกุลเมื่อไม่ใช่บาท
@@ -41,9 +47,11 @@ export async function POST(req: Request) {
   const ctx = await getSessionContext();
   if (!ctx) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
-  const { question } = await req.json().catch(() => ({ question: '' }));
-  const q = String(question || '').trim().slice(0, 500);
-  if (q.length < 2) return NextResponse.json({ error: 'คำถามสั้นเกินไป' }, { status: 400 });
+  const body = await req.json().catch(() => ({}));
+  const q = String(body?.question || '').trim().slice(0, 500);
+  const locale = (LOCALES.includes(body?.locale) ? body.locale : 'th') as Locale;
+  const d = getDictionary(locale);
+  if (q.length < 2) return NextResponse.json({ error: d.ui.assistant.tooShort }, { status: 400 });
 
   // ── หาข้อมูลประกอบด้วยสิทธิ์ของผู้ใช้เอง ──
   const supabase = createClient();
@@ -57,22 +65,20 @@ export async function POST(req: Request) {
 
   if (!isAiConfigured()) {
     return NextResponse.json({
-      answer: hits
-        ? `ยังไม่ได้ตั้งค่า AI จึงสรุปให้ไม่ได้ แต่ค้นเจอ ${hits} รายการที่เกี่ยวข้อง ดูรายการด้านล่างได้เลย`
-        : 'ยังไม่ได้ตั้งค่า AI และไม่พบข้อมูลที่ตรงกับคำถามนี้',
-      refs: refsFrom(found),
+      answer: hits ? `${d.ui.assistant.foundOnly} (${hits})` : d.ui.assistant.notFound,
+      refs: refsFrom(found, d),
       followups: [],
-      note: 'ตั้ง AI_API_URL และ AI_API_KEY เพื่อให้ AI ช่วยสรุป',
+      note: d.ui.assistant.aiNotConfigured,
     });
   }
 
   const context = {
     บริษัท: ctx.company.name_th,
     ปิดงวดถึง: ctx.lockedThrough,
-    เอกสารที่ค้นเจอ: found.documents.map((d) => ({
-      id: d.id, ประเภท: DOC_KIND_TH[d.kind] || d.kind, เลขที่: d.doc_number,
-      วันที่: d.doc_date, สถานะ: d.status, ยอดรวม: d.grand_total,
-      สกุล: d.currency, คู่ค้า: d.contact,
+    เอกสารที่ค้นเจอ: found.documents.map((doc) => ({
+      id: doc.id, ประเภท: docKindLabel(d, doc.kind), เลขที่: doc.doc_number,
+      วันที่: doc.doc_date, สถานะ: doc.status, ยอดรวม: doc.grand_total,
+      สกุล: doc.currency, คู่ค้า: doc.contact,
     })),
     ผู้ติดต่อ: found.contacts.map((c) => ({
       id: c.id, ชื่อ: c.name, รหัส: c.code, ประเภท: c.kind,
@@ -87,42 +93,40 @@ export async function POST(req: Request) {
   };
 
   const r = await askJson(
-    SYSTEM,
+    system(ANSWER_LANG[locale] || ANSWER_LANG.th),
     `คำถามจากผู้ใช้ : ${q}\n\nCONTEXT (ข้อมูลที่ผู้ใช้คนนี้มีสิทธิ์เห็น) :\n${JSON.stringify(context)}`,
     { maxTokens: 900, timeoutMs: 25_000 }
   );
 
   if (!r.ok || !r.data?.answer) {
     return NextResponse.json({
-      answer: hits
-        ? `AI ตอบไม่สำเร็จ แต่ค้นเจอ ${hits} รายการที่เกี่ยวข้อง`
-        : 'ไม่พบข้อมูลที่ตรงกับคำถามนี้',
-      refs: refsFrom(found),
+      answer: hits ? `${d.ui.assistant.foundOnly} (${hits})` : d.ui.assistant.notFound,
+      refs: refsFrom(found, d),
       followups: [],
       note: r.note,
     });
   }
 
   // เชื่อม id ที่ AI อ้างกลับไปเป็นลิงก์จริง — ตัดทิ้งถ้า id นั้นไม่มีอยู่ใน CONTEXT
-  const byId = new Map(refsFrom(found).map((x) => [x.id, x]));
+  const byId = new Map(refsFrom(found, d).map((x) => [x.id, x]));
   const refs = Array.isArray(r.data.refs)
     ? r.data.refs.map((x: any) => byId.get(String(x?.id))).filter(Boolean).slice(0, 8)
     : [];
 
   return NextResponse.json({
     answer: String(r.data.answer).slice(0, 2000),
-    refs: refs.length ? refs : refsFrom(found).slice(0, 6),
+    refs: refs.length ? refs : refsFrom(found, d).slice(0, 6),
     followups: Array.isArray(r.data.followups) ? r.data.followups.slice(0, 3).map(String) : [],
   });
 }
 
 /** แปลงผลค้นหาเป็นลิงก์ที่กดได้ */
-function refsFrom(f: SearchResult) {
+function refsFrom(f: SearchResult, d: Dictionary) {
   return [
-    ...f.documents.map((d) => ({
-      id: d.id, type: 'document',
-      label: `${d.doc_number} · ${DOC_KIND_TH[d.kind] || d.kind}`,
-      sub: d.contact || '', href: docHref(d.kind, d.id),
+    ...f.documents.map((doc) => ({
+      id: doc.id, type: 'document',
+      label: `${doc.doc_number} · ${docKindLabel(d, doc.kind)}`,
+      sub: doc.contact || '', href: docHref(doc.kind, doc.id),
     })),
     ...f.contacts.map((c) => ({
       id: c.id, type: 'contact', label: c.name, sub: c.code,

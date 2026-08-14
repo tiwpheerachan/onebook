@@ -1,4 +1,6 @@
 import { SALES_KINDS, SLUG_BY_KIND, type DocKind } from './constants';
+import { docTitle } from '@/components/documents/doc-meta';
+import type { Dictionary } from '@/i18n';
 
 /** ผลค้นหาจาก rpt_global_search — ใช้ร่วมกันทั้งฝั่ง server และ client */
 export interface SearchDoc {
@@ -28,23 +30,18 @@ export function docHref(kind: DocKind, id: string): string {
   return `/${base}/${SLUG_BY_KIND[kind]}/${id}`;
 }
 
-export const DOC_KIND_TH: Record<string, string> = {
-  quotation: 'ใบเสนอราคา', billing_note: 'ใบวางบิล', invoice: 'ใบแจ้งหนี้',
-  tax_invoice: 'ใบกำกับภาษี', receipt: 'ใบเสร็จรับเงิน', credit_note: 'ใบลดหนี้',
-  debit_note: 'ใบเพิ่มหนี้', deposit_receipt: 'ใบรับมัดจำ',
-  purchase_request: 'ใบขอซื้อ', purchase_order: 'ใบสั่งซื้อ', goods_receipt: 'ใบรับของ',
-  bill: 'ใบรับวางบิล', expense: 'ค่าใช้จ่าย', purchase_credit_note: 'ใบลดหนี้ซื้อ',
-  purchase_debit_note: 'ใบเพิ่มหนี้ซื้อ', deposit_payment: 'จ่ายมัดจำ',
-};
+/** ชื่อประเภทเอกสารใช้ของเดิมใน d.nav อยู่แล้ว ไม่ต้องมีชุดคำแปลซ้ำ */
+export function docKindLabel(d: Dictionary, kind: string): string {
+  return docTitle(d, SLUG_BY_KIND[kind]) || kind;
+}
 
-export const CONTACT_KIND_TH: Record<string, string> = {
-  customer: 'ลูกค้า', vendor: 'ผู้ขาย', both: 'ลูกค้า/ผู้ขาย', employee: 'พนักงาน', other: 'อื่น ๆ',
-};
+export function contactKindLabel(d: Dictionary, kind: string): string {
+  return (d.ui.contactKind as Record<string, string>)[kind] || kind;
+}
 
-export const TASK_STATUS_TH: Record<string, string> = {
-  todo: 'รอเริ่ม', in_progress: 'กำลังทำ', blocked: 'ติดปัญหา',
-  done: 'เสร็จแล้ว', cancelled: 'ยกเลิก',
-};
+export function taskStatusLabel(d: Dictionary, status: string): string {
+  return (d.ui.taskStatus as Record<string, string>)[status] || status;
+}
 
 export function countResults(r: SearchResult): number {
   return r.documents.length + r.contacts.length + r.products.length + r.tasks.length;

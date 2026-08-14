@@ -10,6 +10,7 @@ import { Sidebar } from './sidebar';
 import { CommandPalette, type PageEntry } from './command-palette';
 import { AiPanel } from './ai-panel';
 import type { NavGroup } from './nav-config';
+import type { Dictionary } from '@/i18n';
 
 const ACTION_ICONS: Record<string, any> = {
   CalendarCheck, ClipboardCheck, ScanLine, TrendingUp, Wallet, Layers,
@@ -25,7 +26,7 @@ export interface QuickAction { href: string; label: string; hint: string; icon: 
  * จึงยังคง render ฝั่งเซิร์ฟเวอร์ได้ตามเดิม ไม่ถูกดึงมาเป็น client ทั้งก้อน
  */
 export function AppShell({
-  groups, appName, pages, actions, header, footer, children,
+  groups, appName, pages, actions, header, footer, children, d, locale,
 }: {
   groups: NavGroup[];
   appName: string;
@@ -34,7 +35,10 @@ export function AppShell({
   header: React.ReactNode;
   footer: React.ReactNode;
   children: React.ReactNode;
+  d: Dictionary;
+  locale: string;
 }) {
+  const L = d.ui.shell;
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiSeed, setAiSeed] = useState<string | undefined>();
@@ -71,7 +75,7 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar groups={groups} appName={appName} onOpenSearch={openPalette} />
+      <Sidebar groups={groups} appName={appName} onOpenSearch={openPalette} d={d} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         {header}
@@ -85,7 +89,7 @@ export function AppShell({
               className="group flex shrink-0 items-center gap-2 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-[13px] text-ink-600 transition hover:border-brand-300 hover:text-brand-700"
             >
               <Search className="h-3.5 w-3.5 text-ink-400 group-hover:text-brand-500" strokeWidth={1.8} />
-              ค้นหาทุกอย่าง
+              {L.searchEverything}
               <kbd className="rounded border border-ink-200 bg-ink-50 px-1 font-mono text-xxs text-ink-400">⌘K</kbd>
             </button>
 
@@ -95,7 +99,7 @@ export function AppShell({
               className="flex shrink-0 items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-[13px] font-medium text-brand-700 transition hover:bg-brand-100"
             >
               <Sparkles className="h-3.5 w-3.5" strokeWidth={1.8} />
-              ถาม AI
+              {L.askAi}
               <kbd className="rounded border border-brand-200 bg-white/70 px-1 font-mono text-xxs text-brand-500">⌘J</kbd>
             </button>
 
@@ -130,8 +134,15 @@ export function AppShell({
         onClose={() => setPaletteOpen(false)}
         pages={pages}
         onAskAi={(q) => { setAiSeed(q); setAiOpen(true); }}
+        d={d}
       />
-      <AiPanel open={aiOpen} onClose={() => setAiOpen(false)} initialQuestion={aiSeed} />
+      <AiPanel
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        initialQuestion={aiSeed}
+        d={d}
+        locale={locale}
+      />
     </div>
   );
 }

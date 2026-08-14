@@ -5,6 +5,7 @@ import { getSessionContext } from '@/lib/session';
 import { setLocaleAction } from './session';
 import type { Locale } from '@/i18n/config';
 import { LOCALES } from '@/i18n/config';
+import { t } from '@/i18n/server';
 
 /**
  * แก้โปรไฟล์ของตัวเอง
@@ -19,15 +20,16 @@ export async function updateMyProfile(form: {
   locale?: string;
 }) {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ยังไม่ได้เข้าสู่ระบบ' };
+  if (!ctx) return { ok: false, error: t().auth.signIn };
 
   const name = (form.full_name || '').trim();
-  if (name.length < 2) return { ok: false, error: 'กรุณากรอกชื่อ-นามสกุลอย่างน้อย 2 ตัวอักษร' };
-  if (name.length > 120) return { ok: false, error: 'ชื่อยาวเกินไป' };
+  const L = t().ui.profile;
+  if (name.length < 2) return { ok: false, error: L.nameTooShort };
+  if (name.length > 120) return { ok: false, error: L.nameTooLong };
 
   const phone = (form.phone || '').trim();
   if (phone && !/^[0-9+\-() ]{6,25}$/.test(phone)) {
-    return { ok: false, error: 'รูปแบบเบอร์โทรไม่ถูกต้อง' };
+    return { ok: false, error: L.phoneInvalid };
   }
 
   const supabase = createClient();

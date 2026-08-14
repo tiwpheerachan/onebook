@@ -10,9 +10,10 @@ import { money } from '@/lib/format';
 import { STATUS_STYLE } from '@/lib/constants';
 import {
   EMPTY_RESULT, docHref, countResults,
-  DOC_KIND_TH, CONTACT_KIND_TH, TASK_STATUS_TH,
+  docKindLabel, contactKindLabel, taskStatusLabel,
   type SearchResult,
 } from '@/lib/search-meta';
+import type { Dictionary } from '@/i18n';
 
 export interface PageEntry { href: string; label: string; group: string }
 
@@ -33,13 +34,15 @@ interface Row {
  * ผลลัพธ์ถูกกรองด้วย RLS ที่ฐานข้อมูลอยู่แล้ว จึงเห็นเฉพาะสิ่งที่ตัวเองมีสิทธิ์
  */
 export function CommandPalette({
-  open, onClose, pages, onAskAi,
+  open, onClose, pages, onAskAi, d,
 }: {
   open: boolean;
   onClose: () => void;
   pages: PageEntry[];
   onAskAi?: (q: string) => void;
+  d: Dictionary;
 }) {
+  const L = d.ui.search;
   const router = useRouter();
   const [q, setQ] = useState('');
   const [res, setRes] = useState<SearchResult>(EMPTY_RESULT);
@@ -83,21 +86,21 @@ export function CommandPalette({
       ? pages.filter((p) => p.label.toLowerCase().includes(term) || p.group.toLowerCase().includes(term))
       : pages.slice(0, 8);
     for (const p of matched.slice(0, 6)) {
-      out.push({ key: `p:${p.href}`, href: p.href, icon: ArrowRight, title: p.label, sub: p.group, section: 'หน้าในระบบ' });
+      out.push({ key: `p:${p.href}`, href: p.href, icon: ArrowRight, title: p.label, sub: p.group, section: L.pages });
     }
 
-    for (const d of res.documents) {
+    for (const doc of res.documents) {
       out.push({
-        key: `d:${d.id}`, href: docHref(d.kind, d.id), icon: FileText,
-        title: `${d.doc_number} · ${DOC_KIND_TH[d.kind] || d.kind}`,
-        sub: [d.contact, d.doc_date].filter(Boolean).join(' · '),
+        key: `d:${doc.id}`, href: docHref(doc.kind, doc.id), icon: FileText,
+        title: `${doc.doc_number} · ${docKindLabel(d, doc.kind)}`,
+        sub: [doc.contact, doc.doc_date].filter(Boolean).join(' · '),
         right: (
           <span className="flex items-center gap-2">
-            <span className="tabular-nums text-ink-700">{money(d.grand_total)}</span>
-            <span className={cn('chip', STATUS_STYLE[d.status])}>{d.status}</span>
+            <span className="tabular-nums text-ink-700">{money(doc.grand_total)}</span>
+            <span className={cn('chip', STATUS_STYLE[doc.status])}>{doc.status}</span>
           </span>
         ),
-        section: 'เอกสาร',
+        section: L.documents,
       });
     }
 
@@ -105,8 +108,8 @@ export function CommandPalette({
       out.push({
         key: `c:${c.id}`, href: `/contacts?q=${encodeURIComponent(c.code)}`, icon: Users,
         title: c.name,
-        sub: [c.code, CONTACT_KIND_TH[c.kind] || c.kind, c.tax_id, c.phone].filter(Boolean).join(' · '),
-        section: 'ผู้ติดต่อ',
+        sub: [c.code, contactKindLabel(d, c.kind), c.tax_id, c.phone].filter(Boolean).join(' · '),
+        section: L.contacts,
       });
     }
 
@@ -114,9 +117,9 @@ export function CommandPalette({
       out.push({
         key: `pr:${p.id}`, href: `/products?q=${encodeURIComponent(p.sku)}`, icon: Package,
         title: p.name,
-        sub: `${p.sku} · ${p.unit}${p.is_active ? '' : ' · เลิกใช้แล้ว'}`,
+        sub: `${p.sku} · ${p.unit}${p.is_active ? '' : ` · ${L.inactive}`}`,
         right: <span className="tabular-nums text-ink-600">{money(p.sale_price)}</span>,
-        section: 'สินค้า/บริการ',
+        section: L.products,
       });
     }
 
@@ -124,14 +127,14 @@ export function CommandPalette({
       out.push({
         key: `t:${t.id}`, href: `/tasks?q=${encodeURIComponent(t.title)}`, icon: CheckSquare,
         title: t.title,
-        sub: [TASK_STATUS_TH[t.status] || t.status, t.due_at ? `ครบกำหนด ${t.due_at.slice(0, 10)}` : null]
+        sub: [taskStatusLabel(d, t.status), t.due_at ? `${L.dueOn} ${t.due_at.slice(0, 10)}` : null]
           .filter(Boolean).join(' · '),
-        section: 'งาน',
+        section: L.tasks,
       });
     }
 
     return out;
-  }, [res, pages, q]);
+  }, [res, pages, q, d, L]);
 
   const askRow = onAskAi && q.trim().length >= 2;
   const total = rows.length + (askRow ? 1 : 0);
@@ -165,7 +168,7 @@ export function CommandPalette({
   const found = countResults(res);
 
   return (
-    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="ค้นหาทุกอย่าง">
+    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label={L.title}>
       <div className="absolute inset-0 bg-ink-900/25 backdrop-blur-[2px]" onClick={onClose} />
 
       <div className="absolute left-1/2 top-[12vh] w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2">
@@ -180,7 +183,7 @@ export function CommandPalette({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={onKeyDown}
-              placeholder="ค้นเลขที่เอกสาร ชื่อลูกค้า สินค้า งาน หรือยอดเงิน…"
+              placeholder={L.placeholder}
               className="h-12 flex-1 bg-transparent text-[15px] text-ink-900 outline-none placeholder:text-ink-400"
             />
             <kbd className="rounded border border-ink-200 px-1.5 py-0.5 font-mono text-xxs text-ink-400">esc</kbd>
@@ -236,29 +239,29 @@ export function CommandPalette({
               >
                 <Sparkles className="h-4 w-4 shrink-0 text-brand-500" strokeWidth={1.8} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm text-ink-900">ถาม AI ว่า “{q.trim()}”</span>
-                  <span className="block text-xs text-ink-500">ให้ AI ช่วยหาและสรุปให้ — อ่านอย่างเดียว ไม่แก้ไขข้อมูล</span>
+                  <span className="block truncate text-sm text-ink-900">{L.askAi} “{q.trim()}”</span>
+                  <span className="block text-xs text-ink-500">{L.askAiHint}</span>
                 </span>
               </button>
             )}
 
             {q.trim().length >= 2 && !loading && found === 0 && rows.length === 0 && (
               <p className="px-4 py-8 text-center text-sm text-ink-400">
-                ไม่พบอะไรที่ตรงกับ “{q.trim()}”
+                {L.noResults} “{q.trim()}”
               </p>
             )}
             {q.trim().length < 2 && (
               <p className="px-4 pb-3 pt-1 text-xs text-ink-400">
-                พิมพ์อย่างน้อย 2 ตัวอักษร — ค้นได้ทั้งเลขที่เอกสาร ชื่อลูกค้า เลขผู้เสียภาษี เบอร์โทร รหัสสินค้า หรือยอดเงิน
+                {L.hint}
               </p>
             )}
           </div>
 
           <div className="flex items-center gap-4 border-t border-ink-100 bg-ink-50/60 px-4 py-2 text-xxs text-ink-400">
-            <span><kbd className="font-mono">↑↓</kbd> เลือก</span>
-            <span><kbd className="font-mono">↵</kbd> เปิด</span>
-            <span><kbd className="font-mono">esc</kbd> ปิด</span>
-            <span className="ml-auto">เห็นเฉพาะข้อมูลที่คุณมีสิทธิ์เข้าถึง</span>
+            <span><kbd className="font-mono">↑↓</kbd> {L.kbSelect}</span>
+            <span><kbd className="font-mono">↵</kbd> {L.kbOpen}</span>
+            <span><kbd className="font-mono">esc</kbd> {L.kbClose}</span>
+            <span className="ml-auto">{L.scopeNote}</span>
           </div>
         </div>
       </div>

@@ -21,12 +21,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // แถบนวัตกรรม : ทางลัดไปงานที่ทำบ่อยและช่วยให้ทำงานเร็วขึ้น
   const actions: QuickAction[] = ([
-
-    { href: '/tasks', label: 'ตารางงาน', hint: 'งานที่ต้องทำและงานที่ตกหล่น', icon: 'CalendarCheck', resource: 'tasks' },
-    { href: '/accounting/close-check', label: 'ตรวจก่อนปิดงบ', hint: 'ไล่เช็ก 15 จุดก่อนปิดงวด', icon: 'ClipboardCheck', resource: 'report' },
-    { href: '/documents/ai-import', label: 'อ่านเอกสารด้วย AI', hint: 'แปลงใบกำกับ/บิลเป็นรายการอัตโนมัติ', icon: 'ScanLine', resource: 'documents.ai_import' },
-    { href: '/sales', label: 'ภาพรวมรายรับ', hint: 'ยอดขายและลูกหนี้ล่าสุด', icon: 'TrendingUp', resource: 'report' },
-    { href: '/finance', label: 'ภาพรวมการเงิน', hint: 'ยอดคงเหลือทุกช่องทาง', icon: 'Wallet', resource: 'finance.channels' },
+    { href: '/tasks', label: d.ui.shell.qaTasks, hint: d.ui.shell.qaTasksHint, icon: 'CalendarCheck', resource: 'tasks' },
+    { href: '/accounting/close-check', label: d.ui.shell.qaCloseCheck, hint: d.ui.shell.qaCloseCheckHint, icon: 'ClipboardCheck', resource: 'report' },
+    { href: '/documents/ai-import', label: d.ui.shell.qaAiImport, hint: d.ui.shell.qaAiImportHint, icon: 'ScanLine', resource: 'documents.ai_import' },
+    { href: '/sales', label: d.ui.shell.qaSales, hint: d.ui.shell.qaSalesHint, icon: 'TrendingUp', resource: 'report' },
+    { href: '/finance', label: d.ui.shell.qaFinance, hint: d.ui.shell.qaFinanceHint, icon: 'Wallet', resource: 'finance.channels' },
   ] as (QuickAction & { resource: string })[])
     .filter((a) => can(ctx, a.resource, 'view'))
     .map(({ resource, ...a }) => a);
@@ -46,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const footer = (
     <footer className="no-print border-t border-ink-200 bg-white px-6 py-3 text-center text-xxs text-ink-400">
-      {d.app.name} · {d.app.tagline} · ระบบภายในองค์กร ห้ามเผยแพร่ข้อมูลออกภายนอก
+      {d.app.name} · {d.app.tagline} · {d.app.internalOnly}
     </footer>
   );
 
@@ -58,6 +57,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       actions={actions}
       header={header}
       footer={footer}
+      d={d}
+      locale={locale}
     >
       {children}
     </AppShell>

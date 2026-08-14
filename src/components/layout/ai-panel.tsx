@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Sparkles, X, SendHorizonal, ShieldCheck, FileText, Users, Package, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { ShdSpinner } from '@/components/ui/shd-loader';
+import type { Dictionary } from '@/i18n';
 
 interface Ref { id: string; type: string; label: string; sub?: string; href: string }
 interface Turn { q: string; answer: string; refs: Ref[]; followups: string[]; note?: string }
@@ -12,23 +13,21 @@ const REF_ICON: Record<string, any> = {
   document: FileText, contact: Users, product: Package, task: CheckSquare,
 };
 
-const SUGGESTIONS = [
-  'ใบแจ้งหนี้ที่ยังไม่ได้รับเงินมีใบไหนบ้าง',
-  'ลูกค้ารายไหนค้างชำระนานที่สุด',
-  'งานที่เลยกำหนดแล้วมีอะไรบ้าง',
-];
-
 /**
  * ผู้ช่วย AI แบบอ่านอย่างเดียว
  * ค้นและสรุปให้ได้ แต่แก้เอกสารไม่ได้ — ฝั่ง API ไม่มีทางเขียนข้อมูลเลย
  */
 export function AiPanel({
-  open, onClose, initialQuestion,
+  open, onClose, initialQuestion, d, locale,
 }: {
   open: boolean;
   onClose: () => void;
   initialQuestion?: string;
+  d: Dictionary;
+  locale: string;
 }) {
+  const L = d.ui.assistant;
+  const suggestions = [L.s1, L.s2, L.s3];
   const [q, setQ] = useState('');
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
@@ -45,16 +44,16 @@ export function AiPanel({
       const r = await fetch('/api/ai/ask', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ question: text }),
+        body: JSON.stringify({ question: text, locale }),
       });
       const j = await r.json();
       setTurns((t) => [...t, {
         q: text,
-        answer: j.answer || j.error || 'ตอบไม่สำเร็จ',
+        answer: j.answer || j.error || L.noAnswer,
         refs: j.refs || [], followups: j.followups || [], note: j.note,
       }]);
     } catch {
-      setTurns((t) => [...t, { q: text, answer: 'เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง', refs: [], followups: [] }]);
+      setTurns((t) => [...t, { q: text, answer: L.failed, refs: [], followups: [] }]);
     } finally {
       setBusy(false);
       setTimeout(() => inputRef.current?.focus(), 20);
@@ -85,7 +84,7 @@ export function AiPanel({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[65]" role="dialog" aria-modal="true" aria-label="ผู้ช่วย AI">
+    <div className="fixed inset-0 z-[65]" role="dialog" aria-modal="true" aria-label={L.title}>
       <div className="absolute inset-0 bg-ink-900/20" onClick={onClose} />
 
       <div className="absolute inset-y-0 right-0 flex w-[min(30rem,100vw)] flex-col border-l border-ink-200 bg-white shadow-2xl">
@@ -95,10 +94,10 @@ export function AiPanel({
             <Sparkles className="h-4 w-4 text-brand-600" strokeWidth={1.8} />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-ink-900">ถาม AI</p>
+            <p className="text-sm font-semibold text-ink-900">{L.title}</p>
             <p className="flex items-center gap-1 text-xxs text-ink-500">
               <ShieldCheck className="h-3 w-3" strokeWidth={2} />
-              ค้นและสรุปให้เท่านั้น แก้ไขเอกสารไม่ได้
+              {L.subtitle}
             </p>
           </div>
           <button onClick={onClose} className="rounded-md p-1.5 text-ink-400 hover:bg-ink-100 hover:text-ink-700">
@@ -111,10 +110,10 @@ export function AiPanel({
           {turns.length === 0 && !busy && (
             <div className="space-y-3">
               <p className="text-sm text-ink-600">
-                ถามเป็นภาษาพูดได้เลย AI จะไปค้นเฉพาะข้อมูลที่คุณมีสิทธิ์เห็น แล้วสรุปพร้อมลิงก์ให้กดต่อ
+                {L.intro}
               </p>
               <div className="space-y-1.5">
-                {SUGGESTIONS.map((s) => (
+                {suggestions.map((s) => (
                   <button
                     key={s}
                     onClick={() => ask(s)}
@@ -140,7 +139,7 @@ export function AiPanel({
 
               {t.refs.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xxs font-semibold uppercase tracking-wide text-ink-400">อ้างอิง</p>
+                  <p className="text-xxs font-semibold uppercase tracking-wide text-ink-400">{L.refs}</p>
                   {t.refs.map((r) => {
                     const Icon = REF_ICON[r.type] || FileText;
                     return (
@@ -177,7 +176,7 @@ export function AiPanel({
 
           {busy && (
             <div className="flex items-center gap-2 text-sm text-ink-500">
-              <ShdSpinner size={16} /> กำลังค้นและเรียบเรียง…
+              <ShdSpinner size={16} /> {L.thinking}
             </div>
           )}
         </div>
@@ -191,7 +190,7 @@ export function AiPanel({
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="ถามอะไรก็ได้เกี่ยวกับข้อมูลในระบบ…"
+            placeholder={L.placeholder}
             className="input flex-1"
           />
           <button

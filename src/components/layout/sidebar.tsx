@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { NavGroup } from './nav-config';
+import type { Dictionary } from '@/i18n';
 
 const ICONS: Record<string, any> = {
   LayoutDashboard, TrendingUp, ShoppingCart, Users, Wallet, BookOpen, BarChart3, Receipt, Settings,
@@ -22,12 +23,14 @@ const MAX_W = 380;
 const RAIL_W = 60;
 
 export function Sidebar({
-  groups, appName, onOpenSearch,
+  groups, appName, onOpenSearch, d,
 }: {
   groups: NavGroup[];
   appName: string;
   onOpenSearch?: () => void;
+  d: Dictionary;
 }) {
+  const L = d.ui.shell;
   const pathname = usePathname();
   const activeGroup = groups.find((g) => g.items.some((i) => pathname.startsWith(i.href)))?.id;
   const [open, setOpen] = useState<string[]>([activeGroup || 'overview']);
@@ -168,7 +171,7 @@ export function Sidebar({
             <button
               type="button"
               onClick={() => setCollapse(true)}
-              title="พับแถบเมนู (⌘B)"
+              title={L.collapseNav}
               className="rounded-md p-1 text-ink-400 hover:bg-ink-100 hover:text-ink-700"
             >
               <PanelLeftClose className="h-4 w-4" strokeWidth={1.8} />
@@ -181,7 +184,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={() => setCollapse(false)}
-          title="กางแถบเมนู (⌘B)"
+          title={L.expandNav}
           className="mx-auto mt-2 flex h-8 w-8 items-center justify-center rounded-lg text-ink-400 hover:bg-ink-100 hover:text-ink-700"
         >
           <PanelLeftOpen className="h-4 w-4" strokeWidth={1.8} />
@@ -194,7 +197,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={onOpenSearch}
-            title="ค้นหาทุกอย่าง (⌘K)"
+            title={`${L.searchEverything} (⌘K)`}
             className={cn(
               'flex w-full items-center rounded-lg border border-ink-200 bg-ink-50/60 text-ink-500 transition hover:border-brand-300 hover:bg-white hover:text-ink-700',
               collapsed ? 'justify-center p-2' : 'gap-2 px-2.5 py-1.5'
@@ -203,7 +206,7 @@ export function Sidebar({
             <Search className="h-4 w-4 shrink-0" strokeWidth={1.8} />
             {!collapsed && (
               <>
-                <span className="flex-1 truncate text-left text-[13px]">ค้นหาทุกอย่าง</span>
+                <span className="flex-1 truncate text-left text-[13px]">{L.searchEverything}</span>
                 <kbd className="rounded border border-ink-200 bg-white px-1 py-0.5 font-mono text-xxs text-ink-400">⌘K</kbd>
               </>
             )}
@@ -329,7 +332,7 @@ export function Sidebar({
         <div
           onMouseDown={startDrag}
           onDoubleClick={resetWidth}
-          title="ลากเพื่อปรับความกว้าง · ดับเบิลคลิกเพื่อคืนค่าเดิม"
+          title={L.resizeHint}
           className={cn(
             'absolute inset-y-0 -right-1 z-20 w-2 cursor-col-resize',
             'after:absolute after:inset-y-0 after:left-1/2 after:w-px after:-translate-x-1/2 after:bg-transparent',

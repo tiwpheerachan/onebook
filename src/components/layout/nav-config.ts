@@ -16,7 +16,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
     {
       id: 'sales', label: d.nav.sales, icon: 'TrendingUp',
       items: [
-        { href: '/sales', label: 'ภาพรวมรายรับ', resource: 'report' },
+        { href: '/sales', label: d.ui.overview.sales, resource: 'report' },
         { href: '/sales/quotations', label: d.nav.quotations, resource: 'documents' },
         { href: '/sales/billing-notes', label: d.nav.billingNotes, resource: 'documents' },
         { href: '/sales/invoices', label: d.nav.invoices, resource: 'documents' },
@@ -30,7 +30,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
     {
       id: 'purchase', label: d.nav.purchase, icon: 'ShoppingCart',
       items: [
-        { href: '/purchase', label: 'ภาพรวมรายจ่าย', resource: 'report' },
+        { href: '/purchase', label: d.ui.overview.purchase, resource: 'report' },
         { href: '/purchase/purchase-requests', label: d.nav.purchaseRequests, resource: 'documents' },
         { href: '/purchase/purchase-orders', label: d.nav.purchaseOrders, resource: 'documents' },
         { href: '/purchase/goods-receipts', label: d.nav.goodsReceipts, resource: 'documents' },
@@ -52,7 +52,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
     {
       id: 'finance', label: d.nav.finance, icon: 'Wallet',
       items: [
-        { href: '/finance', label: 'ภาพรวมการเงิน', resource: 'finance.channels' },
+        { href: '/finance', label: d.ui.overview.finance, resource: 'finance.channels' },
         { href: '/finance/channels', label: d.nav.channels, resource: 'finance.channels' },
         { href: '/finance/payments', label: d.nav.payments, resource: 'finance.payments' },
         { href: '/finance/reconcile', label: d.nav.reconcile, resource: 'finance.reconcile' },
@@ -90,8 +90,8 @@ export function buildNav(d: Dictionary): NavGroup[] {
     {
       id: 'settings', label: d.nav.settings, icon: 'Settings',
       items: [
-        { href: '/settings', label: 'ภาพรวมการตั้งค่า', resource: 'documents' },
-        { href: '/settings/profile', label: 'โปรไฟล์ของฉัน', resource: 'documents' },
+        { href: '/settings', label: d.ui.overview.settings, resource: 'documents' },
+        { href: '/settings/profile', label: d.ui.overview.profile, resource: 'documents' },
         { href: '/settings/companies', label: d.nav.companies, resource: 'settings.companies' },
         { href: '/settings/users', label: d.nav.users, resource: 'settings.users' },
         { href: '/settings/roles', label: d.nav.roles, resource: 'settings.roles' },
