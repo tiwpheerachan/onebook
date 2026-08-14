@@ -1,0 +1,116 @@
+'use client';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { Plus, Pencil } from 'lucide-react';
+import { ShdSpinner } from '@/components/ui/shd-loader';
+import { SlidePanel } from './slide-panel';
+import { saveProduct } from '@/actions/master';
+
+const blank = {
+  id: null as string | null, sku: '', name: '', name_en: '', name_zh: '', kind: 'good',
+  unit: 'ชิ้น', category: '', sale_price: 0, purchase_price: 0,
+  vat_treatment: 'exclusive', track_inventory: true,
+  income_account_id: '', expense_account_id: '', is_active: true,
+};
+
+export function ProductManager({
+  canCreate, canEdit, editRow, accounts, labels,
+}: { canCreate: boolean; canEdit: boolean; editRow?: any; accounts: { id: string; label: string }[]; labels: Record<string, string> }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<any>(blank);
+  const [err, setErr] = useState('');
+  const [pending, start] = useTransition();
+  const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+
+  function submit() {
+    setErr('');
+    if (!form.sku || !form.name) { setErr(labels.required); return; }
+    start(async () => {
+      const res = await saveProduct(form);
+      if (!res.ok) { setErr(res.error || ''); return; }
+      setOpen(false);
+      router.refresh();
+    });
+  }
+
+  return (
+    <>
+      {editRow ? (
+        canEdit && (
+          <button onClick={() => { setForm({ ...blank, ...editRow }); setOpen(true); }}
+                  className="rounded p-1 text-ink-400 hover:bg-brand-50 hover:text-brand-600">
+            <Pencil className="h-4 w-4" strokeWidth={1.8} />
+          </button>
+        )
+      ) : (
+        canCreate && (
+          <button onClick={() => { setForm({ ...blank }); setOpen(true); }} className="btn-primary">
+            <Plus className="h-4 w-4" /> {labels.create}
+          </button>
+        )
+      )}
+
+      <SlidePanel
+        open={open} onClose={() => setOpen(false)} title={form.id ? labels.edit : labels.create}
+        footer={
+          <div className="flex justify-end gap-2">
+            <button className="btn-secondary" onClick={() => setOpen(false)}>{labels.cancel}</button>
+            <button className="btn-primary" disabled={pending} onClick={submit}>
+              {pending && <ShdSpinner size={16} />} {labels.save}
+            </button>
+          </div>
+        }
+      >
+        {err && <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700 ring-1 ring-inset ring-rose-200">{err}</p>}
+        <div className="grid grid-cols-2 gap-4">
+          <F label="รหัสสินค้า *"><input className="input" value={form.sku} onChange={(e) => set('sku', e.target.value)} /></F>
+          <F label="ประเภท">
+            <select className="input" value={form.kind} onChange={(e) => set('kind', e.target.value)}>
+              <option value="good">สินค้า</option>
+              <option value="service">บริการ</option>
+              <option value="asset">สินทรัพย์</option>
+            </select>
+          </F>
+          <F label="ชื่อ (ไทย) *" span><input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} /></F>
+          <F label="ชื่อ (อังกฤษ)"><input className="input" value={form.name_en || ''} onChange={(e) => set('name_en', e.target.value)} /></F>
+          <F label="ชื่อ (จีน)"><input className="input" value={form.name_zh || ''} onChange={(e) => set('name_zh', e.target.value)} /></F>
+          <F label="หน่วย"><input className="input" value={form.unit} onChange={(e) => set('unit', e.target.value)} /></F>
+          <F label="หมวดหมู่"><input className="input" value={form.category || ''} onChange={(e) => set('category', e.target.value)} /></F>
+          <F label="ราคาขาย"><input type="number" step="0.01" className="input num" value={form.sale_price} onChange={(e) => set('sale_price', e.target.value)} /></F>
+          <F label="ราคาซื้อ"><input type="number" step="0.01" className="input num" value={form.purchase_price} onChange={(e) => set('purchase_price', e.target.value)} /></F>
+          <F label="ภาษีมูลค่าเพิ่ม">
+            <select className="input" value={form.vat_treatment} onChange={(e) => set('vat_treatment', e.target.value)}>
+              <option value="exclusive">แยกนอก 7%</option>
+              <option value="inclusive">รวมใน 7%</option>
+              <option value="zero_rated">อัตรา 0%</option>
+              <option value="exempt">ยกเว้น</option>
+              <option value="none">ไม่มีภาษี</option>
+            </select>
+          </F>
+          <F label="ตัดสต๊อก">
+            <select className="input" value={form.track_inventory ? '1' : '0'} onChange={(e) => set('track_inventory', e.target.value === '1')}>
+              <option value="1">ใช่</option><option value="0">ไม่</option>
+            </select>
+          </F>
+          <F label="บัญชีรายได้" span>
+            <select className="input" value={form.income_account_id || ''} onChange={(e) => set('income_account_id', e.target.value)}>
+              <option value="">— อัตโนมัติ —</option>
+              {accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
+            </select>
+          </F>
+          <F label="บัญชีต้นทุน/ค่าใช้จ่าย" span>
+            <select className="input" value={form.expense_account_id || ''} onChange={(e) => set('expense_account_id', e.target.value)}>
+              <option value="">— อัตโนมัติ —</option>
+              {accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
+            </select>
+          </F>
+        </div>
+      </SlidePanel>
+    </>
+  );
+}
+
+function F({ label, children, span }: { label: string; children: React.ReactNode; span?: boolean }) {
+  return <div className={span ? 'col-span-2' : ''}><label className="label">{label}</label>{children}</div>;
+}

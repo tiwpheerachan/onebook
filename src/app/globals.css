@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Sarabun', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+
+html, body {
+  @apply bg-ink-50 text-ink-800 antialiased;
+  font-family: var(--font-sans);
+}
+
+/* ปิดโหมดมืดโดยเจตนา : ระบบใช้โหมดสว่างอย่างเดียวตามข้อกำหนด */
+@layer base {
+  * { @apply border-ink-200; }
+  h1 { @apply text-xl font-semibold text-ink-900; }
+  h2 { @apply text-base font-semibold text-ink-900; }
+  table { @apply w-full text-sm; }
+  th { @apply text-left font-medium text-ink-500; }
+  input, select, textarea { color-scheme: light; }
+}
+
+@layer components {
+  .card { @apply rounded-xl border border-ink-200 bg-white shadow-card; }
+  .card-pad { @apply p-5; }
+  .label { @apply block text-xs font-medium text-ink-600 mb-1.5; }
+  .input {
+    @apply w-full rounded-lg border border-ink-300 bg-white px-3 py-2 text-sm text-ink-900
+           placeholder:text-ink-400 outline-none transition
+           focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:bg-ink-50 disabled:text-ink-400;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium
+           transition focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-300; }
+  .btn-secondary { @apply btn border border-ink-300 bg-white text-ink-700 hover:bg-ink-50 focus:ring-ink-200; }
+  .btn-ghost { @apply btn text-ink-600 hover:bg-ink-100; }
+  .btn-danger { @apply btn bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-300; }
+  .chip { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xxs font-medium ring-1 ring-inset; }
+  .th-cell { @apply px-3 py-2.5 text-xs font-medium text-ink-500 whitespace-nowrap; }
+  .td-cell { @apply px-3 py-2.5 text-sm text-ink-800 whitespace-nowrap; }
+  .num { @apply text-right tabular-nums; }
+  .section-title { @apply text-xs font-semibold uppercase tracking-wider text-ink-400; }
+}
+
+/* ── แอนิเมชันโลโก้ SHD ตอนรอโหลด (ดู components/ui/shd-loader.tsx) ───────── */
+@keyframes shd-ring-spin { to { transform: rotate(270deg); } }
+@keyframes shd-wave { to { transform: translateX(50px); } }
+@keyframes shd-tide {
+  0%, 100% { transform: translateY(66px); }
+  50%      { transform: translateY(20px); }
+}
+@keyframes shd-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.035); }
+}
+@keyframes shd-sheen { to { transform: skewX(-16deg) translateX(560px); } }
+@keyframes shd-bar {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(320%); }
+}
+@keyframes shd-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+
+.shd-mark { overflow: visible; }
+.shd-ring-spin  { animation: shd-ring-spin 1.4s cubic-bezier(.6,.05,.35,.95) infinite; transform-origin: 50px 50px; }
+.shd-ring-progress { transition: stroke-dasharray .4s ease-out; }
+.shd-wave-a { animation: shd-wave 2.4s linear infinite; }
+.shd-wave-b { animation: shd-wave 3.7s linear infinite reverse; }
+.shd-tide   { animation: shd-tide 3.2s cubic-bezier(.45,0,.55,1) infinite; }
+.shd-level  { transition: transform .5s cubic-bezier(.3,.7,.3,1); }
+.shd-breathe { animation: shd-breathe 3.2s ease-in-out infinite; transform-origin: 50px 50px; }
+.shd-sheen  { animation: shd-sheen 2.6s cubic-bezier(.5,0,.5,1) infinite; }
+.shd-bar    { animation: shd-bar 1.35s cubic-bezier(.65,0,.35,1) infinite; }
+.shd-overlay { animation: shd-overlay-in .18s ease-out; }
+
+/* เคารพการตั้งค่า "ลดการเคลื่อนไหว" ของเครื่องผู้ใช้ : เหลือแค่จางเข้า-ออก */
+@media (prefers-reduced-motion: reduce) {
+  .shd-ring-spin, .shd-wave-a, .shd-wave-b, .shd-tide,
+  .shd-breathe, .shd-sheen, .shd-bar {
+    animation: none !important;
+  }
+  .shd-tide { transform: translateY(38px); }
+  .shd-bar  { width: 100%; }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { @apply rounded-full bg-ink-300; }
+::-webkit-scrollbar-track { @apply bg-transparent; }
+
+/* ── กระดาษ A4 สำหรับเอกสารที่ออกให้ลูกค้า (ดู components/documents/document-print.tsx) ── */
+.doc-sheet {
+  display: flex;
+  flex-direction: column;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 10mm 12mm;
+  background: #fff;
+  color: #1a1a1a;
+  /* เอกสารราชการอ่านง่ายกว่าเมื่อบรรทัดไม่ห่างมาก */
+  line-height: 1.35;
+}
+@media screen {
+  .doc-sheet {
+    margin: 0 auto 8mm;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.12), 0 8px 24px rgb(0 0 0 / 0.08);
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { @apply bg-white; }
+
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff !important; }
+
+  /* พื้นหลังสีเทาของหัวตารางต้องพิมพ์ออกมาด้วย ไม่งั้นเส้นแบ่งอ่านยาก */
+  .doc-sheet, .doc-sheet * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .doc-sheet {
+    margin: 0;
+    box-shadow: none;
+    break-after: page;
+  }
+  .doc-sheet:last-of-type { break-after: auto; }
+  /* ห้ามตัดกลางแถวตารางหรือกลางช่องลงนาม */
+  .doc-sheet tr, .doc-sheet section { break-inside: avoid; }
+}
