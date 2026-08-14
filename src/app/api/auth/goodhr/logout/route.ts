@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { isGoodhrConfigured, clientId } from '@/lib/goodhr';
+import { isGoodhrConfigured, clientId, discover } from '@/lib/goodhr';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,9 +12,11 @@ export async function GET(req: Request) {
   const origin = (process.env.APP_ORIGIN || new URL(req.url).origin).replace(/\/+$/, '');
   if (!isGoodhrConfigured()) return NextResponse.redirect(`${origin}/login`);
 
-  const issuer = (process.env.GOODHR_ISSUER || '').replace(/\/+$/, '');
-  const url = new URL(`${issuer}/api/oauth/logout`);
+  // ใช้ end_session_endpoint จาก discovery เผื่อ GoodHR ย้าย path ในอนาคต
+  const { end_session_endpoint } = await discover();
+  const url = new URL(end_session_endpoint!);
   url.searchParams.set('client_id', clientId());
+  // ต้องตรงกับ post_logout_redirect_uris ที่ลงทะเบียนไว้เป๊ะ (ไม่มี / ปิดท้าย)
   url.searchParams.set('post_logout_redirect_uri', origin);
   return NextResponse.redirect(url.toString());
 }

@@ -71,6 +71,7 @@ interface Discovery {
   userinfo_endpoint: string;
   jwks_uri: string;
   issuer: string;
+  end_session_endpoint?: string;
 }
 
 let discoveryCache: { at: number; data: Discovery } | null = null;
@@ -83,6 +84,7 @@ export async function discover(): Promise<Discovery> {
     token_endpoint: `${issuer()}/api/oauth/token`,
     userinfo_endpoint: `${issuer()}/api/oauth/userinfo`,
     jwks_uri: `${issuer()}/.well-known/jwks.json`,
+    end_session_endpoint: `${issuer()}/api/oauth/logout`,
   };
 
   if (discoveryCache && Date.now() - discoveryCache.at < 3_600_000) return discoveryCache.data;
