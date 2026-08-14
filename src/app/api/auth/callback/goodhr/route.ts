@@ -76,6 +76,14 @@ export async function GET(req: Request) {
 
     // ── หา auth user เดิม หรือสร้างใหม่ถ้ายังไม่มี ──
     let userId: string | undefined = profile?.id;
+    // อีเมลที่ใช้เปิดเซสชัน ต้องเป็นอีเมลของ auth user ตัวจริง ไม่ใช่อีเมลจาก GoodHR
+    // เพราะพนักงานอาจถูกจับคู่ด้วยรหัสพนักงาน แล้วมีอีเมลคนละอันกับบัญชีเดิม
+    // ถ้าใช้อีเมลจาก GoodHR ตรง ๆ จะไปเปิดเซสชันให้บัญชีอื่นที่ไม่มีสิทธิ์อะไรเลย
+    let sessionEmail = c.email;
+    if (userId) {
+      const { data: existing } = await admin.auth.admin.getUserById(userId);
+      if (existing?.user?.email) sessionEmail = existing.user.email;
+    }
     if (!userId) {
       const { data: created, error: cErr } = await admin.auth.admin.createUser({
         email: c.email,
@@ -98,7 +106,7 @@ export async function GET(req: Request) {
     // ── เปิดเซสชัน Supabase ให้ผู้ใช้ (ไม่ต้องใช้รหัสผ่าน) ──
     const { data: link, error: lErr } = await admin.auth.admin.generateLink({
       type: 'magiclink',
-      email: c.email,
+      email: sessionEmail,
     });
     const hashed = (link as any)?.properties?.hashed_token;
     if (lErr || !hashed) return back(req, 'session_failed');
