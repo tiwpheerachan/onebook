@@ -109,3 +109,57 @@ export async function saveAccount(form: any): Promise<Res> {
   revalidatePath('/accounting/coa');
   return { ok: true, id: q.data.id };
 }
+
+/* ─────────────────────── กลุ่มผู้ติดต่อกำหนดเอง ─────────────────────── */
+
+export async function saveContactGroup(form: { id?: string; name: string; color: string }): Promise<Res> {
+  const ctx = await getSessionContext();
+  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!can(ctx, 'contacts', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์จัดการกลุ่มผู้ติดต่อ' };
+  const name = String(form.name || '').trim();
+  if (!name) return { ok: false, error: 'กรุณาตั้งชื่อกลุ่ม' };
+
+  const supabase = createClient();
+  const row = { company_id: ctx.company.id, name, color: form.color || 'brand', created_by: ctx.userId };
+  const q = form.id
+    ? supabase.from('contact_groups').update({ name, color: row.color }).eq('id', form.id).select('id').maybeSingle()
+    : supabase.from('contact_groups').insert(row).select('id').maybeSingle();
+
+  const { data, error } = await q;
+  if (error) {
+    if (error.code === '23505') return { ok: false, error: 'มีกลุ่มชื่อนี้อยู่แล้ว' };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath('/contacts');
+  return { ok: true, id: data?.id };
+}
+
+export async function deleteContactGroup(id: string): Promise<Res> {
+  const ctx = await getSessionContext();
+  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!can(ctx, 'contacts', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์จัดการกลุ่มผู้ติดต่อ' };
+
+  const supabase = createClient();
+  const { error } = await supabase.from('contact_groups').delete().eq('id', id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath('/contacts');
+  return { ok: true };
+}
+
+/** ใส่/เอาผู้ติดต่อออกจากกลุ่มทีละหลายราย */
+export async function assignContactGroup(
+  groupId: string, contactIds: string[], attach: boolean
+): Promise<Res & { count?: number }> {
+  const ctx = await getSessionContext();
+  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!can(ctx, 'contacts', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์จัดกลุ่มผู้ติดต่อ' };
+  if (!contactIds.length) return { ok: false, error: 'ยังไม่ได้เลือกผู้ติดต่อ' };
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('set_contact_group', {
+    p_group: groupId, p_contacts: contactIds, p_attach: attach,
+  });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath('/contacts');
+  return { ok: true, count: Number(data) };
+}

@@ -16,6 +16,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
     {
       id: 'sales', label: d.nav.sales, icon: 'TrendingUp',
       items: [
+        { href: '/sales', label: 'ภาพรวมรายรับ', resource: 'report' },
         { href: '/sales/quotations', label: d.nav.quotations, resource: 'documents' },
         { href: '/sales/billing-notes', label: d.nav.billingNotes, resource: 'documents' },
         { href: '/sales/invoices', label: d.nav.invoices, resource: 'documents' },

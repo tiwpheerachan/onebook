@@ -1,0 +1,66 @@
+# =====================================================================
+# Render Blueprint สำหรับ ONEBOOK
+#
+# วิธีใช้ : Render Dashboard → New → Blueprint → เลือก repo นี้
+#          Render จะอ่านไฟล์นี้แล้วตั้งค่าให้เองทั้งหมด
+#          เหลือแค่กรอกค่าที่ทำเครื่องหมาย sync: false (ค่าลับ)
+# =====================================================================
+services:
+  - type: web
+    name: onebook
+    runtime: node
+    plan: starter          # free ก็ได้ แต่จะหลับเมื่อไม่มีคนใช้ ทำให้เปิดครั้งแรกช้า
+    region: singapore      # ใกล้ไทยและใกล้ Supabase (Tokyo) ที่สุดที่ Render มี
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+    envVars:
+      # ---------- Node ----------
+      - key: NODE_VERSION
+        value: "20.18.0"
+      - key: HOSTNAME          # ให้ server ฟังทุก interface ไม่งั้น Render เข้าไม่ถึง
+        value: "0.0.0.0"
+
+      # ---------- Supabase (ต้องกรอกเอง) ----------
+      # หมายเหตุ : ตัวแปรที่ขึ้นต้น NEXT_PUBLIC_ ถูกฝังตอน build
+      #           ถ้าแก้ค่าเหล่านี้ ต้อง Deploy ใหม่ (ไม่ใช่แค่ Restart)
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      # ---------- ความปลอดภัย ----------
+      # APP_ORIGIN ต้องตรงกับ URL จริงของบริการนี้ ไม่งั้นการบันทึกทุกอย่างจะถูกปฏิเสธ 403
+      - key: APP_ORIGIN
+        fromService:
+          type: web
+          name: onebook
+          envVarKey: RENDER_EXTERNAL_URL
+
+      # เว้นว่าง = เข้าได้ทุก IP / ใส่ IP ออฟฟิศเมื่อพร้อมจำกัดการเข้าถึง
+      - key: ALLOWED_IPS
+        value: ""
+      - key: ENFORCE_IP_ALLOWLIST
+        value: "false"
+      - key: SESSION_IDLE_TIMEOUT_MINUTES
+        value: "30"
+
+      # ---------- ข้อมูลองค์กร ----------
+      - key: NEXT_PUBLIC_APP_NAME
+        value: "ONEBOOK"
+      - key: NEXT_PUBLIC_DEFAULT_LOCALE
+        value: "th"
+
+      # ---------- ไม่บังคับ : เปิดเมื่อพร้อมใช้ ----------
+      # ผู้ช่วย AI สรุปงาน — ไม่ตั้งค่าระบบก็สรุปด้วยกฎได้ตามปกติ
+      - key: AI_API_URL
+        sync: false
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: "gpt-4o-mini"
