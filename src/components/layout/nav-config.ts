@@ -11,6 +11,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/dashboard', label: d.nav.dashboard, resource: 'documents' },
         { href: '/group', label: d.nav.group, resource: 'report' },
         { href: '/tasks', label: d.nav.tasks, resource: 'tasks' },
+        { href: '/documents/library', label: d.ui.library.title, resource: 'documents' },
       ],
     },
     {
