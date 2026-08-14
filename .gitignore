@@ -10,3 +10,6 @@ build/
 next-env.d.ts
 .vercel
 tsconfig.tsbuildinfo
+
+# repo นี้เป็น public — ไฟล์ที่มีข้อมูลรับรองห้ามขึ้น git
+goodhr_seed_onebook.sql

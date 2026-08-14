@@ -6,80 +6,71 @@
 npm run check:goodhr
 ```
 
-ตอนนี้ผ่านครบทุกข้อแล้ว ✓
+หรือเปิด `https://<โดเมน>/api/health` เพื่อดูสถานะของเครื่องที่ deploy แล้ว
+(`sso.ready = true` แปลว่าปุ่ม GoodHR จะโผล่)
 
 ---
 
-## ค่าใน `.env.local`
+## ค่าที่ต้องกรอกใน Render → Environment
 
-| ตัวแปร | ค่า |
-|---|---|
-| `GOODHR_ISSUER` | `http://localhost:3000` (ตอนพัฒนา) → โดเมนจริงตอนขึ้น production |
-| `OAUTH_CLIENT_ID` | `ghr_onebookbb2ced` |
-| `OAUTH_CLIENT_SECRET` | `ghs_…` (ค่าลับ อยู่ในไฟล์ที่ gitignore แล้ว) |
-| `OAUTH_REDIRECT_URI` | `http://localhost:3100/api/auth/callback/goodhr` |
-| `APP_ORIGIN` | `http://localhost:3100` |
-| `GOODHR_TRUST_APP_ROLE` | `false` — ผู้ดูแล ONEBOOK อนุญาตรายคนเอง |
-| `ALLOW_PASSWORD_LOGIN` | `true` ตอน dev / `false` ตอนขึ้นจริง |
+```
+GOODHR_ISSUER        = https://goodhr.shd-technology.co.th
+OAUTH_CLIENT_ID      = ghr_onebookbb2ced
+OAUTH_CLIENT_SECRET  = <ค่าลับ ดูใน ONEBOOK_SSO_CREDENTIALS.txt>
+OAUTH_REDIRECT_URI   = https://onebook-gxyz.onrender.com/api/auth/callback/goodhr
+GOODHR_TRUST_APP_ROLE = false
+ALLOW_PASSWORD_LOGIN  = true
+```
 
-> **พอร์ต 3000 เป็นของ GoodHR** ONEBOOK จึงต้องรันที่พอร์ตอื่น
+`APP_ORIGIN` ไม่ต้องกรอก — `render.yaml` ตั้งให้ชี้ URL ของตัวเองอัตโนมัติ
+
+กรอกเสร็จต้อง **Manual Deploy** ไม่ใช่แค่ Restart
+
+ตรวจแล้วว่าฝั่ง GoodHR production พร้อมครบ
+
+```
+✓ discovery อ่านได้      https://goodhr.shd-technology.co.th
+✓ issuer ตรงกัน
+✓ JWKS มีกุญแจ RS256     kid=7e0605361df6c0191dcebd4346164bae
+✓ redirect_uri ผ่าน      https://onebook-gxyz.onrender.com/api/auth/callback/goodhr
+```
+
+---
+
+## ค่าสำหรับพัฒนาบนเครื่อง (`.env.local`)
+
+```
+GOODHR_ISSUER        = http://localhost:3000     # GoodHR รันอยู่พอร์ตนี้
+OAUTH_REDIRECT_URI   = http://localhost:3100/api/auth/callback/goodhr
+APP_ORIGIN           = http://localhost:3100
+```
+
+> **พอร์ต 3000 เป็นของ GoodHR** ONEBOOK จึงต้องรันพอร์ตอื่น
 > ```bash
 > npm run dev -- -p 3100
 > ```
 > `APP_ORIGIN` ต้องตรงกับพอร์ตที่รันจริง ไม่งั้น middleware จะบล็อก POST ทุกอันด้วย 403
 
----
-
-## ⛔ เหลืออีก 1 อย่างก่อนทดสอบได้ — เพิ่ม redirect URI ของ dev
-
-GoodHR ตอนนี้ลงทะเบียนไว้เฉพาะ URL production ตรวจสอบแล้วด้วยการยิงจริง
-
-```
-✓ https://onebook-gxyz.onrender.com/api/auth/callback/goodhr   ← ผ่าน
-✗ http://localhost:3100/api/auth/callback/goodhr               ← ยังไม่ได้ลงทะเบียน
-```
-
-**วิธีแก้** เข้า GoodHR → `/admin/sso` → แอป ONEBOOK → เพิ่ม redirect URI
+⛔ ก่อนทดสอบบนเครื่องต้องไปเพิ่ม redirect URI ของ dev ที่ GoodHR `/admin/sso` ก่อน
+(ตอนนี้ลงทะเบียนไว้เฉพาะ URL production)
 
 ```
 http://localhost:3100/api/auth/callback/goodhr
 ```
 
-ต้องตรงเป๊ะทุกตัวอักษร ไม่มี `/` ปิดท้าย
-
 ---
 
-## ⚠️ ตรวจโดเมน production
+## ประตูมี 2 ชั้น — ต้องเปิดทั้งคู่
 
-ที่ลงทะเบียนไว้คือ `https://onebook-gxyz.onrender.com`
-ถ้าโดเมนจริงบน Render ไม่ใช่ตัวนี้ ต้องเข้า `/admin/sso` แก้ให้ตรง ไม่งั้นล็อกอินบน production จะไม่ผ่าน
+`require_allowlist = TRUE` ทำให้พนักงานต้องมีชื่อทั้งสองที่
 
----
+1. **GoodHR** `/admin/sso` → แท็บ "ใครใช้ได้บ้าง"
+   ไม่มีชื่อ = ไม่ผ่านตั้งแต่ฝั่ง GoodHR
+2. **ONEBOOK** ตั้งค่า → ผู้ใช้และสิทธิ์ → "อนุญาตพนักงาน GoodHR"
+   ไม่มีชื่อ = GoodHR ปล่อยผ่านแต่ ONEBOOK ปฏิเสธ
 
-## ขั้นตอนทดสอบ
-
-1. GoodHR รันอยู่ที่พอร์ต 3000 (ตรวจแล้วว่า discovery + JWKS ใช้ได้)
-2. `npm run dev -- -p 3100` แล้วเข้า `http://localhost:3100/login`
-3. กดปุ่ม **เข้าสู่ระบบด้วย GoodHR**
-4. ครั้งแรกจะโดนปฏิเสธ เพราะยังไม่มีรายชื่อในระบบ — ถูกต้องแล้ว
-5. ไปที่ **ตั้งค่า → ผู้ใช้และสิทธิ์ → อนุญาตพนักงาน GoodHR**
-   ใส่รหัสพนักงานหรืออีเมล เลือกบทบาท + บริษัท แล้วลองล็อกอินใหม่
-
----
-
-## ตอนขึ้น Render
-
-ใส่ที่ **Environment** ของบริการ
-
-```
-GOODHR_ISSUER        = https://<โดเมนจริงของ GoodHR>
-OAUTH_CLIENT_ID      = ghr_onebookbb2ced
-OAUTH_CLIENT_SECRET  = ghs_…
-OAUTH_REDIRECT_URI   = https://<โดเมนจริงของ ONEBOOK>/api/auth/callback/goodhr
-APP_ORIGIN           = https://<โดเมนจริงของ ONEBOOK>
-GOODHR_TRUST_APP_ROLE = false
-ALLOW_PASSWORD_LOGIN  = false
-```
+ตั้งใจให้เป็นแบบนี้ — HR คุมว่าใครเข้าแอปได้ ฝ่ายบัญชีคุมว่าเข้าได้บริษัทไหน
+เห็นเมนูอะไร แก้อะไรได้ ซึ่ง GoodHR ไม่รู้
 
 ---
 
@@ -98,12 +89,25 @@ GoodHR ยืนยันแค่ว่า "คุณคือใคร" — ON
 
 ---
 
+## เมื่อล็อกอินไม่ผ่าน
+
+| อาการ | สาเหตุ |
+|---|---|
+| ไม่เห็นปุ่ม GoodHR เลย | env ไม่ครบ 3 ตัว — เช็คที่ `/api/health` → `sso.ready` |
+| `redirect_uri ไม่ถูกต้อง` | URL ไม่ตรงกับที่ลงทะเบียน — เทียบกับ `sso.redirect_uri` ใน `/api/health` |
+| ล็อกอินแล้วเด้งกลับพร้อม `no_access` | ยังไม่ได้อนุญาตใน ONEBOOK (ตั้งค่า → ผู้ใช้และสิทธิ์) |
+| GoodHR ปฏิเสธก่อนถึง ONEBOOK | ยังไม่ได้เพิ่มชื่อใน `/admin/sso` แท็บ "ใครใช้ได้บ้าง" |
+| ล็อกอินได้แต่บันทึกอะไรไม่ได้ (403) | `APP_ORIGIN` ไม่ตรงกับโดเมนจริง |
+
+---
+
 ## ความปลอดภัย
 
 - `OAUTH_CLIENT_SECRET` อยู่ฝั่งเซิร์ฟเวอร์เท่านั้น ห้ามขึ้นต้นด้วย `NEXT_PUBLIC_` ห้าม commit
-- ถ้าหลุด → GoodHR `/admin/sso` → แอป ONEBOOK → "สร้าง secret ใหม่" (ของเก่าตายทันที)
-  แล้วมาแก้ค่าใน `.env.local` และ Render
-- ตัดสิทธิ์รายคนได้ 2 ทาง — ที่ GoodHR `/admin/sso` แท็บ "ใครใช้ได้บ้าง"
-  หรือที่ ONEBOOK **ตั้งค่า → ผู้ใช้และสิทธิ์** (ปิดการใช้งานผู้ใช้)
+  (repo นี้เป็น public — `.env.local` และ `goodhr_seed_onebook.sql` อยู่ใน `.gitignore` แล้ว)
+- ถ้าหลุด → GoodHR `/admin/sso` → แอป ONEBOOK → "สร้าง secret ใหม่" ของเก่าตายทันที
+  แล้วมาแก้ค่าใน Render และ `.env.local`
+- ตัดสิทธิ์รายคนได้ 2 ทาง — GoodHR `/admin/sso` (revoke token ทันที)
+  หรือ ONEBOOK ตั้งค่า → ผู้ใช้และสิทธิ์ (ปิดการใช้งานผู้ใช้)
 - ONEBOOK ตรวจ `id_token` ครบทุกด้าน : ลายเซ็น RS256 จาก JWKS · `iss` · `aud` · `exp`/`iat` · `nonce`
   และปฏิเสธ `alg: none` — ทดสอบการโจมตี 8 แบบผ่านหมดแล้ว
