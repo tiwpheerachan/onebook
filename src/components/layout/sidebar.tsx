@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   LayoutDashboard, TrendingUp, ShoppingCart, Users, Wallet,
   BookOpen, BarChart3, Receipt, Settings, ChevronDown,
@@ -33,7 +34,10 @@ export function Sidebar({
   const [width, setWidth] = useState(240);
   const [collapsed, setCollapsed] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [hoverId, setHoverId] = useState<string | null>(null);
+  // เมนูย่อยตอนพับ ต้องวาดนอก <aside> ผ่าน portal
+  // เพราะ nav มี overflow ซึ่งจะตัดกล่องที่ยื่นออกไปทางขวาจนมองไม่เห็น
+  const [flyout, setFlyout] = useState<{ id: string; top: number; left: number } | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // กันภาพกระพริบ : ก่อนอ่านค่าที่จำไว้เสร็จ ยังไม่ต้องวาดความกว้าง
   const [ready, setReady] = useState(false);
   const asideRef = useRef<HTMLElement>(null);
@@ -55,8 +59,39 @@ export function Sidebar({
 
   const setCollapse = useCallback((v: boolean) => {
     setCollapsed(v);
+    setFlyout(null);
     localStorage.setItem(C_KEY, v ? '1' : '0');
   }, []);
+
+  /* ---------------- เมนูย่อยแบบชี้แล้วกาง (โหมดพับ) ---------------- */
+  const holdOpen = () => { if (closeTimer.current) clearTimeout(closeTimer.current); };
+  // หน่วงก่อนปิด เพื่อให้ลากเมาส์จากไอคอนเข้าไปในกล่องได้ทัน
+  const scheduleClose = () => {
+    holdOpen();
+    closeTimer.current = setTimeout(() => setFlyout(null), 160);
+  };
+
+  const openFlyout = (id: string, el: HTMLElement, itemCount: number) => {
+    holdOpen();
+    const r = el.getBoundingClientRect();
+    const estH = 34 + itemCount * 30;                     // ความสูงโดยประมาณของกล่อง
+    const top = Math.min(Math.max(8, r.top - 6), window.innerHeight - estH - 8);
+    setFlyout({ id, top, left: r.right });
+  };
+
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
+  // เลื่อนหน้าหรือเปลี่ยนหน้าแล้วให้ปิดกล่องทิ้ง ไม่งั้นมันจะค้างผิดตำแหน่ง
+  useEffect(() => { setFlyout(null); }, [pathname]);
+  useEffect(() => {
+    if (!flyout) return;
+    const close = () => setFlyout(null);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [flyout]);
 
   /* ---------------- ลากขอบเพื่อปรับความกว้าง ---------------- */
   const startDrag = (e: React.MouseEvent) => {
@@ -186,45 +221,25 @@ export function Sidebar({
 
           /* ----- โหมดพับ : แสดงเฉพาะไอคอน กางเมนูย่อยตอนชี้ ----- */
           if (collapsed) {
+            const shown = flyout?.id === g.id;
             return (
-              <div
-                key={g.id}
-                className="relative mb-1"
-                onMouseEnter={() => setHoverId(g.id)}
-                onMouseLeave={() => setHoverId((h) => (h === g.id ? null : h))}
-              >
+              <div key={g.id} className="mb-1">
                 <Link
                   href={g.items[0].href}
+                  aria-label={g.label}
+                  onMouseEnter={(e) => openFlyout(g.id, e.currentTarget, g.items.length)}
+                  onFocus={(e) => openFlyout(g.id, e.currentTarget, g.items.length)}
+                  onMouseLeave={scheduleClose}
+                  onBlur={scheduleClose}
                   className={cn(
                     'flex h-9 w-full items-center justify-center rounded-lg transition',
-                    hasActive ? 'bg-brand-50 text-brand-700' : 'text-ink-500 hover:bg-ink-100 hover:text-ink-800'
+                    hasActive || shown
+                      ? 'bg-brand-50 text-brand-700'
+                      : 'text-ink-500 hover:bg-ink-100 hover:text-ink-800'
                   )}
                 >
                   <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
                 </Link>
-
-                {hoverId === g.id && (
-                  <div className="absolute left-full top-0 z-40 ml-1.5 w-56 rounded-xl border border-ink-200 bg-white py-1.5 shadow-pop">
-                    <p className="px-3 pb-1.5 pt-1 text-xxs font-semibold uppercase tracking-wide text-ink-400">
-                      {g.label}
-                    </p>
-                    {g.items.map((i) => {
-                      const active = pathname === i.href || pathname.startsWith(i.href + '/');
-                      return (
-                        <Link
-                          key={i.href}
-                          href={i.href}
-                          className={cn(
-                            'block truncate px-3 py-1.5 text-[13px]',
-                            active ? 'bg-brand-50 font-medium text-brand-700' : 'text-ink-600 hover:bg-ink-50'
-                          )}
-                        >
-                          {i.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             );
           }
@@ -269,6 +284,45 @@ export function Sidebar({
           );
         })}
       </nav>
+
+      {/* ---------- เมนูย่อยตอนพับ (วาดที่ body เพื่อไม่ให้ถูก overflow ตัด) ---------- */}
+      {collapsed && flyout && typeof document !== 'undefined' && createPortal(
+        (() => {
+          const g = groups.find((x) => x.id === flyout.id);
+          if (!g) return null;
+          return (
+            <div
+              onMouseEnter={holdOpen}
+              onMouseLeave={scheduleClose}
+              style={{ top: flyout.top, left: flyout.left }}
+              className="fixed z-[60] pl-2"
+            >
+              <div className="w-60 rounded-xl border border-ink-200 bg-white py-1.5 shadow-pop">
+                <p className="px-3 pb-1.5 pt-1 text-xxs font-semibold uppercase tracking-wide text-ink-400">
+                  {g.label}
+                </p>
+                {g.items.map((i) => {
+                  const active = pathname === i.href || pathname.startsWith(i.href + '/');
+                  return (
+                    <Link
+                      key={i.href}
+                      href={i.href}
+                      onClick={() => setFlyout(null)}
+                      className={cn(
+                        'block truncate px-3 py-1.5 text-[13px]',
+                        active ? 'bg-brand-50 font-medium text-brand-700' : 'text-ink-600 hover:bg-ink-50'
+                      )}
+                    >
+                      {i.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })(),
+        document.body
+      )}
 
       {/* ---------- ขอบสำหรับลากปรับความกว้าง ---------- */}
       {!collapsed && (
