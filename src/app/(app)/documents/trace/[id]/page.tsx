@@ -4,8 +4,10 @@ import { createClient } from '@/lib/supabase/server';
 import { t } from '@/i18n/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { DocumentTrace, type Trace } from '@/components/documents/document-trace';
+import { TraceTabs } from '@/components/documents/trace-tabs';
 import { docTitle } from '@/components/documents/doc-meta';
 import { SLUG_BY_KIND } from '@/lib/constants';
+import type { GraphInput } from '@/lib/trace-graph';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,21 +17,26 @@ export default async function TracePage({ params }: { params: { id: string } }) 
   const d = t();
   const supabase = createClient();
 
-  const { data, error } = await supabase.rpc('rpt_document_trace', { p_document: params.id });
+  // ยิงพร้อมกัน สองฟังก์ชันนี้ไม่ขึ้นต่อกัน
+  const [{ data, error }, { data: graphData }] = await Promise.all([
+    supabase.rpc('rpt_document_trace', { p_document: params.id }),
+    supabase.rpc('rpt_document_graph', { p_document: params.id }),
+  ]);
   if (error || !data) notFound();
 
   const trace = data as Trace;
+  const graph = (graphData || { root: params.id, nodes: [], edges: [], truncated: false }) as GraphInput;
   const doc = trace.document;
   const label = docTitle(d, SLUG_BY_KIND[doc.kind] || '');
 
   return (
     <>
       <PageHeader
-        title={`ที่มาของ ${label} ${doc.doc_number}`}
-        subtitle={`${doc.contact_name || '–'} · ทุกตัวเลขในหน้านี้อ้างอิงจากรายการจริงในฐานข้อมูล ไม่ได้คำนวณซ้ำ`}
-        breadcrumb={[{ label: d.nav.dashboard }, { label: 'ที่มาของตัวเลข' }]}
+        title={`${d.ui.graph.title} · ${label} ${doc.doc_number}`}
+        subtitle={`${doc.contact_name || '–'} · ${d.ui.graph.subtitle}`}
+        breadcrumb={[{ label: d.nav.dashboard }, { label: d.ui.graph.title }]}
       />
-      <DocumentTrace trace={trace} dict={d} />
+      <TraceTabs graph={graph} d={d} list={<DocumentTrace trace={trace} dict={d} />} />
     </>
   );
 }
