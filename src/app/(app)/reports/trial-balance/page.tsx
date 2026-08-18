@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requirePermission, can } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { t, currentLocale } from '@/i18n/server';
@@ -19,6 +20,9 @@ export default async function TrialBalancePage({ searchParams }: { searchParams:
   const supabase = createClient();
   const { data } = await supabase.rpc('rpt_trial_balance', { p_company: ctx.company.id, p_from: from, p_to: to });
   const rows = (data || []) as any[];
+  const back = encodeURIComponent(`/reports/trial-balance?from=${from}&to=${to}`);
+  const drill = (code: string) =>
+    `/reports/drill?code=${encodeURIComponent(code)}&from=${from}&to=${to}&back=${back}`;
   const sum = (k: string) => rows.reduce((a, r) => a + Number(r[k] || 0), 0);
 
   return (
@@ -51,7 +55,15 @@ export default async function TrialBalancePage({ searchParams }: { searchParams:
             {rows.length === 0 && <EmptyRow colSpan={8} label={d.common.noData} />}
             {rows.map((r) => (
               <TR key={r.account_code}>
-                <TD><span className="font-mono text-xs">{r.account_code}</span></TD>
+                <TD>
+                  <Link
+                    href={drill(r.account_code)}
+                    title={d.ui.drill.clickHint}
+                    className="font-mono text-xs text-brand-700 hover:underline"
+                  >
+                    {r.account_code}
+                  </Link>
+                </TD>
                 <TD>{r.account_name}</TD>
                 <TD align="right">{money(r.opening_debit)}</TD>
                 <TD align="right">{money(r.opening_credit)}</TD>

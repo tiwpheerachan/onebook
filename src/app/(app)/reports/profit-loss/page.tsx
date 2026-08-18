@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requirePermission, can } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { t, currentLocale } from '@/i18n/server';
@@ -32,6 +33,9 @@ export default async function ProfitLossPage({ searchParams }: { searchParams: {
   const total = (k: string) => bySection(k).reduce((a, r) => a + Number(r.amount || 0), 0);
   const net = SECTIONS.reduce((a, s) => a + s.sign * total(s.key), 0);
   const grossProfit = total('1_revenue') - total('3_cost_of_sales');
+  const back = encodeURIComponent(`/reports/profit-loss?from=${from}&to=${to}`);
+  const drill = (code: string) =>
+    `/reports/drill?code=${encodeURIComponent(code)}&from=${from}&to=${to}&back=${back}`;
 
   return (
     <>
@@ -64,7 +68,15 @@ export default async function ProfitLossPage({ searchParams }: { searchParams: {
                 {items.map((r) => (
                   <div key={r.account_code} className="flex justify-between border-b border-ink-100 py-1.5 pl-4 text-sm">
                     <span className="text-ink-600"><span className="mr-2 font-mono text-xs text-ink-400">{r.account_code}</span>{r.account_name}</span>
-                    <span className="tabular-nums text-ink-800">{money(r.amount)}</span>
+                    {/* กดตัวเลขเพื่อเจาะดูบรรทัดที่รวมกันเป็นยอดนี้ */}
+                    <Link
+                      href={drill(r.account_code)}
+                      title={d.ui.drill.clickHint}
+                      className="tabular-nums text-ink-800 decoration-brand-300 underline-offset-4 hover:text-brand-700 hover:underline no-print"
+                    >
+                      {money(r.amount)}
+                    </Link>
+                    <span className="hidden tabular-nums text-ink-800 print:inline">{money(r.amount)}</span>
                   </div>
                 ))}
                 <div className="flex justify-between py-1.5 text-sm font-medium">
