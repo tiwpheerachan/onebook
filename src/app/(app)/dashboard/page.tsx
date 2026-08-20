@@ -8,7 +8,7 @@ import { StatusBadge } from '@/components/ui/badge';
 import { Table, THead, TBody, TR, TH, TD, EmptyRow } from '@/components/ui/table';
 import { firstDayOfMonth, lastDayOfMonth, localeDate, money } from '@/lib/format';
 import { SLUG_BY_KIND } from '@/lib/constants';
-import { FileText, ShoppingCart, UserPlus, BookOpen } from 'lucide-react';
+import { FileText, ShoppingCart, UserPlus, BookOpen, BellRing } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +22,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   const to = searchParams.to || lastDayOfMonth();
 
   // ยิงพร้อมกัน : สรุปตัวเลขกับรายการเอกสารล่าสุดไม่ขึ้นต่อกัน
-  const [{ data: stats }, { data: recent }] = await Promise.all([
+  const seesContacts = can(ctx, 'contacts', 'view');
+  const [{ data: stats }, { data: recent }, { data: cycles }] = await Promise.all([
     supabase.rpc('rpt_dashboard', { p_company: ctx.company.id, p_from: from, p_to: to }),
     supabase
       .from('documents')
@@ -30,10 +31,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
       .eq('company_id', ctx.company.id)
       .order('created_at', { ascending: false })
       .limit(8),
+    // ลูกค้าที่หลุดรอบหรือใกล้หลุด — เตือนตั้งแต่หน้าแรกก่อนจะสายเกินไป
+    seesContacts
+      ? supabase.rpc('rpt_customer_cycles', {
+          p_company: ctx.company.id, p_filter: 'overdue', p_q: null, p_limit: 5,
+        })
+      : Promise.resolve({ data: null }),
   ]);
   const s = (stats || {}) as any;
 
   const profit = Number(s.revenue || 0) - Number(s.expense || 0);
+
+  const cyc = (cycles || {}) as any;
+  const cycleRows = (cyc.rows || []) as any[];
+  const cycleSummary = (cyc.summary || {}) as Record<string, number>;
 
   const quick = [
     { href: '/sales/tax-invoices?new=1', label: d.nav.taxInvoices, icon: FileText, resource: 'documents' },
@@ -52,6 +63,42 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
       {searchParams.denied && (
         <div className="mb-5 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700 ring-1 ring-inset ring-rose-200">
           {d.security.noPermission} ({searchParams.denied})
+        </div>
+      )}
+
+      {cycleRows.length > 0 && (
+        <div className="mb-5 card overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-ink-200 px-5 py-3">
+            <BellRing className="h-4 w-4 text-amber-500" strokeWidth={1.8} />
+            <h2 className="text-sm font-semibold text-ink-900">{d.ui.cycles.insight}</h2>
+            <span className="chip bg-rose-50 text-rose-700 ring-rose-200">
+              {cycleSummary.overdue ?? 0}
+            </span>
+            <Link href="/contacts/cycles?f=overdue" className="ml-auto text-xs text-brand-600 hover:underline">
+              {d.ui.cycles.insightMore}
+            </Link>
+          </div>
+          <ul className="divide-y divide-ink-100">
+            {cycleRows.map((c: any) => (
+              <li key={c.id} className="flex flex-wrap items-center gap-3 px-5 py-2.5">
+                <span className="min-w-0 flex-1 truncate text-sm text-ink-800">{c.name}</span>
+                <span className="text-xxs text-ink-500">
+                  {d.ui.cycles.lastOrder} {c.last_order ? localeDate(c.last_order, locale) : '—'}
+                </span>
+                <span className="chip bg-rose-50 text-rose-700 ring-rose-200">
+                  {d.ui.cycles.daysLate.replace('{n}', String(c.days_late))}
+                </span>
+                {can(ctx, 'documents', 'create') && (
+                  <Link
+                    href={`/sales/invoices?new=1&contact=${c.id}`}
+                    className="text-xs text-brand-600 hover:underline"
+                  >
+                    {d.ui.cycles.createDoc}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

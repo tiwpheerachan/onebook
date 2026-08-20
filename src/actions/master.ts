@@ -163,3 +163,40 @@ export async function assignContactGroup(
   revalidatePath('/contacts');
   return { ok: true, count: Number(data) };
 }
+
+/**
+ * ตั้งรอบการขายของลูกค้า
+ *
+ * ส่ง days = null คือเลิกตั้งเอง กลับไปใช้ค่าที่ระบบคำนวณจากประวัติ
+ * ฝั่งฐานข้อมูลตรวจสิทธิ์ contacts.edit ให้อีกชั้นแล้ว
+ */
+export async function setContactCycle(form: {
+  contact_id: string;
+  days: number | null;
+  is_regular?: boolean;
+  note?: string;
+}) {
+  const ctx = await getSessionContext();
+  if (!ctx || !can(ctx, 'contacts', 'edit')) {
+    return { ok: false, error: 'ไม่มีสิทธิ์แก้ไขผู้ติดต่อ' };
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc('set_contact_cycle', {
+    p_contact: form.contact_id,
+    p_days: form.days,
+    p_regular: form.is_regular ?? null,
+    p_note: form.note || null,
+  });
+
+  if (error) {
+    if (error.message.includes('INVALID_CYCLE')) {
+      return { ok: false, error: 'รอบการขายต้องอยู่ระหว่าง 1 ถึง 730 วัน' };
+    }
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath('/contacts/cycles');
+  revalidatePath('/dashboard');
+  return { ok: true };
+}
