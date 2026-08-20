@@ -26,7 +26,7 @@ export interface QuickAction { href: string; label: string; hint: string; icon: 
  * จึงยังคง render ฝั่งเซิร์ฟเวอร์ได้ตามเดิม ไม่ถูกดึงมาเป็น client ทั้งก้อน
  */
 export function AppShell({
-  groups, appName, pages, actions, header, footer, children, d, locale,
+  groups, appName, pages, actions, header, footer, children, d, locale, canPropose,
 }: {
   groups: NavGroup[];
   appName: string;
@@ -37,6 +37,7 @@ export function AppShell({
   children: React.ReactNode;
   d: Dictionary;
   locale: string;
+  canPropose: boolean;
 }) {
   const L = d.ui.shell;
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -151,6 +152,7 @@ export function AppShell({
         initialQuestion={aiSeed}
         d={d}
         locale={locale}
+        canPropose={canPropose}
       />
     </div>
   );

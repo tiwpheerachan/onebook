@@ -1,9 +1,10 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, X, SendHorizonal, ShieldCheck, FileText, Users, Package, CheckSquare } from 'lucide-react';
+import { Sparkles, X, SendHorizonal, ShieldCheck, FileText, Users, Package, CheckSquare, MessageCircleQuestion, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { ShdSpinner } from '@/components/ui/shd-loader';
+import { AiPropose } from './ai-propose';
 import type { Dictionary } from '@/i18n';
 
 interface Ref { id: string; type: string; label: string; sub?: string; href: string }
@@ -18,16 +19,21 @@ const REF_ICON: Record<string, any> = {
  * ค้นและสรุปให้ได้ แต่แก้เอกสารไม่ได้ — ฝั่ง API ไม่มีทางเขียนข้อมูลเลย
  */
 export function AiPanel({
-  open, onClose, initialQuestion, d, locale,
+  open, onClose, initialQuestion, d, locale, canPropose,
 }: {
   open: boolean;
   onClose: () => void;
   initialQuestion?: string;
   d: Dictionary;
   locale: string;
+  /** ผู้ใช้มีสิทธิ์แก้/อนุมัติ/ยกเลิกเอกสารหรือไม่ ถ้าไม่มีก็ไม่ต้องโชว์โหมดสั่งงาน */
+  canPropose?: boolean;
 }) {
   const L = d.ui.assistant;
   const suggestions = [L.s1, L.s2, L.s3];
+  // แยกสองโหมดชัดเจน : ถาม = อ่านอย่างเดียว / สั่งงาน = เสนอแล้วรอคนยืนยัน
+  const [mode, setMode] = useState<'ask' | 'act'>('ask');
+  const canAct = canPropose ?? false;
   const [q, setQ] = useState('');
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
@@ -105,7 +111,30 @@ export function AiPanel({
           </button>
         </div>
 
-        {/* ---------- บทสนทนา ---------- */}
+        {canAct && (
+          <div className="flex gap-1 border-b border-ink-200 px-3 py-2">
+            {([
+              { id: 'ask' as const, label: d.ui.propose.ask, icon: MessageCircleQuestion },
+              { id: 'act' as const, label: d.ui.propose.tab, icon: Wand2 },
+            ]).map((tb) => (
+              <button
+                key={tb.id}
+                onClick={() => setMode(tb.id)}
+                className={cn(
+                  'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] transition',
+                  mode === tb.id ? 'bg-brand-50 font-medium text-brand-700' : 'text-ink-500 hover:bg-ink-50'
+                )}
+              >
+                <tb.icon className="h-3.5 w-3.5" strokeWidth={1.8} />{tb.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {canAct && mode === 'act' && <AiPropose d={d} locale={locale} />}
+
+        {/* ---------- บทสนทนา (โหมดถาม) ---------- */}
+        {(!canAct || mode === 'ask') && <>
         <div ref={bodyRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
           {turns.length === 0 && !busy && (
             <div className="space-y-3">
@@ -201,6 +230,7 @@ export function AiPanel({
             <SendHorizonal className="h-4 w-4" strokeWidth={1.8} />
           </button>
         </form>
+        </>}
       </div>
     </div>
   );

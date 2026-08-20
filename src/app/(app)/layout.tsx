@@ -72,6 +72,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       footer={footer}
       d={d}
       locale={locale}
+      canPropose={
+        can(ctx, 'documents', 'approve') ||
+        can(ctx, 'documents', 'void') ||
+        can(ctx, 'documents', 'edit')
+      }
     >
       {children}
     </AppShell>
