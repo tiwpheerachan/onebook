@@ -59,10 +59,17 @@ export function embeddingEnabled(raw?: string | null): boolean {
  * ที่ยอมให้คุกกี้ข้ามไซต์ได้เพราะยังมีด่าน CSRF อีกชั้น —
  * middleware ตรวจ Origin ของทุก POST เทียบกับ APP_ORIGIN อยู่แล้ว
  */
-export function cookiePolicy(): { sameSite: 'lax' | 'none'; secure: boolean } {
+export function cookiePolicy(): {
+  sameSite: 'lax' | 'none';
+  secure: boolean;
+  partitioned?: boolean;
+} {
   const isProd = process.env.NODE_ENV === 'production';
   const embed = embeddingEnabled(process.env.FRAME_ANCESTORS);
+  // Partitioned (CHIPS) จำเป็นกับเบราว์เซอร์รุ่นใหม่ที่ปิดคุกกี้บุคคลที่สาม
+  // ลำพัง SameSite=None ไม่พออีกต่อไป Chrome จะทิ้งคุกกี้เงียบ ๆ
+  // ผลข้างเคียงที่ยอมรับได้ : เซสชันในพอร์ทัลกับในแท็บตรงจะแยกกัน
   return embed && isProd
-    ? { sameSite: 'none', secure: true }
+    ? { sameSite: 'none', secure: true, partitioned: true }
     : { sameSite: 'lax', secure: isProd };
 }

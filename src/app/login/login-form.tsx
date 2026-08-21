@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, isEmbedded } from '@/lib/supabase/client';
 import { Eye, EyeOff, Lock, ShieldCheck } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -39,25 +39,61 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // เบราว์เซอร์บล็อกคุกกี้เพราะถูกฝังในเว็บอื่น
+  const [blocked, setBlocked] = useState(false);
   const ssoError = params.get('sso');
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError('');
-    const supabase = createClient();
-    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (err) {
+    setBlocked(false);
+    try {
+      const supabase = createClient();
+      const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (err) {
+        setError(labels.invalid);
+        return;
+      }
+
+      // ยืนยันว่าคุกกี้ถูกเก็บจริง ไม่ใช่แค่เซิร์ฟเวอร์ตอบว่าผ่าน
+      //
+      // ตอนถูกฝังในพอร์ทัล เบราว์เซอร์อาจปฏิเสธคุกกี้บุคคลที่สามเงียบ ๆ
+      // ถ้าข้ามการตรวจนี้ไป ผู้ใช้จะเห็นแค่วงกลมหมุนค้างโดยไม่รู้ว่าเกิดอะไรขึ้น
+      // เพราะเด้งไปหน้าแรกแล้วโดนส่งกลับมาหน้าล็อกอินวนไม่จบ
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        setBlocked(true);
+        return;
+      }
+
+      router.replace(params.get('next') || '/dashboard');
+      router.refresh();
+    } catch {
       setError(labels.invalid);
+    } finally {
+      // ต้องปลดเสมอ ไม่งั้นถ้าไปต่อไม่ได้จะค้างที่ "กำลังเข้าสู่ระบบ" ตลอดไป
       setBusy(false);
-      return;
     }
-    router.replace(params.get('next') || '/dashboard');
-    router.refresh();
   }
 
   return (
     <div className="flex flex-col gap-5">
+      {blocked && (
+        <div className="rounded-lg bg-amber-50 px-3.5 py-3 text-xs leading-relaxed text-amber-900 ring-1 ring-inset ring-amber-200">
+          <p className="font-medium">{labels.embedBlockedTitle}</p>
+          <p className="mt-1">{labels.embedBlockedBody}</p>
+          <a
+            href={typeof window !== 'undefined' ? window.location.href : '/login'}
+            target="_top"
+            rel="noopener"
+            className="mt-2 inline-block rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700"
+          >
+            {labels.embedBlockedAction}
+          </a>
+        </div>
+      )}
+
       {ssoError && (
         <p className="rounded-lg bg-rose-50 px-3.5 py-2.5 text-xs leading-relaxed text-rose-700 ring-1 ring-inset ring-rose-200">
           {SSO_ERROR[ssoError] || SSO_ERROR.failed}
