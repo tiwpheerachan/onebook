@@ -1,5 +1,6 @@
 'use server';
 import { cookies } from 'next/headers';
+import { cookiePolicy } from '@/lib/frame-policy';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { COMPANY_COOKIE } from '@/lib/session';
@@ -7,8 +8,7 @@ import { LOCALE_COOKIE } from '@/i18n/config';
 
 const COOKIE_OPTS = {
   httpOnly: false as const,
-  sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production',
+  ...cookiePolicy(),
   path: '/',
   maxAge: 60 * 60 * 24 * 365,
 };

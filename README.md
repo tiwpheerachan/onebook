@@ -103,7 +103,7 @@ npm run start
 
 ```
 onebook/
-├── middleware.ts                  ตรวจ IP allowlist + เซสชัน + ป้องกัน CSRF
+├── src/middleware.ts              ตรวจ IP allowlist + เซสชัน + CSRF + frame-ancestors
 ├── supabase/migrations/           SQL ทั้งหมด (schema, RLS, ผังบัญชี, รายงาน)
 ├── src/
 │   ├── app/

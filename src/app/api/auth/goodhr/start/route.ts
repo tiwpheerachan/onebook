@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { isGoodhrConfigured, randomToken, pkceChallenge, buildAuthorizeUrl, appOrigin } from '@/lib/goodhr';
+import { cookiePolicy } from '@/lib/frame-policy';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,8 +21,9 @@ export async function GET(req: Request) {
   const jar = cookies();
   const opts = {
     httpOnly: true as const,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
+    // ตอนถูกฝังใน iframe การเด้งกลับจาก GoodHR ไม่ใช่การนำทางระดับบนสุด
+    // คุกกี้ SameSite=Lax จะไม่ถูกส่งกลับมา แล้ว callback จะหา state ไม่เจอ
+    ...cookiePolicy(),
     path: '/',
     maxAge: 600, // 10 นาที พอสำหรับล็อกอินหนึ่งครั้ง
   };

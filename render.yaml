@@ -42,6 +42,11 @@ services:
           name: onebook
           envVarKey: RENDER_EXTERNAL_URL
 
+      # โดเมนที่อนุญาตให้ฝังหน้าจอนี้ใน iframe (เช่นพอร์ทัล ONE SPACE)
+      # เว้นว่าง = ห้ามฝังทั้งหมด · ห้ามใส่ * เพราะจะเปิดให้ทุกเว็บฝังได้
+      - key: FRAME_ANCESTORS
+        value: "https://onespace-ose7.onrender.com"
+
       # เว้นว่าง = เข้าได้ทุก IP / ใส่ IP ออฟฟิศเมื่อพร้อมจำกัดการเข้าถึง
       - key: ALLOWED_IPS
         value: ""

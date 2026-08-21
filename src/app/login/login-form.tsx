@@ -67,6 +67,9 @@ export function LoginForm({
       {ssoEnabled && (
         <a
           href="/api/auth/goodhr/start"
+          // หน้าล็อกอินของ GoodHR มักไม่ยอมให้ฝังใน iframe
+          // จึงพาออกไปทำที่หน้าต่างบนสุดเสมอ ถ้าไม่ได้ถูกฝังอยู่ค่านี้ก็ไม่มีผลอะไร
+          target="_top"
           className="flex w-full items-center justify-center gap-2.5 rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-800"
         >
           <ShieldCheck className="h-4 w-4" strokeWidth={2} />

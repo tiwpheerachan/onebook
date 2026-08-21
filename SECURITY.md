@@ -8,8 +8,9 @@
 
 | มาตรการ | ที่อยู่ในโค้ด |
 |---|---|
-| IP allowlist ตรวจทุก request ก่อนถึงหน้าใด ๆ (รองรับ CIDR) | `middleware.ts` + `src/lib/ip-guard.ts` |
-| ตรวจ `Origin` ของ request ที่เป็น mutation (ป้องกัน CSRF ข้ามโดเมน) | `middleware.ts` |
+| IP allowlist ตรวจทุก request ก่อนถึงหน้าใด ๆ (รองรับ CIDR) | `src/middleware.ts` + `src/lib/ip-guard.ts` |
+| ตรวจ `Origin` ของ request ที่เป็น mutation (ป้องกัน CSRF ข้ามโดเมน) | `src/middleware.ts` |
+| คุมว่าใครฝังหน้าจอนี้ใน iframe ได้ (CSP `frame-ancestors`) ไม่ตั้งค่า = ห้ามฝัง | `src/lib/frame-policy.ts` |
 | Security headers: HSTS, `X-Frame-Options: DENY`, `nosniff`, Referrer-Policy, COOP, Permissions-Policy | `next.config.mjs` |
 | `robots: noindex, nofollow` และไม่มีหน้า public ใด ๆ นอกจาก `/login` | `src/app/layout.tsx` |
 

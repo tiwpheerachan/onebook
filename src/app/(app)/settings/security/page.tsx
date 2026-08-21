@@ -20,7 +20,7 @@ const CONTROLS = [
   { icon: Database, title: 'Audit trail ที่ลบไม่ได้',
     body: 'ทุกการเปลี่ยนแปลงบันทึก before/after เป็น JSON พร้อมผู้ใช้และเวลา ตาราง audit_logs ถอนสิทธิ์ INSERT/UPDATE/DELETE จาก role ผู้ใช้ทั้งหมด' },
   { icon: ShieldCheck, title: 'Security headers และป้องกัน CSRF',
-    body: 'ตั้ง HSTS, X-Frame-Options: DENY, nosniff, Referrer-Policy และตรวจ Origin ของ request ที่เป็น mutation เทียบกับ APP_ORIGIN' },
+    body: 'ตั้ง HSTS, nosniff, Referrer-Policy และตรวจ Origin ของ request ที่เป็น mutation เทียบกับ APP_ORIGIN ส่วนการฝังหน้าจอในเว็บอื่นคุมด้วย CSP frame-ancestors ซึ่งอนุญาตเฉพาะโดเมนที่กำหนดใน FRAME_ANCESTORS เท่านั้น ไม่ตั้งค่า = ห้ามฝังทั้งหมด' },
 ];
 
 export default async function SecurityPage() {

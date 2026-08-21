@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { cookiePolicy } from '@/lib/frame-policy';
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -19,8 +20,9 @@ export async function updateSession(request: NextRequest) {
             response.cookies.set(name, value, {
               ...options,
               httpOnly: true,
-              sameSite: 'lax',
-              secure: process.env.NODE_ENV === 'production',
+              // ถูกฝังข้ามโดเมนต้องใช้ SameSite=None ไม่งั้นเบราว์เซอร์ไม่ส่งคุกกี้
+              // แล้วผู้ใช้จะเจอหน้า login วนไม่จบใน ONE SPACE
+              ...cookiePolicy(),
             })
           );
         },
