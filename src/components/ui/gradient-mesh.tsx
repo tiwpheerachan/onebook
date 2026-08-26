@@ -78,7 +78,10 @@ void main() {
     vec3 col = mix(uColorA, uColorB, mix1);
     col = mix(col, uColorC, mix2);
 
-    float grain = (random(gl_FragCoord.xy + uTime) - 0.5) * uGrain;
+    // เกรนคิดจากตำแหน่งพิกเซลอย่างเดียว ไม่ผูกกับเวลา
+    // เดิมใส่ uTime เข้าไปด้วย ทำให้ทุกพิกเซลต้องคำนวณ random ใหม่ทุกเฟรม
+    // ซึ่งกินกำลัง GPU มากที่สุดในทั้ง shader โดยที่ตาแทบมองไม่เห็นความต่าง
+    float grain = (random(gl_FragCoord.xy) - 0.5) * uGrain;
     col = colorDodge(col, vec3(0.5 + grain));
 
     gl_FragColor = vec4(col, 1.0);
@@ -139,9 +142,19 @@ export function GradientMesh({
     const ctn = ctnDom.current;
     if (!ctn) return;
 
+    /* ---------- เครื่องที่ไม่ควรเปิดเอฟเฟกต์ ----------
+       พื้นหลังนี้เป็นแค่ของตกแต่ง ไม่คุ้มที่จะเบียดกำลังเครื่องของผู้ใช้
+       เครื่องสเปกต่ำหรือผู้ใช้ที่ขอประหยัดข้อมูล ให้ใช้ไล่สีแบบ CSS ซึ่งไม่กินอะไรเลย */
+    const nav = navigator as any;
+    const weakDevice =
+      (nav.hardwareConcurrency ?? 8) <= 4 ||
+      (nav.deviceMemory ?? 8) <= 4 ||
+      nav.connection?.saveData === true;
+    if (weakDevice) { setFailed(true); return; }
+
     let renderer: Renderer;
     try {
-      renderer = new Renderer({ alpha: false, antialias: false });
+      renderer = new Renderer({ alpha: false, antialias: false, dpr: 1 });
     } catch {
       setFailed(true);
       return;
@@ -150,9 +163,23 @@ export function GradientMesh({
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 1);
 
-    const resize = () => renderer.setSize(ctn.offsetWidth, ctn.offsetHeight);
-    window.addEventListener('resize', resize, false);
-    resize();
+    /* ---------- จำกัดจำนวนพิกเซลที่ต้องคำนวณ ----------
+       เดิมวาดเต็มขนาดจริงของพื้นที่ บนจอกว้าง ๆ คือเกินล้านพิกเซลต่อเฟรม
+       ภาพนี้เป็นไล่สีนุ่ม ๆ วาดเล็กแล้วให้เบราว์เซอร์ขยายด้วย CSS
+       ตาคนแยกไม่ออก แต่งานของ GPU ลดลงหลายเท่า */
+    const MAX_PIXELS = 480_000;
+    const resize = () => {
+      const w = Math.max(1, ctn.offsetWidth);
+      const h = Math.max(1, ctn.offsetHeight);
+      const shrink = Math.min(1, Math.sqrt(MAX_PIXELS / (w * h)));
+      renderer.setSize(Math.round(w * shrink), Math.round(h * shrink));
+      const c = gl.canvas as HTMLCanvasElement;
+      c.style.width = '100%';
+      c.style.height = '100%';
+      (program?.uniforms.uResolution as any)?.value?.set?.(
+        c.width, c.height, c.width / c.height
+      );
+    };
 
     const geometry = new Triangle(gl);
     const uniforms: Record<string, { value: unknown }> = {
@@ -180,27 +207,70 @@ export function GradientMesh({
     const program = new Program(gl, { vertex: vert, fragment: frag(distortion), uniforms });
     const mesh = new Mesh(gl, { geometry, program });
 
+    resize();
+    window.addEventListener('resize', resize, false);
+
     const reduceMotion =
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     let animateId = 0;
-    if (reduceMotion) {
+    let last = 0;
+    let onScreen = true;
+    let running = false;
+
+    const drawOnce = () => {
       program.uniforms.uTime.value = 0;
       renderer.render({ scene: mesh });
-    } else {
-      const update = (t: number) => {
-        animateId = requestAnimationFrame(update);
-        program.uniforms.uTime.value = t * 0.001;
-        renderer.render({ scene: mesh });
-      };
+    };
+
+    /* ---------- จำกัดที่ 30 เฟรมต่อวินาที ----------
+       เดิมปล่อยตามจอ จอ 144Hz จะวาด 144 ครั้งต่อวินาที
+       ภาพเคลื่อนช้าอยู่แล้ว 30 เฟรมก็ลื่นพอ แต่งานลดลงเกินครึ่ง */
+    const FRAME_MS = 1000 / 30;
+    const update = (t: number) => {
       animateId = requestAnimationFrame(update);
-    }
+      if (t - last < FRAME_MS) return;
+      last = t;
+      program.uniforms.uTime.value = t * 0.001;
+      renderer.render({ scene: mesh });
+    };
+
+    const start = () => {
+      if (running || reduceMotion) return;
+      running = true;
+      last = 0;
+      animateId = requestAnimationFrame(update);
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(animateId);
+    };
+
+    /* ---------- หยุดวาดเมื่อผู้ใช้ไม่ได้มองอยู่ ----------
+       requestAnimationFrame หยุดเองเฉพาะตอนสลับแท็บ
+       แต่ถ้าหน้าต่างถูกบังหรือย้ายไปจอที่สอง มันยังวาดต่อและกิน GPU ไปเรื่อย ๆ */
+    const sync = () => {
+      if (onScreen && !document.hidden) start();
+      else stop();
+    };
+
+    const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; sync(); },
+      { threshold: 0.01 });
+    io.observe(ctn);
+    document.addEventListener('visibilitychange', sync);
+    window.addEventListener('blur', stop);
+    window.addEventListener('focus', sync);
 
     ctn.appendChild(gl.canvas);
+    if (reduceMotion) drawOnce(); else sync();
 
     return () => {
-      cancelAnimationFrame(animateId);
+      stop();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', sync);
+      window.removeEventListener('blur', stop);
+      window.removeEventListener('focus', sync);
       window.removeEventListener('resize', resize);
       if (gl.canvas.parentNode === ctn) ctn.removeChild(gl.canvas);
       gl.getExtension('WEBGL_lose_context')?.loseContext();

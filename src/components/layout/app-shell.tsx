@@ -82,7 +82,7 @@ export function AppShell({
         {header}
 
         {/* ---------- แถบนวัตกรรม ---------- */}
-        <div className="no-print sticky top-14 z-20 border-b border-ink-200 bg-white/85 backdrop-blur">
+        <div className="no-print sticky top-14 z-20 border-b border-ink-200 bg-white">
           <div className="flex items-center gap-1.5 overflow-x-auto px-4 py-2 sm:px-6">
             <button
               type="button"

@@ -70,9 +70,11 @@ export default function LoginPage() {
 
       {/* ---------------- ฝั่งขวา : ภาพพื้นหลังไล่สีตามโลโก้ (เฉพาะจอใหญ่) ---------------- */}
       <div className="relative hidden overflow-hidden bg-sea-950 lg:block">
+        {/* distortion = จำนวนรอบวนคำนวณต่อพิกเซล ยิ่งมากยิ่งกิน GPU
+            ลดจาก 6 เหลือ 4 ลายที่ได้ต่างกันแทบไม่ออก แต่งานลดลงหนึ่งในสาม */}
         <GradientMesh
           colors={['#012a30', '#0f5f5e', '#72d8c9']}
-          distortion={6}
+          distortion={4}
           swirl={0.35}
           speed={0.5}
           scale={1.15}
