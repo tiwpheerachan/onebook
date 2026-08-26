@@ -86,6 +86,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/tax/vat', label: d.nav.vat, resource: 'tax' },
         { href: '/tax/pp30', label: d.nav.pp30, resource: 'tax' },
         { href: '/tax/wht', label: d.nav.wht, resource: 'tax' },
+        { href: '/tax/pending', label: d.ui.vatPending.title, resource: 'tax' },
         { href: '/tax/etax', label: d.nav.etax, resource: 'tax.etax' },
       ],
     },

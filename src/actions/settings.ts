@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
+import { t } from '@/i18n/server';
 import { isValidThaiTaxId } from '@/lib/format';
 import { isValidPromptPayId, detectIdType } from '@/lib/promptpay';
 
@@ -263,5 +264,46 @@ export async function cancelSsoInvitation(id: string) {
   if (error) return { ok: false, error: error.message };
 
   revalidatePath('/settings/users');
+  return { ok: true };
+}
+
+/**
+ * กำหนดเดือนภาษีที่จะใช้สิทธิ์ภาษีซื้อ หรือพักไว้ก่อน
+ *
+ * ไม่แตะวันที่เอกสารเด็ดขาด เพราะวันที่ในใบกำกับเป็นข้อเท็จจริงที่แก้ไม่ได้
+ * ฐานข้อมูลกันซ้ำอีกชั้นทั้งเรื่องสิทธิ์ งวดที่ปิดแล้ว และการย้อนก่อนเดือนใบกำกับ
+ */
+export async function setVatTaxMonth(form: {
+  document_id: string;
+  month: string | null;   // 'YYYY-MM' หรือ null
+  defer: boolean;
+  note?: string;
+}) {
+  const ctx = await getSessionContext();
+  const d = t();
+  const L = d.ui.vatPending;
+  if (!ctx || !can(ctx, 'tax', 'edit')) return { ok: false, error: L.noPermission };
+
+  const month = form.defer || !form.month ? null : `${form.month}-01`;
+  if (month && !/^\d{4}-\d{2}-01$/.test(month)) return { ok: false, error: L.useMonth };
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc('set_vat_tax_month', {
+    p_document: form.document_id,
+    p_month: month,
+    p_defer: !!form.defer,
+    p_note: form.note || null,
+  });
+
+  if (error) {
+    if (error.message.includes('PERIOD_LOCKED')) return { ok: false, error: L.lockedMonth };
+    if (error.message.includes('VAT_MONTH_BEFORE_DOC')) return { ok: false, error: L.beforeDoc };
+    if (error.message.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath('/tax/pending');
+  revalidatePath('/tax/vat');
+  revalidatePath('/tax/pp30');
   return { ok: true };
 }
