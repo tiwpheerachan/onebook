@@ -10,7 +10,7 @@ import { firstDayOfMonth, lastDayOfMonth, localeDate, money } from '@/lib/format
 
 export const dynamic = 'force-dynamic';
 
-export default async function JournalPage({ searchParams }: { searchParams: { from?: string; to?: string } }) {
+export default async function JournalPage({ searchParams }: { searchParams: { from?: string; to?: string; q?: string } }) {
   const ctx = await requirePermission('journal', 'view');
   const d = t();
   const locale = currentLocale();
@@ -18,11 +18,18 @@ export default async function JournalPage({ searchParams }: { searchParams: { fr
   const from = searchParams.from || firstDayOfMonth();
   const to = searchParams.to || lastDayOfMonth();
 
-  const { data } = await supabase
+  let query = supabase
     .from('journal_entries')
     .select('*')
-    .eq('company_id', ctx.company.id)
-    .gte('entry_date', from).lte('entry_date', to)
+    .eq('company_id', ctx.company.id);
+
+  // ค้นเลขที่รายการ : ข้ามช่วงวันที่ไปเลย เพราะคนที่กดมาจากแผนภาพหรือหน้าเจาะดู
+  // ต้องการรายการใบนั้นโดยเฉพาะ ซึ่งมักอยู่คนละเดือนกับช่วงที่ตั้งไว้
+  const q = (searchParams.q || '').trim();
+  if (q) query = query.ilike('entry_number', `%${q}%`);
+  else query = query.gte('entry_date', from).lte('entry_date', to);
+
+  const { data } = await query
     .order('entry_date', { ascending: false }).limit(500);
   const rows = (data || []) as any[];
 

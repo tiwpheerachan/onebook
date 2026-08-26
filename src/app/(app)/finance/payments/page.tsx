@@ -9,18 +9,24 @@ import { firstDayOfMonth, lastDayOfMonth, localeDate, money } from '@/lib/format
 
 export const dynamic = 'force-dynamic';
 
-export default async function PaymentsPage({ searchParams }: { searchParams: { from?: string; to?: string } }) {
+export default async function PaymentsPage({ searchParams }: { searchParams: { from?: string; to?: string; q?: string } }) {
   const ctx = await requirePermission('finance.payments', 'view');
   const d = t();
   const locale = currentLocale();
   const from = searchParams.from || firstDayOfMonth();
   const to = searchParams.to || lastDayOfMonth();
   const supabase = createClient();
-  const { data } = await supabase
+  let query = supabase
     .from('payments')
     .select('*, contacts(name), financial_channels(name)')
-    .eq('company_id', ctx.company.id)
-    .gte('doc_date', from).lte('doc_date', to)
+    .eq('company_id', ctx.company.id);
+
+  // ค้นเลขที่รายการ : ข้ามช่วงวันที่ ด้วยเหตุผลเดียวกับหน้าสมุดรายวัน
+  const q = (searchParams.q || '').trim();
+  if (q) query = query.ilike('doc_number', `%${q}%`);
+  else query = query.gte('doc_date', from).lte('doc_date', to);
+
+  const { data } = await query
     .order('doc_date', { ascending: false }).limit(500);
   const rows = (data || []) as any[];
 

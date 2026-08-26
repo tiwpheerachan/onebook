@@ -101,6 +101,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/settings/roles', label: d.nav.roles, resource: 'settings.roles' },
         { href: '/settings/numbering', label: d.nav.numbering, resource: 'settings.numbering' },
         { href: '/settings/data-import', label: d.nav.dataImport, resource: 'contacts', action: 'create' },
+        { href: '/settings/demo', label: d.ui.demo.title, resource: 'documents' },
         { href: '/settings/period-lock', label: d.nav.periodLock, resource: 'period' },
         { href: '/settings/security', label: d.nav.security, resource: 'settings.security' },
         { href: '/settings/marketplace', label: d.nav.marketplace, resource: 'settings.marketplace' },

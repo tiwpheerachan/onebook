@@ -307,3 +307,37 @@ export async function setVatTaxMonth(form: {
   revalidatePath('/tax/pp30');
   return { ok: true };
 }
+
+/* ─────────────────────────── ข้อมูลจำลอง ─────────────────────────── */
+
+export async function seedDemoData() {
+  const ctx = await getSessionContext();
+  const L = t().ui.demo;
+  if (!ctx || !can(ctx, 'documents', 'create')) return { ok: false, error: L.noPermission };
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('seed_demo_data', { p_company: ctx.company.id });
+  if (error) {
+    if (error.message.includes('ALREADY_SEEDED')) return { ok: false, error: L.alreadySeeded };
+    if (error.message.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath('/', 'layout');
+  return { ok: true, rows: (data as any)?.rows ?? 0 };
+}
+
+/** ลบเฉพาะแถวที่ข้อมูลจำลองสร้างไว้ ไม่แตะข้อมูลจริง — ฐานข้อมูลบังคับอีกชั้น */
+export async function purgeDemoData() {
+  const ctx = await getSessionContext();
+  const L = t().ui.demo;
+  if (!ctx || !can(ctx, 'documents', 'delete')) return { ok: false, error: L.noPermission };
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc('purge_demo_data', { p_company: ctx.company.id });
+  if (error) {
+    if (error.message.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath('/', 'layout');
+  return { ok: true };
+}
