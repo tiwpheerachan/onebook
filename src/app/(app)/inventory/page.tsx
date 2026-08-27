@@ -11,14 +11,16 @@ import { money } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function InventoryPage({ searchParams }: { searchParams: { as_of?: string } }) {
+export default async function InventoryPage({ searchParams }: { searchParams: { as_of?: string; wh?: string } }) {
   const ctx = await requirePermission('products.inventory', 'view');
   const d = t();
   const supabase = createClient();
   const asOf = searchParams.as_of || new Date().toISOString().slice(0, 10);
 
-  const [{ data: stock }, { data: products }] = await Promise.all([
-    supabase.rpc('rpt_stock_balance', { p_company: ctx.company.id, p_as_of: asOf }),
+  // wh ว่าง = รวมทุกคลัง
+  const wh = searchParams.wh || null;
+  const [{ data: stock }, { data: products }, { data: whs }] = await Promise.all([
+    supabase.rpc('rpt_stock_balance', { p_company: ctx.company.id, p_as_of: asOf, p_warehouse: wh }),
     supabase
       .from('products')
       .select('id, sku, name')
@@ -27,7 +29,19 @@ export default async function InventoryPage({ searchParams }: { searchParams: { 
       .eq('is_active', true)
       .order('sku')
       .limit(500),
+    supabase.from('warehouses').select('id, code, name, is_active')
+      .eq('company_id', ctx.company.id).eq('is_active', true)
+      .order('sort_order').order('code'),
   ]);
+
+  const warehouses = (whs || []) as any[];
+  const whLink = (id: string | null) => {
+    const p = new URLSearchParams();
+    if (searchParams.as_of) p.set('as_of', searchParams.as_of);
+    if (id) p.set('wh', id);
+    const q = p.toString();
+    return q ? `/inventory?${q}` : '/inventory';
+  };
 
   const rows = (stock || []) as any[];
   const totalValue = rows.reduce((s, r) => s + Number(r.stock_value || 0), 0);
@@ -56,6 +70,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: { 
                   ...rows.map((r) => [r.sku, r.product_name, r.unit, r.qty_on_hand, r.stock_value, r.avg_unit_cost]),
                 ]}
               />
+
             )}
             {can(ctx, 'products.inventory', 'edit') && (
               <StockAdjust products={(products || []).map((p: any) => ({ id: p.id, label: `${p.sku} · ${p.name}` }))} labels={labels} />
@@ -63,6 +78,32 @@ export default async function InventoryPage({ searchParams }: { searchParams: { 
           </>
         }
       />
+
+
+      {/* เลือกคลัง — มีมากกว่าหนึ่งคลังจึงจะแสดง */}
+      {warehouses.length > 1 && (
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          <Link
+            href={whLink(null)}
+            className={'chip transition ' + (!searchParams.wh
+              ? 'bg-brand-600 text-white ring-brand-600'
+              : 'bg-white text-ink-600 ring-ink-200 hover:bg-ink-50')}
+          >
+            {d.ui.warehouse.all}
+          </Link>
+          {warehouses.map((w: any) => (
+            <Link
+              key={w.id}
+              href={whLink(w.id)}
+              className={'chip transition ' + (searchParams.wh === w.id
+                ? 'bg-brand-600 text-white ring-brand-600'
+                : 'bg-white text-ink-600 ring-ink-200 hover:bg-ink-50')}
+            >
+              {w.code} · {w.name}
+            </Link>
+          ))}
+        </div>
+      )}
 
       <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label={d.inv.stockValue} value={totalValue} suffix={d.common.baht} tone="brand" />

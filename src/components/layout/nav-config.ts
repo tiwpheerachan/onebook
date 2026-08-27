@@ -49,6 +49,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/contacts/cycles', label: d.ui.cycles.title, resource: 'contacts' },
         { href: '/products', label: d.nav.products, resource: 'products' },
         { href: '/inventory', label: d.nav.inventory, resource: 'products.inventory' },
+        { href: '/inventory/warehouses', label: d.ui.warehouse.title, resource: 'products.inventory' },
       ],
     },
     {
