@@ -210,3 +210,117 @@ export async function confirmStockCount(countId: string) {
   revalidatePath('/inventory');
   return { ok: true, result: data };
 }
+
+/* ─────────────────────────── ต้นทุนแฝง ─────────────────────────── */
+
+export async function createLandedCost(form: {
+  source_document_id: string;
+  date: string;
+  method: 'value' | 'qty' | 'weight';
+  note?: string;
+}) {
+  const ctx = await getSessionContext();
+  const L = t().ui.landed;
+  if (!ctx || !can(ctx, 'products.inventory', 'edit')) return { ok: false, error: L.noPermission };
+  if (!form.source_document_id) return { ok: false, error: L.noSource };
+
+  const supabase = createClient();
+
+  // เลขที่ใบรันตามเดือน เหมือนใบตรวจนับ
+  const ym = form.date.slice(0, 7).replace('-', '');
+  const { count } = await supabase
+    .from('landed_costs')
+    .select('id', { count: 'exact', head: true })
+    .eq('company_id', ctx.company.id)
+    .gte('doc_date', `${form.date.slice(0, 7)}-01`);
+
+  const docNumber = `LC-${ym}-${String((count || 0) + 1).padStart(3, '0')}`;
+
+  const { data, error } = await supabase
+    .from('landed_costs')
+    .insert({
+      company_id: ctx.company.id,
+      doc_number: docNumber,
+      doc_date: form.date,
+      source_document_id: form.source_document_id,
+      method: form.method,
+      note: form.note || null,
+      created_by: ctx.userId,
+    })
+    .select('id')
+    .single();
+
+  if (error) return { ok: false, error: error.message };
+  revalidatePath('/inventory/landed-costs');
+  return { ok: true, id: data.id as string };
+}
+
+export async function addLandedCharge(form: {
+  landed_id: string;
+  description: string;
+  amount: number;
+  account_id: string;
+}) {
+  const ctx = await getSessionContext();
+  const L = t().ui.landed;
+  if (!ctx || !can(ctx, 'products.inventory', 'edit')) return { ok: false, error: L.noPermission };
+  if (!(Number(form.amount) > 0)) return { ok: false, error: L.amount };
+
+  const supabase = createClient();
+  const { error } = await supabase.from('landed_cost_charges').insert({
+    landed_id: form.landed_id,
+    company_id: ctx.company.id,
+    description: form.description.trim(),
+    amount: Number(form.amount),
+    account_id: form.account_id,
+  });
+
+  if (error) {
+    if (error.message.includes('LC_CONFIRMED')) return { ok: false, error: L.locked };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath(`/inventory/landed-costs/${form.landed_id}`);
+  return { ok: true };
+}
+
+export async function removeLandedCharge(landedId: string, chargeId: string) {
+  const ctx = await getSessionContext();
+  const L = t().ui.landed;
+  if (!ctx || !can(ctx, 'products.inventory', 'edit')) return { ok: false, error: L.noPermission };
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('landed_cost_charges').delete()
+    .eq('id', chargeId).eq('landed_id', landedId).eq('company_id', ctx.company.id);
+
+  if (error) {
+    if (error.message.includes('LC_CONFIRMED')) return { ok: false, error: L.locked };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath(`/inventory/landed-costs/${landedId}`);
+  return { ok: true };
+}
+
+export async function confirmLandedCost(landedId: string) {
+  const ctx = await getSessionContext();
+  const L = t().ui.landed;
+  if (!ctx || !can(ctx, 'products.inventory', 'edit')) return { ok: false, error: L.noPermission };
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('confirm_landed_cost', { p_landed: landedId });
+
+  if (error) {
+    const m = error.message;
+    if (m.includes('LC_NOT_DRAFT') || m.includes('LC_RACE')) return { ok: false, error: L.notDraft };
+    if (m.includes('LC_NO_CHARGE')) return { ok: false, error: L.noCharge };
+    if (m.includes('LC_NO_SOURCE')) return { ok: false, error: L.noSource };
+    if (m.includes('LC_NO_BASIS')) return { ok: false, error: L.noBase };
+    if (m.includes('PERIOD_LOCKED')) return { ok: false, error: L.periodLocked };
+    if (m.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
+    return { ok: false, error: m };
+  }
+
+  revalidatePath(`/inventory/landed-costs/${landedId}`);
+  revalidatePath('/inventory');
+  return { ok: true, result: data };
+}

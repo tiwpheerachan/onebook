@@ -51,6 +51,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/inventory', label: d.nav.inventory, resource: 'products.inventory' },
         { href: '/inventory/warehouses', label: d.ui.warehouse.title, resource: 'products.inventory' },
         { href: '/inventory/counts', label: d.ui.count.title, resource: 'products.inventory' },
+        { href: '/inventory/landed-costs', label: d.ui.landed.title, resource: 'products.inventory' },
       ],
     },
     {
