@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
+import { t } from '@/i18n/server';
 
 type Res = { ok: boolean; error?: string; id?: string };
 
@@ -199,4 +200,71 @@ export async function setContactCycle(form: {
   revalidatePath('/contacts/cycles');
   revalidatePath('/dashboard');
   return { ok: true };
+}
+
+/* ─────────────────────────── กลุ่มสินค้า ─────────────────────────── */
+
+export async function saveProductGroup(form: {
+  id?: string;
+  code: string;
+  name: string;
+  note?: string;
+  income_account_id?: string;
+  expense_account_id?: string;
+  inventory_account_id?: string;
+  cogs_account_id?: string;
+  is_active?: boolean;
+}) {
+  const ctx = await getSessionContext();
+  const L = t().ui.pgroup;
+  if (!ctx || !can(ctx, 'products', 'edit')) return { ok: false, error: L.noPermission };
+
+  const code = (form.code || '').trim().toUpperCase();
+  const name = (form.name || '').trim();
+  if (!code || !name) return { ok: false, error: L.codeRequired };
+
+  const supabase = createClient();
+  const row = {
+    company_id: ctx.company.id,
+    code, name,
+    note: form.note?.trim() || null,
+    income_account_id: form.income_account_id || null,
+    expense_account_id: form.expense_account_id || null,
+    inventory_account_id: form.inventory_account_id || null,
+    cogs_account_id: form.cogs_account_id || null,
+    is_active: form.is_active !== false,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = form.id
+    ? await supabase.from('product_groups').update(row).eq('id', form.id).eq('company_id', ctx.company.id)
+    : await supabase.from('product_groups').insert(row);
+
+  if (error) {
+    if (error.message.includes('duplicate key')) return { ok: false, error: L.duplicate };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath('/products/groups');
+  revalidatePath('/products');
+  return { ok: true };
+}
+
+/** ใช้ผังบัญชีของกลุ่มกับสินค้าทั้งกลุ่ม — ต้องกดเอง ไม่ทำอัตโนมัติ */
+export async function applyGroupAccounts(groupId: string, overwrite: boolean) {
+  const ctx = await getSessionContext();
+  const L = t().ui.pgroup;
+  if (!ctx || !can(ctx, 'products', 'edit')) return { ok: false, error: L.noPermission };
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('apply_group_accounts', {
+    p_group: groupId, p_overwrite: overwrite,
+  });
+
+  if (error) {
+    if (error.message.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath('/products/groups');
+  revalidatePath('/products');
+  return { ok: true, updated: (data as any)?.updated ?? 0 };
 }
