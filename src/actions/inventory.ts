@@ -324,3 +324,61 @@ export async function confirmLandedCost(landedId: string) {
   revalidatePath('/inventory');
   return { ok: true, result: data };
 }
+
+/* ─────────────────────────── การจองสินค้า ─────────────────────────── */
+
+export async function reserveStock(form: {
+  product_id: string;
+  warehouse_id: string;
+  qty: number;
+  document_id?: string;
+  expires_at?: string;
+  note?: string;
+}) {
+  const ctx = await getSessionContext();
+  const L = t().ui.reserve;
+  if (!ctx || !can(ctx, 'products.inventory', 'edit')) return { ok: false, error: L.noPermission };
+  if (!(Number(form.qty) > 0)) return { ok: false, error: L.invalidQty };
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc('reserve_stock', {
+    p_company: ctx.company.id,
+    p_product: form.product_id,
+    p_warehouse: form.warehouse_id,
+    p_qty: Number(form.qty),
+    p_document: form.document_id || null,
+    p_expires: form.expires_at || null,
+    p_note: form.note || null,
+  });
+
+  if (error) {
+    const m = error.message;
+    if (m.includes('NOT_ENOUGH')) return { ok: false, error: L.notEnough };
+    if (m.includes('INVALID_QTY')) return { ok: false, error: L.invalidQty };
+    if (m.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
+    return { ok: false, error: m };
+  }
+  revalidatePath('/inventory');
+  revalidatePath('/inventory/reservations');
+  return { ok: true };
+}
+
+export async function releaseReservation(id: string, fulfilled: boolean) {
+  const ctx = await getSessionContext();
+  const L = t().ui.reserve;
+  if (!ctx || !can(ctx, 'products.inventory', 'edit')) return { ok: false, error: L.noPermission };
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc('release_reservation', {
+    p_reservation: id, p_fulfilled: fulfilled,
+  });
+
+  if (error) {
+    if (error.message.includes('NOT_ACTIVE')) return { ok: false, error: L.notActive };
+    if (error.message.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath('/inventory');
+  revalidatePath('/inventory/reservations');
+  return { ok: true };
+}

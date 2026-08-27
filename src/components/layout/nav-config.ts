@@ -53,6 +53,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/inventory/warehouses', label: d.ui.warehouse.title, resource: 'products.inventory' },
         { href: '/inventory/counts', label: d.ui.count.title, resource: 'products.inventory' },
         { href: '/inventory/landed-costs', label: d.ui.landed.title, resource: 'products.inventory' },
+        { href: '/inventory/reservations', label: d.ui.reserve.title, resource: 'products.inventory' },
       ],
     },
     {
@@ -83,6 +84,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/reports/balance-sheet', label: d.nav.balanceSheet, resource: 'report' },
         { href: '/reports/ar-aging', label: d.nav.arAging, resource: 'report' },
         { href: '/reports/ap-aging', label: d.nav.apAging, resource: 'report' },
+        { href: '/reports/analysis', label: d.ui.analysis.title, resource: 'report' },
       ],
     },
     {
