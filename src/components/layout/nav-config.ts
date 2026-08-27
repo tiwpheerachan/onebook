@@ -60,6 +60,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/finance', label: d.ui.overview.finance, resource: 'finance.channels' },
         { href: '/finance/channels', label: d.nav.channels, resource: 'finance.channels' },
         { href: '/finance/payments', label: d.nav.payments, resource: 'finance.payments' },
+        { href: '/finance/cheques', label: d.ui.cheque.title, resource: 'finance.payments' },
         { href: '/finance/reconcile', label: d.nav.reconcile, resource: 'finance.reconcile' },
       ],
     },
