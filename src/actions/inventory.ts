@@ -143,3 +143,70 @@ export async function transferStock(form: {
   revalidatePath('/inventory');
   return { ok: true };
 }
+
+/* ─────────────────────────── ตรวจนับสินค้า ─────────────────────────── */
+
+export async function openStockCount(form: { warehouse_id: string; date: string; note?: string }) {
+  const ctx = await getSessionContext();
+  const L = t().ui.count;
+  if (!ctx || !can(ctx, 'products.inventory', 'edit')) return { ok: false, error: L.noPermission };
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('open_stock_count', {
+    p_company: ctx.company.id,
+    p_warehouse: form.warehouse_id,
+    p_date: form.date,
+    p_note: form.note || null,
+  });
+
+  if (error) {
+    if (error.message.includes('COUNT_OPEN')) return { ok: false, error: L.alreadyOpen };
+    if (error.message.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath('/inventory/counts');
+  return { ok: true, id: (data as any)?.id as string };
+}
+
+/** บันทึกยอดที่นับได้ — trigger ที่ฐานข้อมูลกันไม่ให้แก้ใบที่ยืนยันแล้วอีกชั้น */
+export async function saveCountedQty(countId: string, lines: { id: string; counted_qty: number | null }[]) {
+  const ctx = await getSessionContext();
+  const L = t().ui.count;
+  if (!ctx || !can(ctx, 'products.inventory', 'edit')) return { ok: false, error: L.noPermission };
+
+  const supabase = createClient();
+  for (const l of lines) {
+    const { error } = await supabase
+      .from('stock_count_lines')
+      .update({ counted_qty: l.counted_qty })
+      .eq('id', l.id)
+      .eq('count_id', countId)
+      .eq('company_id', ctx.company.id);
+    if (error) {
+      if (error.message.includes('COUNT_CONFIRMED')) return { ok: false, error: L.locked };
+      return { ok: false, error: error.message };
+    }
+  }
+  revalidatePath(`/inventory/counts/${countId}`);
+  return { ok: true };
+}
+
+export async function confirmStockCount(countId: string) {
+  const ctx = await getSessionContext();
+  const L = t().ui.count;
+  if (!ctx || !can(ctx, 'products.inventory', 'edit')) return { ok: false, error: L.noPermission };
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('confirm_stock_count', { p_count: countId });
+
+  if (error) {
+    if (error.message.includes('COUNT_NOT_OPEN') || error.message.includes('COUNT_RACE'))
+      return { ok: false, error: L.notOpen };
+    if (error.message.includes('PERIOD_LOCKED')) return { ok: false, error: L.periodLocked };
+    if (error.message.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath(`/inventory/counts/${countId}`);
+  revalidatePath('/inventory');
+  return { ok: true, result: data };
+}
