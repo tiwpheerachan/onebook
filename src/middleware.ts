@@ -37,11 +37,35 @@ export async function middleware(request: NextRequest) {
   }
 
   // ---------- 2) ป้องกัน CSRF ข้ามโดเมนสำหรับ mutation ----------
+  //
+  // เทียบกับ "โฮสต์ที่ผู้ใช้เปิดอยู่จริง" เป็นหลัก ไม่ใช่เทียบกับ APP_ORIGIN อย่างเดียว
+  //
+  // เดิมเทียบกับ APP_ORIGIN ตรง ๆ ซึ่งพังทันทีเมื่อพอร์ตหรือโดเมนไม่ตรงกับที่ตั้งไว้
+  // เช่นตั้ง APP_ORIGIN เป็น 3100 แต่รัน dev ที่ 3000 ทุก server action จะโดน 403
+  // แล้วฝั่งหน้าเว็บจะได้ค่า undefined กลับไป เพราะ 403 ไม่ใช่รูปแบบที่ action อ่านได้
+  // อาการที่เห็นคือ "Cannot read properties of undefined" ซึ่งชี้ต้นเหตุไม่ได้เลย
+  //
+  // การเทียบกับโฮสต์ของ request เองยังกัน CSRF ได้เท่าเดิม เพราะเว็บอื่นปลอม Origin ไม่ได้
+  // และใช้ได้ทุกพอร์ตทุกโดเมนโดยไม่ต้องตั้งค่าเพิ่ม
   if (request.method === 'POST') {
     const origin = request.headers.get('origin');
-    const expected = process.env.APP_ORIGIN;
-    if (origin && expected && !origin.startsWith(expected)) {
-      return withFramePolicy(new NextResponse('Cross-origin request blocked', { status: 403 }));
+    if (origin) {
+      const host = request.headers.get('x-forwarded-host')?.split(',')[0].trim()
+        || request.headers.get('host');
+      const proto = request.headers.get('x-forwarded-proto')?.split(',')[0].trim()
+        || (request.nextUrl.protocol.replace(':', ''));
+
+      const allowed = new Set<string>();
+      if (host) allowed.add(`${proto}://${host}`);
+      if (process.env.APP_ORIGIN) allowed.add(process.env.APP_ORIGIN.replace(/\/+$/, ''));
+      // พอร์ทัลที่ฝังหน้าจอเราไว้ ก็ถือเป็นต้นทางที่เชื่อถือได้
+      for (const a of (process.env.FRAME_ANCESTORS || '').split(/[\s,]+/)) {
+        if (/^https?:\/\//.test(a)) allowed.add(a.replace(/\/+$/, ''));
+      }
+
+      if (!allowed.has(origin.replace(/\/+$/, ''))) {
+        return withFramePolicy(new NextResponse('Cross-origin request blocked', { status: 403 }));
+      }
     }
   }
 
