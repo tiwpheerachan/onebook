@@ -62,6 +62,15 @@ export async function saveProduct(form: any): Promise<Res> {
     expense_account_id: form.expense_account_id || null,
     is_active: form.is_active ?? true,
   };
+  // ผู้ใช้ที่มองไม่เห็นค่า ต้องไม่ทำให้ค่านั้นหายไปด้วย
+  // หน้าจอส่งค่าว่างกลับมาเพราะไม่เคยได้รับค่าจริง ถ้าเขียนทับตรง ๆ ข้อมูลเดิมจะหาย
+  if (form.id) {
+    const { data: masked } = await supabase.rpc('rpt_masked_fields', {
+      p_company: ctx.company.id, p_resource: 'products',
+    });
+    for (const f of (masked || []) as string[]) delete (row as any)[f];
+  }
+
   const q = form.id
     ? await supabase.from('products').update(row).eq('id', form.id).select('id').single()
     : await supabase.from('products').insert(row).select('id').single();

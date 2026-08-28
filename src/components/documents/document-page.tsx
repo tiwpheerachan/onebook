@@ -34,7 +34,7 @@ export async function DocumentPage({
   const [{ data: contacts }, { data: products }, { data: accounts }] = await Promise.all([
     supabase.from('contacts').select('id, name, tax_id')
       .eq('company_id', ctx.company.id).eq('is_active', true).order('name').limit(1000),
-    supabase.from('products').select('id, name, sku, sale_price, purchase_price, unit')
+    supabase.from('products_masked').select('id, name, sku, sale_price, purchase_price, unit')
       .eq('company_id', ctx.company.id).eq('is_active', true).order('sku').limit(1000),
     supabase.from('accounts').select('id, code, name_th')
       .eq('company_id', ctx.company.id).eq('is_active', true).eq('is_header', false).order('code').limit(500),

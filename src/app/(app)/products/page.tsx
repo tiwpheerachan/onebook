@@ -16,7 +16,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
   const d = t();
   const supabase = createClient();
 
-  let q = supabase.from('products').select('*').eq('company_id', ctx.company.id).order('sku').limit(500);
+  // อ่านผ่าน view ที่ปิดคอลัมน์ตามสิทธิ์ ไม่ใช่ตารางตรง
+  let q = supabase.from('products_masked').select('*').eq('company_id', ctx.company.id).order('sku').limit(500);
   if (searchParams.q) q = q.or(`name.ilike.%${searchParams.q}%,sku.ilike.%${searchParams.q}%`);
   const { data } = await q;
   const rows = (data || []) as any[];
