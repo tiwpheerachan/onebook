@@ -341,3 +341,46 @@ export async function purgeDemoData() {
   revalidatePath('/', 'layout');
   return { ok: true };
 }
+
+/**
+ * ตั้งเงื่อนไขจำกัดแถวที่บทบาทหนึ่งมองเห็น
+ *
+ * รับเฉพาะรูปแบบที่กำหนดไว้ ไม่ใช่เงื่อนไขอิสระ
+ * ฐานข้อมูลตรวจซ้ำอีกชั้นก่อนเก็บเสมอ
+ */
+export async function setRowFilter(form: {
+  role_id: string;
+  resource: string;
+  mode: 'none' | 'own' | 'contact_group';
+  group_ids?: string[];
+}) {
+  const ctx = await getSessionContext();
+  const L = t().ui.rowFilter;
+  if (!ctx || !can(ctx, 'settings.roles', 'edit')) return { ok: false, error: L.noPermission };
+
+  const filter =
+    form.mode === 'none' ? null
+    : form.mode === 'own' ? { mode: 'own' }
+    : { mode: 'contact_group', ids: form.group_ids || [] };
+
+  if (form.mode === 'contact_group' && !(form.group_ids || []).length) {
+    return { ok: false, error: L.needGroups };
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc('set_row_filter', {
+    p_role: form.role_id, p_resource: form.resource, p_filter: filter,
+  });
+
+  if (error) {
+    const m = error.message;
+    if (m.includes('NO_PERMISSION_ROW')) return { ok: false, error: L.noRow };
+    if (m.includes('BAD_MODE')) return { ok: false, error: L.badMode };
+    if (m.includes('NEED_GROUPS')) return { ok: false, error: L.needGroups };
+    if (m.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
+    return { ok: false, error: m };
+  }
+
+  revalidatePath('/settings/roles');
+  return { ok: true };
+}

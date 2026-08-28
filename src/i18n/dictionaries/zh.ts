@@ -206,6 +206,17 @@ const zh: Dictionary = {
       safetyNote: 'AI 无法修改金额或明细行，这些数字会影响财务报表，请在单据页面自行修改。',
       auditNote: '每一项确认都会记录为来自 AI 建议',
     },
+    rowFilter: {
+      title: '限制可见数据行',
+      hint: '未设置 = 与以往一样可见全部数据；设置后该角色仅能看到符合条件的行。',
+      none: '可见全部', own: '仅本人创建的', group: '仅负责的联系人分组',
+      pickGroups: '选择联系人分组', save: '保存条件', saved: '已保存',
+      needGroups: '请至少选择一个联系人分组',
+      noRow: '该角色尚未配置此菜单的权限，请先勾选权限',
+      badMode: '条件格式不正确',
+      noPermission: '你没有编辑角色的权限',
+      appliesTo: '仅适用于联系人与单据菜单',
+    },
     analysis: {
       title: '销售与采购分析',
       subtitle: '查看哪些商品畅销、哪个分组盈利、哪些往来单位重要',

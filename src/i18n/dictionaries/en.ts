@@ -206,6 +206,17 @@ const en: Dictionary = {
       safetyNote: 'AI cannot change amounts or line items — those flow through to the financial statements, so edit them on the document screen yourself.',
       auditNote: 'Everything you confirm is recorded as having come from an AI proposal',
     },
+    rowFilter: {
+      title: 'Limit which rows are visible',
+      hint: 'Not set = sees every row as before. Once set, this role only sees rows that match.',
+      none: 'See every row', own: 'Only what they created', group: 'Only their contact groups',
+      pickGroups: 'Choose contact groups', save: 'Save condition', saved: 'Saved',
+      needGroups: 'Choose at least one contact group',
+      noRow: 'This role has no permission for that menu yet — tick a permission first',
+      badMode: 'That condition is not valid',
+      noPermission: 'You do not have permission to edit roles',
+      appliesTo: 'Applies to the contacts and documents menus only',
+    },
     analysis: {
       title: 'Sales and purchase analysis',
       subtitle: 'See which products sell, which groups make money, and which counterparties matter',
