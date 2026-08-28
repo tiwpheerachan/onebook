@@ -3,7 +3,13 @@ import { updateSession } from '@/lib/supabase/middleware';
 import { isIpAllowed, clientIpFromHeaders } from '@/lib/ip-guard';
 import { frameAncestors } from '@/lib/frame-policy';
 
-const PUBLIC_PATHS = ['/login', '/blocked', '/_next', '/favicon.ico', '/api/health'];
+// เส้นทางที่ต้องเข้าถึงได้ก่อนมีเซสชัน
+//
+// /api/auth ทั้งกลุ่มต้องอยู่ตรงนี้ ไม่งั้นการล็อกอินด้วย GoodHR จะพังทั้งวงจร
+//   · start    ยังไม่มีเซสชันอยู่แล้วโดยธรรมชาติ
+//   · callback เป็นขาที่กลับมาสร้างเซสชัน ถ้าโดนเด้งไป login ก่อนก็ไม่มีวันสร้างได้
+//   · logout   ต้องผ่านเพื่อไปล้างคุกกี้ให้เรียบร้อย
+const PUBLIC_PATHS = ['/login', '/blocked', '/_next', '/favicon.ico', '/api/health', '/api/auth'];
 
 /**
  * ใครฝังหน้าจอนี้ได้บ้าง
@@ -74,6 +80,15 @@ export async function middleware(request: NextRequest) {
 
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   if (!user && !isPublic) {
+    // เส้นทาง API ต้องตอบเป็น JSON ไม่ใช่เด้งไปหน้า login
+    // ถ้าเด้ง ฝั่งหน้าเว็บที่เรียกด้วย fetch จะได้ HTML แล้วแตกตอนแปลงเป็น JSON
+    // กลายเป็นข้อความผิดพลาดที่ไม่เกี่ยวกับสาเหตุจริงเลย
+    if (pathname.startsWith('/api/')) {
+      return withFramePolicy(new NextResponse(
+        JSON.stringify({ error: 'unauthorized' }),
+        { status: 401, headers: { 'content-type': 'application/json; charset=utf-8' } }
+      ));
+    }
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('next', pathname);
