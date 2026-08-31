@@ -1,13 +1,14 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ONEBOOK';
 
 export type DocKind =
-  | 'quotation' | 'billing_note' | 'invoice' | 'tax_invoice' | 'receipt'
+  | 'quotation' | 'sales_order' | 'billing_note' | 'invoice' | 'tax_invoice' | 'receipt'
   | 'credit_note' | 'debit_note' | 'deposit_receipt'
   | 'purchase_request' | 'purchase_order' | 'goods_receipt' | 'bill' | 'expense'
   | 'purchase_credit_note' | 'purchase_debit_note' | 'deposit_payment';
 
 export const SALES_KINDS: DocKind[] = [
-  'quotation', 'billing_note', 'invoice', 'tax_invoice', 'receipt', 'credit_note', 'debit_note', 'deposit_receipt',
+  'quotation', 'sales_order', 'billing_note', 'invoice', 'tax_invoice', 'receipt',
+  'credit_note', 'debit_note', 'deposit_receipt',
 ];
 export const PURCHASE_KINDS: DocKind[] = [
   'purchase_request', 'purchase_order', 'goods_receipt', 'bill', 'expense', 'purchase_credit_note', 'purchase_debit_note', 'deposit_payment',
@@ -16,6 +17,7 @@ export const PURCHASE_KINDS: DocKind[] = [
 /** slug ที่ใช้ใน URL <-> doc_kind ในฐานข้อมูล */
 export const KIND_SLUG: Record<string, DocKind> = {
   quotations: 'quotation',
+  'sales-orders': 'sales_order',
   'billing-notes': 'billing_note',
   invoices: 'invoice',
   'tax-invoices': 'tax_invoice',
@@ -71,6 +73,7 @@ export const RESOURCES = [
   { key: 'settings.users', group: 'ตั้งค่า' },
   { key: 'settings.roles', group: 'ตั้งค่า' },
   { key: 'settings.numbering', group: 'ตั้งค่า' },
+  { key: 'settings.dimensions', group: 'ตั้งค่า' },
   { key: 'settings.security', group: 'ตั้งค่า' },
   { key: 'settings.marketplace', group: 'ตั้งค่า' },
   { key: 'settings.audit', group: 'ตั้งค่า' },

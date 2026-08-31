@@ -66,7 +66,7 @@ export default async function AgingPage({ searchParams }: { searchParams: { to?:
               const b = BUCKETS.find((x) => x.key === r.bucket);
               return (
                 <TR key={i}>
-                  <TD className="max-w-[20rem] truncate">{r.contact_name}</TD>
+                  <TD><span className="block truncate max-w-[20rem]">{r.contact_name}</span></TD>
                   <TD className="font-mono text-xs">{r.doc_number}</TD>
                   <TD>{localeDate(r.doc_date, locale)}</TD>
                   <TD>{r.due_date ? localeDate(r.due_date, locale) : '–'}</TD>

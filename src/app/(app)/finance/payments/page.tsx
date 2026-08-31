@@ -50,7 +50,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: { f
                 <TD className="font-mono text-xs">{r.doc_number}</TD>
                 <TD>{localeDate(r.doc_date, locale)}</TD>
                 <TD><Badge tone={r.direction === 'receive' ? 'success' : 'warn'}>{r.direction === 'receive' ? 'รับเงิน' : 'จ่ายเงิน'}</Badge></TD>
-                <TD className="max-w-[18rem] truncate">{r.contacts?.name || '–'}</TD>
+                <TD><span className="block truncate max-w-[18rem]">{r.contacts?.name || '–'}</span></TD>
                 <TD>{r.financial_channels?.name || '–'}</TD>
                 <TD align="right" className="font-medium">{money(r.amount)}</TD>
                 <TD align="right">{money(r.wht_amount)}</TD>

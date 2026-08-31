@@ -57,7 +57,7 @@ export default async function PeriodLockPage() {
               <TR key={r.id}>
                 <TD className="font-medium">{localeDate(r.locked_through, locale)}</TD>
                 <TD><Badge tone="brand">{SCOPE_LABEL[r.scope]}</Badge></TD>
-                <TD className="max-w-[20rem] truncate text-ink-600">{r.reason || '–'}</TD>
+                <TD className="text-ink-600"><span className="block truncate max-w-[20rem]">{r.reason || '–'}</span></TD>
                 <TD>{r.locked_profile?.full_name || '–'}</TD>
                 <TD className="text-xs text-ink-500">{localeDate(r.locked_at, locale)}</TD>
                 <TD>{r.is_active && !r.released_at ? <Badge tone="warn">ล็อกอยู่</Badge> : <Badge>ปลดแล้ว</Badge>}</TD>

@@ -11,7 +11,8 @@ export function PageHeader({
 }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
+      {/* min-w-0 กันหัวเรื่องหรือคำบรรยายยาวดันกลุ่มปุ่มหลุดออกนอกจอ */}
+      <div className="min-w-0">
         {breadcrumb && breadcrumb.length > 0 && (
           <nav className="mb-1.5 flex items-center gap-1.5 text-xs text-ink-400">
             {breadcrumb.map((b, i) => (
@@ -29,7 +30,7 @@ export function PageHeader({
         <h1 className="text-xl font-semibold tracking-tight text-ink-900">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-ink-500">{subtitle}</p>}
       </div>
-      {action && <div className="flex items-center gap-2">{action}</div>}
+      {action && <div className="flex flex-wrap items-center gap-2">{action}</div>}
     </div>
   );
 }

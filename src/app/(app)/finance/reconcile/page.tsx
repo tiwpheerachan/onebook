@@ -183,7 +183,7 @@ export default async function ReconcilePage({
             {rows.map((r) => (
               <TR key={r.id} className={cn(r.status === 'ignored' && 'opacity-50')}>
                 <TD className="whitespace-nowrap">{r.txn_date}</TD>
-                <TD className="max-w-[22rem] truncate" >{r.description || '—'}</TD>
+                <TD><span className="block truncate max-w-[22rem]">{r.description || '—'}</span></TD>
                 <TD className="num text-emerald-600">{Number(r.deposit) ? money(r.deposit) : '—'}</TD>
                 <TD className="num text-rose-600">{Number(r.withdrawal) ? money(r.withdrawal) : '—'}</TD>
                 <TD className="num text-ink-500">{r.balance != null ? money(r.balance) : '—'}</TD>

@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
+import { t } from '@/i18n/server';
 import { calcDocument, type VatTreatment } from '@/lib/tax';
 import { canConvert, NEEDS_DUE_DATE } from '@/lib/doc-flow';
 import type { DocKind } from '@/lib/constants';
@@ -30,6 +31,8 @@ export interface DocPayload {
   reference?: string | null;
   notes?: string | null;
   discount_amount?: number;
+  /** แผนก — ระบุที่หัวเอกสาร ทริกเกอร์ใน 0046 ส่งต่อลงบรรทัดให้เอง */
+  dimension_id?: string | null;
   /** เอกสารต้นทางที่แปลงมา ใช้ตรวจสอบย้อนกลับ */
   ref_document_id?: string | null;
   lines: LinePayload[];
@@ -83,6 +86,7 @@ export async function saveDocument(payload: DocPayload): Promise<ActionResult> {
     reference: payload.reference || null,
     ref_document_id: payload.ref_document_id || null,
     notes: payload.notes || null,
+    dimension_id: payload.dimension_id || null,
     subtotal: totals.subtotal,
     discount_amount: totals.discount_amount,
     vat_base: totals.vat_base,
@@ -140,7 +144,7 @@ export async function saveDocument(payload: DocPayload): Promise<ActionResult> {
 
 export async function approveDocument(id: string): Promise<{ ok: boolean; error?: string }> {
   const ctx = await getSessionContext();
-  if (!ctx || !can(ctx, 'documents', 'approve')) return { ok: false, error: 'ไม่มีสิทธิ์อนุมัติเอกสาร' };
+  if (!ctx || !can(ctx, 'documents', 'approve')) return { ok: false, error: t().ui.docError.noApprove };
   const supabase = createClient();
   const { error } = await supabase.rpc('post_document', { p_document: id });
   if (error) return { ok: false, error: translate(error.message) };
@@ -152,7 +156,7 @@ export async function approveDocument(id: string): Promise<{ ok: boolean; error?
 export async function voidDocument(id: string, reason: string): Promise<{ ok: boolean; error?: string }> {
   const ctx = await getSessionContext();
   if (!ctx || (!can(ctx, 'documents', 'void') && !can(ctx, 'documents', 'delete')))
-    return { ok: false, error: 'ไม่มีสิทธิ์ยกเลิกเอกสาร' };
+    return { ok: false, error: t().ui.docError.noVoid };
   const supabase = createClient();
   const { error } = await supabase.rpc('void_document', { p_document: id, p_reason: reason });
   if (error) return { ok: false, error: translate(error.message) };
@@ -162,11 +166,19 @@ export async function voidDocument(id: string, reason: string): Promise<{ ok: bo
 }
 
 function translate(msg: string): string {
-  if (msg.includes('PERIOD_LOCKED')) return 'งวดบัญชีถูกปิด (freeze) ไม่สามารถบันทึกรายการในช่วงเวลานี้ได้';
-  if (msg.includes('FORBIDDEN')) return 'คุณไม่มีสิทธิ์ดำเนินการนี้';
-  if (msg.includes('DOC_LOCKED')) return 'เอกสารที่อนุมัติแล้วแก้ไขยอดไม่ได้ กรุณายกเลิกและออกใหม่';
-  if (msg.includes('row-level security')) return 'สิทธิ์ไม่เพียงพอตามนโยบายความปลอดภัยของฐานข้อมูล';
-  if (msg.includes('duplicate key')) return 'มีเลขที่เอกสารนี้อยู่แล้ว';
+  const d = t();
+  const E = d.ui.docError;
+  if (msg.includes('PERIOD_LOCKED')) return E.periodLocked;
+  if (msg.includes('FORBIDDEN')) return E.forbidden;
+  if (msg.includes('DOC_LOCKED')) return E.docLocked;
+  // ข้อความจากฐานข้อมูลมีชื่อลูกค้าและตัวเลขติดมาด้วย ซึ่งช่วยให้ตัดสินใจได้
+  // จึงเก็บส่วนนั้นไว้ แล้วเติมคำอธิบายตามภาษาที่ผู้ใช้เลือกไว้ข้างหน้า
+  if (msg.includes('CREDIT_LIMIT_EXCEEDED')) {
+    const detail = msg.split('CREDIT_LIMIT_EXCEEDED:')[1]?.trim() || '';
+    return `${d.ui.credit.exceeded}${detail ? ' — ' + detail : ''}`;
+  }
+  if (msg.includes('row-level security')) return E.rls;
+  if (msg.includes('duplicate key')) return E.duplicate;
   return msg;
 }
 

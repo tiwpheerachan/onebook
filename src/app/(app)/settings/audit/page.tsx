@@ -52,12 +52,10 @@ export default async function AuditPage({ searchParams }: { searchParams: { reso
                 <TD className="text-ink-700">{r.user_email || '–'}</TD>
                 <TD><Badge tone={ACTION_TONE[r.action] || 'neutral'}>{ACTION_LABEL[r.action] || r.action}</Badge></TD>
                 <TD className="font-mono text-xs">{r.resource}</TD>
-                <TD className="max-w-[12rem] truncate font-mono text-xxs text-ink-400">{r.record_id || '–'}</TD>
-                <TD className="max-w-[24rem] truncate text-xxs text-ink-500">
-                  {r.action === 'update' && r.before_data && r.after_data
+                <TD className="font-mono text-xxs text-ink-400"><span className="block truncate max-w-[12rem]">{r.record_id || '–'}</span></TD>
+                <TD className="text-xxs text-ink-500"><span className="block truncate max-w-[24rem]">{r.action === 'update' && r.before_data && r.after_data
                     ? diffSummary(r.before_data, r.after_data)
-                    : r.action === 'insert' ? summarise(r.after_data) : summarise(r.before_data)}
-                </TD>
+                    : r.action === 'insert' ? summarise(r.after_data) : summarise(r.before_data)}</span></TD>
               </TR>
             ))}
           </TBody>

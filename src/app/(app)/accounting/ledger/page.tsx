@@ -85,7 +85,7 @@ export default async function LedgerPage({
                 <TR key={i}>
                   <TD>{localeDate(l.journal_entries.entry_date, locale)}</TD>
                   <TD className="font-mono text-xs">{l.journal_entries.entry_number}</TD>
-                  <TD className="max-w-[26rem] truncate">{l.description}</TD>
+                  <TD><span className="block truncate max-w-[26rem]">{l.description}</span></TD>
                   <TD align="right">{Number(l.debit) ? money(l.debit) : '–'}</TD>
                   <TD align="right">{Number(l.credit) ? money(l.credit) : '–'}</TD>
                   <TD align="right" className="font-medium">{money(running)}</TD>

@@ -278,6 +278,8 @@ export async function setVatTaxMonth(form: {
   month: string | null;   // 'YYYY-MM' หรือ null
   defer: boolean;
   note?: string;
+  tax_invoice_number?: string | null;
+  tax_invoice_date?: string | null;  // 'YYYY-MM-DD'
 }) {
   const ctx = await getSessionContext();
   const d = t();
@@ -287,23 +289,33 @@ export async function setVatTaxMonth(form: {
   const month = form.defer || !form.month ? null : `${form.month}-01`;
   if (month && !/^\d{4}-\d{2}-01$/.test(month)) return { ok: false, error: L.useMonth };
 
+  const tiDate = form.tax_invoice_date || null;
+  if (tiDate && !/^\d{4}-\d{2}-\d{2}$/.test(tiDate)) return { ok: false, error: L.taxInvoiceDate };
+
   const supabase = createClient();
   const { error } = await supabase.rpc('set_vat_tax_month', {
     p_document: form.document_id,
     p_month: month,
     p_defer: !!form.defer,
     p_note: form.note || null,
+    p_ti_number: form.tax_invoice_number || null,
+    p_ti_date: tiDate,
   });
 
   if (error) {
     if (error.message.includes('PERIOD_LOCKED')) return { ok: false, error: L.lockedMonth };
     if (error.message.includes('VAT_MONTH_BEFORE_DOC')) return { ok: false, error: L.beforeDoc };
+    if (error.message.includes('TI_DATE_FUTURE')) return { ok: false, error: L.tiDateFuture };
+    // ข้อความจากฐานข้อมูลมีเดือนสุดท้ายติดมาด้วย ดึงออกมาใส่ในข้อความภาษาผู้ใช้
+    const over = error.message.match(/VAT_MONTH_OVER_SIX[^\d]*(\d{4}-\d{2})/);
+    if (over) return { ok: false, error: L.overSixBlock.replace('{to}', over[1]) };
     if (error.message.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
     return { ok: false, error: error.message };
   }
 
   revalidatePath('/tax/pending');
-  revalidatePath('/tax/vat');
+  revalidatePath('/tax/vat/sales');
+  revalidatePath('/tax/vat/purchase');
   revalidatePath('/tax/pp30');
   return { ok: true };
 }

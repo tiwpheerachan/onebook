@@ -57,7 +57,7 @@ export default async function JournalPage({ searchParams }: { searchParams: { fr
                 </TD>
                 <TD>{localeDate(r.entry_date, locale)}</TD>
                 <TD><Badge tone="neutral">{r.book}</Badge></TD>
-                <TD className="max-w-[24rem] truncate">{r.description}</TD>
+                <TD><span className="block truncate max-w-[24rem]">{r.description}</span></TD>
                 <TD align="right">{money(r.total_debit)}</TD>
                 <TD align="right">{money(r.total_credit)}</TD>
                 <TD>

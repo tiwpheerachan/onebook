@@ -14,6 +14,8 @@ export interface CompanyRef {
   parent_id: string | null;
   tax_id: string | null;
   vat_rate: number;
+  /** สกุลเงินหลัก — ระบบยังเป็นสกุลเงินเดียว ทุกยอดในบริษัทนี้อยู่ในสกุลนี้ */
+  base_currency: string;
 }
 
 export interface SessionContext {

@@ -6,13 +6,10 @@ import { t, currentLocale } from '@/i18n/server';
 import { PageHeader, Card, CardHeader } from '@/components/ui/page-header';
 import { MonthlyBars, DonutBreakdown, ProgressRow, type Series } from '@/components/charts/charts';
 import { MonthPicker } from '@/components/forms/month-picker';
-import { money, localeDate } from '@/lib/format';
+import { money, localeDate, monthName, localeYear } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
 export const dynamic = 'force-dynamic';
-
-const TH_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
-  'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 
 /** สีของแต่ละช่วงเวลาที่ต้องจ่าย เรียงจากเร่งด่วนไปไม่เร่ง */
 const BUCKET_TONE: Record<string, { bar: string; text: string }> = {
@@ -30,6 +27,7 @@ export default async function ExpenseOverviewPage({
 }) {
   const ctx = await requirePermission('report', 'view');
   const d = t();
+  const L = d.ui.expenseOverview;
   const locale = currentLocale();
   const now = new Date();
   const year = Number(searchParams.y) || now.getFullYear();
@@ -43,21 +41,28 @@ export default async function ExpenseOverviewPage({
   if (error) {
     return (
       <>
-        <PageHeader title="ภาพรวมรายจ่าย" subtitle={ctx.company.name_th} />
-        <p className="card card-pad text-sm text-rose-700">ดึงข้อมูลไม่สำเร็จ : {error.message}</p>
+        <PageHeader title={L.title} subtitle={ctx.company.name_th} />
+        <p className="card card-pad text-sm text-rose-700">{L.loadFailed} : {error.message}</p>
       </>
     );
   }
 
   const ov = data as any;
+  const yLabel = String(localeYear(year, locale));
+  const mLabel = monthName(month, locale);
+  // ชื่อช่วงเวลามาจากฐานข้อมูลเป็นภาษาไทย จับคู่กับข้อความตามภาษาที่เลือก
+  const BUCKET_LABEL: Record<string, string> = {
+    'เลยกำหนดแล้ว': L.bucketOverdue, 'ภายใน 7 วัน': L.bucket7,
+    'ภายใน 30 วัน': L.bucket30, 'เกิน 30 วัน': L.bucketOver30,
+  };
   const monthly: any[] = ov.monthly || [];
   const byMonth = (key: string) =>
     Array.from({ length: 12 }, (_, i) => Number(monthly.find((m) => m.month === i + 1)?.[key] || 0));
 
   const series: Series[] = [
-    { key: 'paid',    label: 'จ่ายแล้ว',  color: '#14827c', values: byMonth('paid') },
-    { key: 'open',    label: 'ค้างจ่าย',  color: '#fbbf24', values: byMonth('open') },
-    { key: 'overdue', label: 'เลยกำหนด',  color: '#f43f5e', values: byMonth('overdue') },
+    { key: 'paid',    label: L.paid,    color: '#14827c', values: byMonth('paid') },
+    { key: 'open',    label: L.open,    color: '#fbbf24', values: byMonth('open') },
+    { key: 'overdue', label: L.overdue, color: '#f43f5e', values: byMonth('overdue') },
   ];
 
   const yt = ov.year_total || {};
@@ -69,23 +74,23 @@ export default async function ExpenseOverviewPage({
   const scheduleTotal = schedule.reduce((a, s) => a + Number(s.amount || 0), 0);
 
   const stats = [
-    { label: `ตั้งหนี้รวมปี ${year + 543}`, value: yt.billed, tone: 'text-ink-900' },
-    { label: 'จ่ายแล้ว', value: yt.paid, tone: 'text-emerald-600' },
-    { label: `ค้างจ่าย ${yt.open_count || 0} รายการ`, value: yt.open_amount, tone: 'text-amber-600' },
-    { label: `เลยกำหนด ${yt.overdue_count || 0} รายการ`, value: yt.overdue_amount, tone: 'text-rose-600' },
+    { label: L.billedYear.replace('{y}', yLabel), value: yt.billed, tone: 'text-ink-900' },
+    { label: L.paid, value: yt.paid, tone: 'text-emerald-600' },
+    { label: L.openCount.replace('{n}', String(yt.open_count || 0)), value: yt.open_amount, tone: 'text-amber-600' },
+    { label: L.overdueCount.replace('{n}', String(yt.overdue_count || 0)), value: yt.overdue_amount, tone: 'text-rose-600' },
   ];
 
   return (
     <>
       <PageHeader
-        title="ภาพรวมรายจ่าย"
-        subtitle={`${ctx.company.name_th} · นับเฉพาะเอกสารที่ลงบัญชีแล้ว ตัวเลขตรงกับงบการเงินเสมอ`}
+        title={L.title}
+        subtitle={`${ctx.company.name_th} · ${L.subtitle}`}
         action={
           <>
             <MonthPicker year={year} month={month} />
             {can(ctx, 'documents', 'create') && (
               <Link href="/purchase/expenses/new" className="btn-primary">
-                <Plus className="h-4 w-4" strokeWidth={2} /> บันทึกค่าใช้จ่าย
+                <Plus className="h-4 w-4" strokeWidth={2} /> {L.newExpense}
               </Link>
             )}
           </>
@@ -95,8 +100,8 @@ export default async function ExpenseOverviewPage({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card className="card-pad">
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-sm font-semibold text-ink-900">รายจ่ายที่จ่ายแล้ว ค้างจ่าย และเลยกำหนด</h2>
-            <span className="text-xxs text-ink-400">ปี {year + 543}</span>
+            <h2 className="text-sm font-semibold text-ink-900">{L.chartTitle}</h2>
+            <span className="text-xxs text-ink-400">{L.yearLabel.replace('{y}', yLabel)}</span>
           </div>
           <MonthlyBars series={series} year={year} />
           <div className="mt-5 grid grid-cols-2 gap-4 border-t border-ink-100 pt-4 sm:grid-cols-4">
@@ -111,17 +116,17 @@ export default async function ExpenseOverviewPage({
 
         {/* ตารางการเบิกจ่าย */}
         <Card className="card-pad">
-          <h2 className="text-sm font-semibold text-ink-900">ต้องจ่ายเมื่อไร</h2>
-          <p className="mt-0.5 text-xxs text-ink-400">ยอดค้างจ่ายทั้งหมดแบ่งตามความเร่งด่วน</p>
+          <h2 className="text-sm font-semibold text-ink-900">{L.dueTitle}</h2>
+          <p className="mt-0.5 text-xxs text-ink-400">{L.dueHint}</p>
 
           <p className="mt-3 text-2xl font-semibold tabular-nums text-ink-900">{money(scheduleTotal)}</p>
-          <p className="text-xxs text-ink-500">ยอดค้างจ่ายรวม</p>
+          <p className="text-xxs text-ink-500">{L.dueTotal}</p>
 
           <div className="mt-3 divide-y divide-ink-100">
             {schedule.length === 0 && (
               <p className="flex items-center gap-2 py-4 text-sm text-ink-400">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500" strokeWidth={1.8} />
-                ไม่มียอดค้างจ่าย
+                {L.dueEmpty}
               </p>
             )}
             {schedule.map((b) => {
@@ -129,7 +134,7 @@ export default async function ExpenseOverviewPage({
               return (
                 <ProgressRow
                   key={b.bucket}
-                  label={b.bucket}
+                  label={BUCKET_LABEL[b.bucket] || b.bucket}
                   amount={Number(b.amount || 0)}
                   count={Number(b.count || 0)}
                   ratio={scheduleTotal ? Number(b.amount || 0) / scheduleTotal : 0}
@@ -145,36 +150,36 @@ export default async function ExpenseOverviewPage({
         {/* สายงานจัดซื้อ */}
         <Card className="card-pad">
           <div className="mb-3 flex items-baseline justify-between gap-2">
-            <h2 className="text-sm font-semibold text-ink-900">ใบสั่งซื้อเดือน{TH_MONTHS[month - 1]}</h2>
+            <h2 className="text-sm font-semibold text-ink-900">{L.poTitle.replace('{m}', mLabel)}</h2>
           </div>
           <div className="divide-y divide-ink-100">
-            <ProgressRow label="ใบสั่งซื้อที่ออก" amount={issued}
+            <ProgressRow label={L.poIssued} amount={issued}
                          count={Number(po.issued_count || 0)} ratio={1} color="bg-brand-600" />
-            <ProgressRow label="ยังไม่ได้รับของ" amount={Number(po.waiting_amount || 0)}
+            <ProgressRow label={L.poWaiting} amount={Number(po.waiting_amount || 0)}
                          count={Number(po.waiting_count || 0)}
                          ratio={issued ? Number(po.waiting_amount || 0) / issued : 0} color="bg-amber-400" />
-            <ProgressRow label="รับของ/ตั้งหนี้แล้ว" amount={Number(po.received_amount || 0)}
+            <ProgressRow label={L.poReceived} amount={Number(po.received_amount || 0)}
                          count={Number(po.received_count || 0)}
                          ratio={issued ? Number(po.received_amount || 0) / issued : 0} color="bg-emerald-500" />
           </div>
 
           <div className="mt-4 space-y-1.5 border-t border-ink-100 pt-3">
-            <p className="section-title">ภาษีเดือนนี้</p>
+            <p className="section-title">{L.taxTitle}</p>
             <div className="flex items-baseline justify-between text-sm">
-              <span className="text-ink-600">ภาษีซื้อ</span>
+              <span className="text-ink-600">{L.inputVat}</span>
               <b className="tabular-nums text-ink-900">{money(tax.vat_input || 0)}</b>
             </div>
             <div className="flex items-baseline justify-between text-sm">
-              <span className="text-ink-600">หัก ณ ที่จ่าย</span>
+              <span className="text-ink-600">{L.wht}</span>
               <b className="tabular-nums text-ink-900">{money(tax.wht_withheld || 0)}</b>
             </div>
-            <p className="text-xxs text-ink-400">จากเอกสารซื้อ {tax.doc_count || 0} ใบ</p>
+            <p className="text-xxs text-ink-400">{L.fromDocs.replace('{n}', String(tax.doc_count || 0))}</p>
           </div>
         </Card>
 
         {[
-          { title: 'จ่ายให้ใครมากที่สุด', slices: ov.top_vendors || [] },
-          { title: 'จ่ายค่าอะไรมากที่สุด', slices: ov.top_accounts || [] },
+          { title: L.topVendors,  slices: ov.top_vendors || [] },
+          { title: L.topAccounts, slices: ov.top_accounts || [] },
         ].map((c) => {
           const total = (c.slices as any[]).reduce((a, s) => a + Number(s.amount || 0), 0);
           const prev = (c.slices as any[]).reduce((a, s) => a + Number(s.prev || 0), 0);
@@ -183,12 +188,12 @@ export default async function ExpenseOverviewPage({
             <Card key={c.title} className="card-pad">
               <div className="mb-3 flex items-baseline justify-between gap-2">
                 <h2 className="text-sm font-semibold text-ink-900">{c.title}</h2>
-                <span className="text-xxs text-ink-400">เดือน{TH_MONTHS[month - 1]}</span>
+                <span className="text-xxs text-ink-400">{L.monthLabel.replace('{m}', mLabel)}</span>
               </div>
               <p className="text-xl font-semibold tabular-nums text-ink-900">{money(total)}</p>
               {mom != null && (
                 <p className={cn('text-xxs tabular-nums', mom <= 0 ? 'text-emerald-600' : 'text-rose-600')}>
-                  {mom >= 0 ? '+' : ''}{mom.toFixed(2)}% เทียบเดือนก่อน
+                  {mom >= 0 ? '+' : ''}{mom.toFixed(2)}% {L.momSuffix}
                 </p>
               )}
               <div className="mt-3">
@@ -205,28 +210,29 @@ export default async function ExpenseOverviewPage({
 
       <Card className="mt-4">
         <CardHeader
-          title="รายการที่ต้องจ่ายถัดไป"
-          description="เรียงตามวันครบกำหนด — รายการที่เลยกำหนดขึ้นก่อน"
+          title={L.nextTitle}
+          description={L.nextHint}
           right={
             <Link href="/reports/ap-aging" className="btn-ghost text-xs">
-              ดูอายุเจ้าหนี้ทั้งหมด <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
+              {L.nextAll} <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
             </Link>
           }
         />
         {dueNext.length === 0 ? (
           <p className="flex items-center justify-center gap-2 px-5 py-8 text-sm text-ink-400">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" strokeWidth={1.8} />
-            ไม่มีรายการค้างจ่าย
+            {L.nextEmpty}
           </p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-full text-sm">
             <thead>
               <tr className="bg-ink-50">
-                <th className="th-cell">เลขที่</th>
-                <th className="th-cell">ผู้ขาย</th>
-                <th className="th-cell">ครบกำหนด</th>
-                <th className="th-cell text-right">อีกกี่วัน</th>
-                <th className="th-cell text-right">ยอดค้างจ่าย</th>
+                <th className="th-cell">{L.colNumber}</th>
+                <th className="th-cell">{L.colVendor}</th>
+                <th className="th-cell">{L.colDue}</th>
+                <th className="th-cell text-right">{L.colLate}</th>
+                <th className="th-cell text-right">{L.colOutstanding}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-100">
@@ -239,17 +245,20 @@ export default async function ExpenseOverviewPage({
                         {f.doc_number}
                       </Link>
                     </td>
-                    <td className="td-cell max-w-[20rem] truncate">{f.contact || '–'}</td>
+                    <td className="td-cell"><span className="block truncate max-w-[20rem]">{f.contact || '–'}</span></td>
                     <td className="td-cell">{f.due_date ? localeDate(f.due_date, locale) : '–'}</td>
                     <td className={cn('td-cell num font-medium', late ? 'text-rose-600' : 'text-ink-700')}>
-                      {late ? `เลยมา ${Math.abs(Number(f.days))} วัน` : `${f.days} วัน`}
+                      {late
+                        ? `${L.overdue} ${Math.abs(Number(f.days))} ${L.days}`
+                        : `${f.days} ${L.days}`}
                     </td>
                     <td className="td-cell num font-medium">{money(f.outstanding)}</td>
                   </tr>
                 );
               })}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </Card>
     </>

@@ -155,9 +155,12 @@ export function ContactTable({
                       {r.code}
                     </Link>
                   </td>
-                  <td className="td-cell max-w-[20rem] truncate font-medium text-ink-900">
-                    {r.name}
-                    {!r.is_active && <Badge>ปิดใช้งาน</Badge>}
+                  <td className="td-cell font-medium text-ink-900">
+                    <span className="flex items-center gap-1.5">
+                      {/* ป้ายสถานะต้องไม่ถูกตัดทิ้งพร้อมชื่อยาว จึงอยู่นอกกล่องที่บีบ */}
+                      <span className="block max-w-[20rem] truncate">{r.name}</span>
+                      {!r.is_active && <Badge>ปิดใช้งาน</Badge>}
+                    </span>
                   </td>
                   <td className="td-cell">
                     <span className="flex flex-wrap gap-1">

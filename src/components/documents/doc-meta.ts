@@ -8,6 +8,7 @@ export const PURCHASE_SLUGS = [
 export function docTitle(d: Dictionary, slug: string): string {
   const map: Record<string, string> = {
     quotations: d.nav.quotations,
+    'sales-orders': d.nav.salesOrders,
     'billing-notes': d.nav.billingNotes,
     invoices: d.nav.invoices,
     'tax-invoices': d.nav.taxInvoices,

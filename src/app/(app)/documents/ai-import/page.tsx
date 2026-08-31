@@ -79,7 +79,7 @@ export default async function AiImportPage() {
               const m = (r.mapped || {}) as any;
               return (
                 <TR key={r.id}>
-                  <TD className="max-w-[18rem] truncate">{r.file_name}</TD>
+                  <TD><span className="block truncate max-w-[18rem]">{r.file_name}</span></TD>
                   <TD className="text-ink-600">{r.detected_kind || '—'}</TD>
                   <TD className="num text-ink-500">{r.confidence != null ? `${Number(r.confidence).toFixed(0)}%` : '—'}</TD>
                   <TD className="font-mono text-xxs">{m.doc_number || '—'}</TD>

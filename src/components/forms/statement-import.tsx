@@ -157,8 +157,9 @@ export function StatementImport({
                 {labels.in} <b className="text-emerald-600">{fmt(totalIn)}</b> · {labels.out} <b className="text-rose-600">{fmt(totalOut)}</b>
               </span>
             </div>
+            {/* กล่องนี้เลื่อนได้ทั้งสองแกนอยู่แล้ว ห้ามใส่กล่องเลื่อนซ้อนอีกชั้นเพราะหัวตารางจะไม่ติดขอบบน */}
             <div className="max-h-72 overflow-auto rounded-lg border border-ink-200">
-              <table className="w-full text-sm">
+                <table className="w-full min-w-full text-sm">
                 <thead className="sticky top-0 bg-ink-50">
                   <tr>
                     <th className="th-cell">{labels.date}</th>
@@ -171,13 +172,13 @@ export function StatementImport({
                   {lines.slice(0, 100).map((l) => (
                     <tr key={l.line_no}>
                       <td className="td-cell whitespace-nowrap">{l.txn_date}</td>
-                      <td className="td-cell max-w-[16rem] truncate">{l.description}</td>
+                      <td className="td-cell"><span className="block truncate max-w-[16rem]">{l.description}</span></td>
                       <td className="td-cell num text-emerald-600">{l.deposit ? fmt(l.deposit) : '—'}</td>
                       <td className="td-cell num text-rose-600">{l.withdrawal ? fmt(l.withdrawal) : '—'}</td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </table>
             </div>
             {lines.length > 100 && <p className="mt-1.5 text-xxs text-ink-400">{labels.showingFirst.replace('{n}', String(lines.length))}</p>}
           </>

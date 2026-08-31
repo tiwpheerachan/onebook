@@ -98,7 +98,7 @@ export default async function WhtPage({ searchParams }: { searchParams: { y?: st
               <TR key={r.id}>
                 <TD>{localeDate(r.doc_date, locale)}</TD>
                 <TD className="font-mono text-xs">{r.doc_number}</TD>
-                <TD className="max-w-[18rem] truncate">{r.contacts?.name || '–'}</TD>
+                <TD><span className="block truncate max-w-[18rem]">{r.contacts?.name || '–'}</span></TD>
                 <TD className="font-mono text-xs">{r.contacts?.tax_id || '–'}</TD>
                 <TD><Badge tone="brand">{r.contacts?.is_juristic === false ? 'ภ.ง.ด.3' : 'ภ.ง.ด.53'}</Badge></TD>
                 <TD align="right">{money(r.grand_total)}</TD>
@@ -141,9 +141,7 @@ export default async function WhtPage({ searchParams }: { searchParams: { y?: st
               <TR key={c.id}>
                 <TD className="font-mono text-xs">{c.cert_number}</TD>
                 <TD>{localeDate(c.cert_date, locale)}</TD>
-                <TD className="max-w-[18rem] truncate">
-                  {(c.payee_snapshot || {}).legal_name || (c.payee_snapshot || {}).name || '–'}
-                </TD>
+                <TD><span className="block truncate max-w-[18rem]">{(c.payee_snapshot || {}).legal_name || (c.payee_snapshot || {}).name || '–'}</span></TD>
                 <TD><Badge tone="brand">{c.pnd_form}</Badge></TD>
                 <TD align="right">{money(c.base_total)}</TD>
                 <TD align="right" className="font-medium">{money(c.wht_total)}</TD>

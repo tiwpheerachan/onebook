@@ -28,7 +28,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
   const accOptions = (accounts || []).map((a: any) => ({ id: a.id, label: `${a.code} ${a.name_th}` }));
 
   const showCost = can(ctx, 'products', 'edit') || can(ctx, 'report', 'view');
-  const labels = { create: d.common.create, edit: d.common.edit, save: d.common.save, cancel: d.common.cancel, required: d.common.required };
+  const labels = {
+    create: d.common.create, edit: d.common.edit, save: d.common.save,
+    cancel: d.common.cancel, required: d.common.required,
+    tracking: d.ui.lot.tracking, trackNone: d.ui.lot.trackNone,
+    trackLot: d.ui.lot.trackLot, trackSerial: d.ui.lot.trackSerial,
+  };
 
   return (
     <>
@@ -59,7 +64,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
             {rows.map((r) => (
               <TR key={r.id}>
                 <TD><span className="font-mono text-xs">{r.sku}</span></TD>
-                <TD className="max-w-[22rem] truncate font-medium text-ink-900">{r.name}</TD>
+                <TD className="font-medium text-ink-900"><span className="block truncate max-w-[22rem]">{r.name}</span></TD>
                 <TD><Badge tone={r.kind === 'service' ? 'brand' : 'neutral'}>{r.kind === 'good' ? 'สินค้า' : r.kind === 'service' ? 'บริการ' : 'สินทรัพย์'}</Badge></TD>
                 <TD>{r.unit}</TD>
                 <TD align="right">{money(r.sale_price)}</TD>

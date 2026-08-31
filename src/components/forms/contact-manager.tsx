@@ -98,7 +98,12 @@ export function ContactManager({
           <Field label="โทรศัพท์"><input className="input" value={form.phone || ''} onChange={(e) => set('phone', e.target.value)} /></Field>
           <Field label="อีเมล" span><input className="input" value={form.email || ''} onChange={(e) => set('email', e.target.value)} /></Field>
           <Field label="เครดิต (วัน)"><input type="number" className="input" value={form.credit_days} onChange={(e) => set('credit_days', e.target.value)} /></Field>
-          <Field label="วงเงินเครดิต"><input type="number" className="input" value={form.credit_limit} onChange={(e) => set('credit_limit', e.target.value)} /></Field>
+          <Field label={labels.creditLimit}>
+            <input type="number" className="input" value={form.credit_limit}
+                   onChange={(e) => set('credit_limit', e.target.value)} />
+            {/* 0 = ไม่จำกัด ต้องบอกให้ชัด ไม่งั้นคนตั้ง 0 โดยเข้าใจว่าห้ามขายเชื่อ */}
+            <p className="mt-1 text-xxs leading-relaxed text-ink-400">{labels.creditHint}</p>
+          </Field>
         </div>
       </SlidePanel>
     </>

@@ -48,7 +48,7 @@ export default async function JournalDetail({ params }: { params: { id: string }
                 <TD className="text-ink-400">{l.line_no}</TD>
                 <TD><span className="font-mono text-xs">{l.accounts?.code}</span></TD>
                 <TD>{l.accounts?.name_th}</TD>
-                <TD className="max-w-[20rem] truncate text-ink-600">{l.description}</TD>
+                <TD className="text-ink-600"><span className="block truncate max-w-[20rem]">{l.description}</span></TD>
                 <TD className="text-ink-600">{l.contacts?.name || '–'}</TD>
                 <TD align="right">{Number(l.debit) ? money(l.debit) : '–'}</TD>
                 <TD align="right">{Number(l.credit) ? money(l.credit) : '–'}</TD>

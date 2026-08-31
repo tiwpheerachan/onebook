@@ -7,7 +7,7 @@ import { SearchBox } from '@/components/forms/search-box';
 import { Table, THead, TBody, TR, TH, TD, EmptyRow } from '@/components/ui/table';
 import { VatMonthEditor } from '@/components/forms/vat-month-editor';
 import { docKindLabel, docHref } from '@/lib/search-meta';
-import { localeDate, money } from '@/lib/format';
+import { localeDate, money, currencyLabel } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { AlertTriangle, PauseCircle, CalendarClock } from 'lucide-react';
 
@@ -52,16 +52,27 @@ export default async function VatPendingPage({
 
   return (
     <>
-      <PageHeader title={L.title} subtitle={`${ctx.company.name_th} · ${L.subtitle}`} />
+      <PageHeader
+        title={L.title}
+        subtitle={`${ctx.company.name_th} · ${L.subtitle} · ${currencyLabel(ctx.company.base_currency, locale)}`}
+      />
 
-      <div className="mb-5 grid gap-3 sm:grid-cols-3">
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <div className="card p-4">
           <p className="text-xxs uppercase tracking-wide text-ink-400">{L.count}</p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-ink-900">{sum.count ?? 0}</p>
         </div>
         <div className="card p-4">
+          <p className="text-xxs uppercase tracking-wide text-ink-400">{d.doc.vatBase}</p>
+          <p className="mt-1 text-lg font-semibold tabular-nums text-ink-900">{money(sum.base_total)}</p>
+        </div>
+        <div className="card p-4">
           <p className="text-xxs uppercase tracking-wide text-ink-400">{L.vatTotal}</p>
           <p className="mt-1 text-lg font-semibold tabular-nums text-brand-700">{money(sum.vat_total)}</p>
+        </div>
+        <div className="card p-4">
+          <p className="text-xxs uppercase tracking-wide text-ink-400">{d.doc.grandTotal}</p>
+          <p className="mt-1 text-lg font-semibold tabular-nums text-ink-900">{money(sum.gross_total)}</p>
         </div>
         <div className={cn('card p-4', Number(sum.over_six || 0) > 0 && 'ring-1 ring-inset ring-amber-300')}>
           <p className="text-xxs uppercase tracking-wide text-ink-400">{L.overSix}</p>
@@ -99,12 +110,13 @@ export default async function VatPendingPage({
               <TH>{L.vendor}</TH>
               <TH className="text-right">{L.base}</TH>
               <TH className="text-right">{L.vat}</TH>
+              <TH className="text-right">{d.doc.grandTotal}</TH>
               <TH>{L.taxMonth}</TH>
               <TH className="text-right">{d.common.actions}</TH>
             </TR>
           </THead>
           <TBody>
-            {rows.length === 0 && <EmptyRow colSpan={7} label={L.empty} />}
+            {rows.length === 0 && <EmptyRow colSpan={8} label={L.empty} />}
 
             {rows.map((r) => (
               <TR key={r.id}>
@@ -113,9 +125,15 @@ export default async function VatPendingPage({
                     {r.doc_number}
                   </Link>
                   <span className="block text-xxs text-ink-400">{docKindLabel(d, r.kind)}</span>
+                  {/* ตั้งบิลจากใบแจ้งหนี้ เลขที่ใบกำกับจึงเป็นคนละเลขกับเลขที่เอกสาร */}
+                  {r.tax_invoice_number && (
+                    <span className="block font-mono text-xxs text-ink-500">
+                      {L.taxInvoiceNo} {r.tax_invoice_number}
+                    </span>
+                  )}
                 </TD>
                 <TD className="whitespace-nowrap text-ink-600">
-                  {localeDate(r.doc_date, locale)}
+                  {localeDate(r.tax_invoice_date || r.doc_date, locale)}
                   {r.months_aged > 6 && (
                     <span
                       title={L.sixMonthWarn}
@@ -130,7 +148,10 @@ export default async function VatPendingPage({
                   {r.tax_id && <span className="block font-mono text-xxs text-ink-400">{r.tax_id}</span>}
                 </TD>
                 <TD className="text-right tabular-nums text-ink-600">{money(r.vat_base)}</TD>
-                <TD className="text-right tabular-nums font-medium text-ink-900">{money(r.vat_amount)}</TD>
+                <TD className="text-right tabular-nums text-brand-700">{money(r.vat_amount)}</TD>
+                <TD className="text-right tabular-nums font-medium text-ink-900">
+                  {money(Number(r.vat_base || 0) + Number(r.vat_amount || 0))}
+                </TD>
                 <TD>
                   {r.vat_deferred ? (
                     <span className="chip bg-ink-100 text-ink-600 ring-ink-200">
@@ -153,6 +174,8 @@ export default async function VatPendingPage({
                       contact_name: r.contact_name, vat_amount: r.vat_amount,
                       vat_deferred: r.vat_deferred, vat_tax_month: r.vat_tax_month,
                       vat_note: r.vat_note, months_aged: r.months_aged,
+                      tax_invoice_number: r.tax_invoice_number,
+                      tax_invoice_date: r.tax_invoice_date,
                     }}
                     d={d}
                     canEdit={canEdit}

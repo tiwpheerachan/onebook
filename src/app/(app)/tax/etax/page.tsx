@@ -32,7 +32,7 @@ export default async function EtaxPage({ searchParams }: { searchParams: { from?
   const [{ data: docs }, { data: etax }] = await Promise.all([
     supabase
       .from('documents')
-      .select('id, kind, doc_number, doc_date, grand_total, status, contact_snapshot')
+      .select('id, kind, doc_number, doc_date, vat_base, vat_amount, grand_total, status, contact_snapshot')
       .eq('company_id', ctx.company.id)
       .in('kind', ETAX_KINDS)
       .neq('status', 'draft')
@@ -48,6 +48,7 @@ export default async function EtaxPage({ searchParams }: { searchParams: { from?
 
   const rows = (docs || []) as any[];
   const byDoc = new Map((etax || []).map((e: any) => [e.document_id, e]));
+  const sum = (k: string) => rows.reduce((a, r) => a + Number(r[k] || 0), 0);
   const configured = isEtaxConfigured();
   const editable = can(ctx, 'tax.etax', 'create');
 
@@ -88,14 +89,16 @@ export default async function EtaxPage({ searchParams }: { searchParams: { from?
               <TH>{d.common.date}</TH>
               <TH>{d.doc.number}</TH>
               <TH>{d.doc.contact}</TH>
-              <TH className="num">{d.doc.grandTotal}</TH>
+              <TH align="right">{d.doc.vatBase}</TH>
+              <TH align="right">{d.doc.vat}</TH>
+              <TH align="right">{d.doc.grandTotal}</TH>
               <TH>{d.etax.etaxStatus}</TH>
               <TH>{d.etax.providerRef}</TH>
               <TH />
             </TR>
           </THead>
           <TBody>
-            {rows.length === 0 && <EmptyRow colSpan={7} label={d.common.noData} />}
+            {rows.length === 0 && <EmptyRow colSpan={9} label={d.common.noData} />}
             {rows.map((r) => {
               const e = byDoc.get(r.id);
               const st = e?.status || 'none';
@@ -103,8 +106,10 @@ export default async function EtaxPage({ searchParams }: { searchParams: { from?
                 <TR key={r.id}>
                   <TD className="whitespace-nowrap">{r.doc_date}</TD>
                   <TD className="font-mono text-xxs">{r.doc_number}</TD>
-                  <TD className="max-w-[16rem] truncate">{(r.contact_snapshot as any)?.name || '—'}</TD>
-                  <TD className="num">{money(r.grand_total)}</TD>
+                  <TD><span className="block truncate max-w-[16rem]">{(r.contact_snapshot as any)?.name || '—'}</span></TD>
+                  <TD align="right" className="text-ink-600">{money(r.vat_base)}</TD>
+                  <TD align="right" className="text-ink-600">{money(r.vat_amount)}</TD>
+                  <TD align="right" className="font-medium text-ink-900">{money(r.grand_total)}</TD>
                   <TD>
                     <span className={`chip ${STATUS_STYLE[st]}`}>{d.etax.status[st as 'draft']}</span>
                     {e?.error_message && (
@@ -130,6 +135,17 @@ export default async function EtaxPage({ searchParams }: { searchParams: { from?
               );
             })}
           </TBody>
+          {rows.length > 0 && (
+            <tfoot className="bg-ink-50 font-medium">
+              <tr>
+                <td className="td-cell" colSpan={3}>{d.common.total}</td>
+                <td className="td-cell num">{money(sum('vat_base'))}</td>
+                <td className="td-cell num">{money(sum('vat_amount'))}</td>
+                <td className="td-cell num">{money(sum('grand_total'))}</td>
+                <td className="td-cell" colSpan={3} />
+              </tr>
+            </tfoot>
+          )}
         </Table>
       </Card>
     </>

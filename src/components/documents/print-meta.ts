@@ -21,6 +21,7 @@ export interface PrintForm {
  */
 export const PRINT_FORM: Record<DocKind, PrintForm> = {
   quotation:            { th: 'ใบเสนอราคา',              en: 'QUOTATION',        isTaxDoc: false, side: 'sales',    signLeft: 'ผู้อนุมัติสั่งซื้อ',  showPayment: false },
+  sales_order:          { th: 'ใบสั่งขาย',              en: 'SALES ORDER',      isTaxDoc: false, side: 'sales',    signLeft: 'ผู้สั่งซื้อ',        showPayment: false },
   billing_note:         { th: 'ใบวางบิล',                en: 'BILLING NOTE',     isTaxDoc: false, side: 'sales',    signLeft: 'ผู้รับวางบิล',      showPayment: true },
   invoice:              { th: 'ใบแจ้งหนี้',              en: 'INVOICE',          isTaxDoc: false, side: 'sales',    signLeft: 'ผู้รับเอกสาร',      showPayment: true },
   tax_invoice:          { th: 'ใบกำกับภาษี/ใบส่งของ',    en: 'TAX INVOICE',      isTaxDoc: true,  side: 'sales',    signLeft: 'ผู้รับสินค้า',      showPayment: true },

@@ -96,7 +96,7 @@ export async function DocumentList({
                 </TD>
                 <TD>{localeDate(r.doc_date, locale)}</TD>
                 <TD>{r.due_date ? localeDate(r.due_date, locale) : '–'}</TD>
-                <TD className="max-w-[18rem] truncate">{r.contacts?.name || '–'}</TD>
+                <TD><span className="block truncate max-w-[18rem]">{r.contacts?.name || '–'}</span></TD>
                 <TD align="right">{money(r.grand_total)}</TD>
                 <TD align="right">{money(Number(r.net_payable) - Number(r.paid_amount))}</TD>
                 <TD><StatusBadge status={r.status} label={(d.status as any)[r.status]} /></TD>

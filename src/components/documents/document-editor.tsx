@@ -1,7 +1,7 @@
 'use client';
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState, useTransition, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Save, CheckCircle2, XCircle, Lock } from 'lucide-react';
+import { Plus, Trash2, Save, CheckCircle2, XCircle, Lock, CreditCard } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { calcDocument, calcLine, WHT_PRESETS, type VatTreatment } from '@/lib/tax';
 import { money, bahtTextSafe } from '@/lib/ui-helpers';
@@ -17,12 +17,16 @@ export interface EditorProps {
   contacts: Option[];
   products: Option[];
   accounts: Option[];
+  /** แผนก — ระบุที่หัวเอกสารครั้งเดียว ฐานข้อมูลจะส่งต่อลงบรรทัดและสมุดรายวันเอง */
+  dimensions: Option[];
   doc: any | null;
   lines: any[];
   /** ผู้ติดต่อตั้งต้นเมื่อเปิดจากหน้าผู้ติดต่อ */
   initialContactId?: string;
   perms: { create: boolean; edit: boolean; approve: boolean; void: boolean };
   lockedThrough: string | null;
+  /** สถานะวงเงินของลูกค้า — null เมื่อไม่ได้ตั้งวงเงินหรือเอกสารไม่ก่อหนี้ */
+  credit?: { name: string; credit_limit: number; outstanding: number; available: number } | null;
   labels: Record<string, string>;
 }
 
@@ -39,6 +43,36 @@ interface Row {
   wht_code: string;
   wht_rate: number;
   account_id: string;
+}
+
+/**
+ * โครงคอลัมน์ของชั้นบน ใช้ร่วมกันระหว่างหัวตารางกับแถวข้อมูล
+ * เพื่อให้ตรงกันเสมอแม้แก้ความกว้างทีหลัง
+ *
+ * ความกว้างรวมของคอลัมน์คงที่คือ 28+88+80+112+136+28 = 472px บวกช่องไฟอีก 72px
+ * ที่เหลือทั้งหมดตกเป็นของช่องสินค้า จึงไม่มีทางกว้างเกินกรอบและไม่ต้องเลื่อนซ้ายขวา
+ */
+const LINE_GRID =
+  'lg:grid lg:grid-cols-[1.75rem_minmax(0,1fr)_5.5rem_5rem_7rem_8.5rem_1.75rem]';
+
+/**
+ * ช่องกรอกหนึ่งช่องพร้อมป้ายกำกับ
+ * ปกติป้ายจะโผล่เฉพาะจอแคบที่ไม่มีหัวตาราง ส่วน always ใช้กับชั้นล่างที่ไม่มีหัวตารางเลย
+ */
+function LineField(
+  { label, children, align, always }:
+  { label: string; children: ReactNode; align?: 'right'; always?: boolean }
+) {
+  return (
+    <div className="min-w-0">
+      <span className={
+        'mb-1 block text-xxs font-medium text-ink-500 ' +
+        (always ? '' : 'lg:hidden ') +
+        (align === 'right' ? 'text-right' : '')
+      }>{label}</span>
+      {children}
+    </div>
+  );
 }
 
 const emptyRow = (): Row => ({
@@ -62,6 +96,7 @@ export function DocumentEditor(p: EditorProps) {
   const [contactId, setContactId] = useState<string>(p.doc?.contact_id || p.initialContactId || '');
   const [reference, setReference] = useState<string>(p.doc?.reference || '');
   const [notes, setNotes] = useState<string>(p.doc?.notes || '');
+  const [dimensionId, setDimensionId] = useState<string>(p.doc?.dimension_id || '');
   const [headerDiscount, setHeaderDiscount] = useState<number>(0);
   const [rows, setRows] = useState<Row[]>(
     p.lines.length
@@ -112,6 +147,7 @@ export function DocumentEditor(p: EditorProps) {
         doc_date: docDate,
         due_date: dueDate || null,
         contact_id: contactId || null,
+        dimension_id: dimensionId || null,
         reference,
         notes,
         discount_amount: headerDiscount,
@@ -172,6 +208,29 @@ export function DocumentEditor(p: EditorProps) {
         </div>
       )}
 
+      {/* วงเงินเครดิต — เตือนตั้งแต่เปิดเอกสาร ไม่ใช่ตอนกดอนุมัติแล้วโดนปฏิเสธ */}
+      {p.credit && (() => {
+        const over = p.credit.available < 0;
+        const near = !over && p.credit.available <= p.credit.credit_limit * 0.2;
+        return (
+          <div className={
+            'flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg px-4 py-3 text-sm ring-1 ring-inset ' +
+            (over ? 'bg-rose-50 text-rose-800 ring-rose-200'
+                  : near ? 'bg-amber-50 text-amber-800 ring-amber-200'
+                         : 'bg-ink-50 text-ink-700 ring-ink-200')
+          }>
+            <span className="flex items-center gap-2 font-medium">
+              <CreditCard className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+              {over ? p.labels.creditOver : near ? p.labels.creditNear : p.credit.name}
+            </span>
+            <span>{p.labels.creditLimit} <b className="tabular-nums">{money(p.credit.credit_limit)}</b></span>
+            <span>{p.labels.creditOutstanding} <b className="tabular-nums">{money(p.credit.outstanding)}</b></span>
+            <span>{p.labels.creditAvailable} <b className="tabular-nums">{money(p.credit.available)}</b></span>
+            {over && <span className="w-full text-xxs opacity-80">{p.labels.creditOverrideHint}</span>}
+          </div>
+        );
+      })()}
+
       {/* ---------- ส่วนหัวเอกสาร ---------- */}
       <div className="card card-pad">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -205,96 +264,140 @@ export function DocumentEditor(p: EditorProps) {
             <input className="input" value={notes} disabled={readOnly}
                    onChange={(e) => setNotes(e.target.value)} />
           </div>
+          {/* ซ่อนทั้งช่องเมื่อบริษัทยังไม่ได้ตั้งแผนก จะได้ไม่รกสำหรับกิจการที่ไม่ใช้ */}
+          {p.dimensions.length > 0 && (
+            <div className="md:col-span-2">
+              <label className="label">{p.labels.dimension}</label>
+              <select className="input" value={dimensionId} disabled={readOnly}
+                      onChange={(e) => setDimensionId(e.target.value)}>
+                <option value="">— {p.labels.noDimension} —</option>
+                {p.dimensions.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ---------- รายการ ---------- */}
-      <div className="card">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-ink-200">
-            <thead className="bg-ink-50">
-              <tr>
-                <th className="th-cell w-8">#</th>
-                <th className="th-cell min-w-[16rem]">{p.labels.product}</th>
-                <th className="th-cell w-24 text-right">{p.labels.quantity}</th>
-                <th className="th-cell w-32 text-right">{p.labels.unitPrice}</th>
-                <th className="th-cell w-20 text-right">{p.labels.discount} %</th>
-                <th className="th-cell w-28">{p.labels.vatType}</th>
-                <th className="th-cell w-44">{p.labels.whtType}</th>
-                <th className="th-cell w-32 text-right">{p.labels.subtotal}</th>
-                <th className="th-cell w-10" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-100 bg-white">
-              {rows.map((r, i) => {
-                const calc = calcLine(r as any);
-                return (
-                  <tr key={r.key} className="align-top">
-                    <td className="td-cell text-ink-400">{i + 1}</td>
-                    <td className="td-cell">
-                      <select className="input mb-1.5 text-xs" value={r.product_id} disabled={readOnly}
-                              onChange={(e) => onPickProduct(i, e.target.value)}>
-                        <option value="">— {p.labels.freeText} —</option>
-                        {p.products.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-                      </select>
-                      <input className="input" placeholder={p.labels.description} value={r.description}
-                             disabled={readOnly} onChange={(e) => update(i, { description: e.target.value })} />
-                      <select className="input mt-1.5 text-xs" value={r.account_id} disabled={readOnly}
-                              onChange={(e) => update(i, { account_id: e.target.value })}>
-                        <option value="">— {p.labels.account} ({p.labels.auto}) —</option>
-                        {p.accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
-                      </select>
-                    </td>
-                    <td className="td-cell">
-                      <input type="number" step="0.0001" className="input num" value={r.quantity} disabled={readOnly}
-                             onChange={(e) => update(i, { quantity: Number(e.target.value) })} />
-                      <input className="input mt-1.5 text-xs" placeholder={p.labels.unit} value={r.unit}
-                             disabled={readOnly} onChange={(e) => update(i, { unit: e.target.value })} />
-                    </td>
-                    <td className="td-cell">
-                      <input type="number" step="0.0001" className="input num" value={r.unit_price} disabled={readOnly}
-                             onChange={(e) => update(i, { unit_price: Number(e.target.value) })} />
-                    </td>
-                    <td className="td-cell">
-                      <input type="number" step="0.01" className="input num" value={r.discount_pct} disabled={readOnly}
-                             onChange={(e) => update(i, { discount_pct: Number(e.target.value) })} />
-                    </td>
-                    <td className="td-cell">
-                      <select className="input text-xs" value={r.vat_treatment} disabled={readOnly}
-                              onChange={(e) => update(i, { vat_treatment: e.target.value as VatTreatment })}>
-                        <option value="exclusive">{p.labels.exclusive}</option>
-                        <option value="inclusive">{p.labels.inclusive}</option>
-                        <option value="zero_rated">{p.labels.zeroRated}</option>
-                        <option value="exempt">{p.labels.exempt}</option>
-                        <option value="none">{p.labels.none}</option>
-                      </select>
-                    </td>
-                    <td className="td-cell">
-                      <select className="input text-xs" value={r.wht_code} disabled={readOnly}
-                              onChange={(e) => onPickWht(i, e.target.value)}>
-                        {WHT_PRESETS.map((w) => (
-                          <option key={w.code} value={w.code}>{w.label}{w.rate ? ` ${w.rate}%` : ''}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="td-cell num align-middle">
-                      <div className="font-medium">{money(calc.line_amount)}</div>
-                      {calc.vat_amount > 0 && <div className="text-xxs text-ink-400">VAT {money(calc.vat_amount)}</div>}
-                      {calc.wht_amount > 0 && <div className="text-xxs text-amber-600">WHT {money(calc.wht_amount)}</div>}
-                    </td>
-                    <td className="td-cell">
-                      {!readOnly && rows.length > 1 && (
+      {/* ---------- รายการ ----------
+          เดิมเป็นตาราง 9 คอลัมน์ที่กว้างเกินพื้นที่จริงเสมอ เบราว์เซอร์จึงบีบช่องจนซ้อนกัน
+          เปลี่ยนเป็นตารางแบบ grid ที่แบ่งเป็นสองชั้น
+            ชั้นบน  = ข้อมูลที่ต้องเห็นทุกครั้ง (สินค้า จำนวน หน่วย ราคา ยอด)
+            ชั้นล่าง = ข้อมูลที่ตั้งครั้งเดียวแล้วแทบไม่แก้ (บัญชี ส่วนลด ภาษี หัก ณ ที่จ่าย)
+          จอแคบจะเรียงลงมาเป็นบล็อกพร้อมป้ายกำกับ ไม่ต้องเลื่อนซ้ายขวาและไม่ซ้อนกันทุกความกว้าง */}
+      <div className="card overflow-hidden">
+        {/* หัวคอลัมน์ของชั้นบน — ซ่อนบนจอแคบเพราะแต่ละช่องมีป้ายกำกับในตัวแล้ว */}
+        <div className={'hidden bg-ink-50 px-4 py-2.5 text-xs font-medium text-ink-500 lg:gap-3 ' + LINE_GRID}>
+          <div>#</div>
+          <div>{p.labels.product}</div>
+          <div className="text-right">{p.labels.quantity}</div>
+          <div>{p.labels.unit}</div>
+          <div className="text-right">{p.labels.unitPrice}</div>
+          <div className="text-right">{p.labels.subtotal}</div>
+          <div />
+        </div>
+
+        <div className="divide-y divide-ink-100">
+          {rows.map((r, i) => {
+            const calc = calcLine(r as any);
+            const removable = !readOnly && rows.length > 1;
+            return (
+              <div key={r.key} className="px-4 py-3">
+                <div className={'grid grid-cols-1 gap-2 lg:items-start lg:gap-3 ' + LINE_GRID}>
+                  <div className="hidden pt-2.5 text-sm tabular-nums text-ink-400 lg:block">{i + 1}</div>
+
+                  {/* สินค้า + รายละเอียด */}
+                  <div className="min-w-0 space-y-1.5">
+                    <div className="flex items-center justify-between lg:hidden">
+                      <span className="text-xxs font-semibold text-ink-400">#{i + 1}</span>
+                      {removable && (
                         <button type="button" onClick={() => setRows(rows.filter((_, x) => x !== i))}
+                                aria-label={p.labels.removeLine}
                                 className="rounded p-1 text-ink-400 hover:bg-rose-50 hover:text-rose-600">
                           <Trash2 className="h-4 w-4" strokeWidth={1.8} />
                         </button>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                    <select className="input text-xs" value={r.product_id} disabled={readOnly}
+                            onChange={(e) => onPickProduct(i, e.target.value)}>
+                      <option value="">— {p.labels.freeText} —</option>
+                      {p.products.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+                    </select>
+                    <input className="input" placeholder={p.labels.description} value={r.description}
+                           disabled={readOnly} onChange={(e) => update(i, { description: e.target.value })} />
+                  </div>
+
+                  {/* จอแคบเรียงสามช่องนี้เป็นแถวเดียว จอกว้าง lg:contents ทำให้กลับไปอยู่ในคอลัมน์ของตัวเอง */}
+                  <div className="grid grid-cols-3 gap-2 lg:contents">
+                    <LineField label={p.labels.quantity} align="right">
+                      <input type="number" step="0.0001" className="input num" value={r.quantity} disabled={readOnly}
+                             onChange={(e) => update(i, { quantity: Number(e.target.value) })} />
+                    </LineField>
+                    <LineField label={p.labels.unit}>
+                      <input className="input" value={r.unit} disabled={readOnly}
+                             onChange={(e) => update(i, { unit: e.target.value })} />
+                    </LineField>
+                    <LineField label={p.labels.unitPrice} align="right">
+                      <input type="number" step="0.0001" className="input num" value={r.unit_price} disabled={readOnly}
+                             onChange={(e) => update(i, { unit_price: Number(e.target.value) })} />
+                    </LineField>
+                  </div>
+
+                  {/* ยอดของรายการ */}
+                  <div className="flex items-baseline justify-between border-t border-ink-100 pt-2 lg:block lg:border-0 lg:pt-2.5 lg:text-right">
+                    <span className="text-xxs font-medium text-ink-500 lg:hidden">{p.labels.subtotal}</span>
+                    <div>
+                      <div className="text-sm font-medium tabular-nums text-ink-900">{money(calc.line_amount)}</div>
+                      {calc.vat_amount > 0 && <div className="text-xxs tabular-nums text-ink-400">VAT {money(calc.vat_amount)}</div>}
+                      {calc.wht_amount > 0 && <div className="text-xxs tabular-nums text-amber-600">WHT {money(calc.wht_amount)}</div>}
+                    </div>
+                  </div>
+
+                  <div className="hidden pt-2 lg:block">
+                    {removable && (
+                      <button type="button" onClick={() => setRows(rows.filter((_, x) => x !== i))}
+                              aria-label={p.labels.removeLine}
+                              className="rounded p-1 text-ink-400 hover:bg-rose-50 hover:text-rose-600">
+                        <Trash2 className="h-4 w-4" strokeWidth={1.8} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* ชั้นล่าง : ค่าที่ตั้งแล้วแทบไม่แก้ — มีป้ายกำกับเสมอเพราะไม่มีหัวคอลัมน์ */}
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 lg:pl-[2.5rem]">
+                  <LineField label={p.labels.account} always>
+                    <select className="input text-xs" value={r.account_id} disabled={readOnly}
+                            onChange={(e) => update(i, { account_id: e.target.value })}>
+                      <option value="">— {p.labels.auto} —</option>
+                      {p.accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
+                    </select>
+                  </LineField>
+                  <LineField label={`${p.labels.discount} %`} always>
+                    <input type="number" step="0.01" className="input num" value={r.discount_pct} disabled={readOnly}
+                           onChange={(e) => update(i, { discount_pct: Number(e.target.value) })} />
+                  </LineField>
+                  <LineField label={p.labels.vatType} always>
+                    <select className="input text-xs" value={r.vat_treatment} disabled={readOnly}
+                            onChange={(e) => update(i, { vat_treatment: e.target.value as VatTreatment })}>
+                      <option value="exclusive">{p.labels.exclusive}</option>
+                      <option value="inclusive">{p.labels.inclusive}</option>
+                      <option value="zero_rated">{p.labels.zeroRated}</option>
+                      <option value="exempt">{p.labels.exempt}</option>
+                      <option value="none">{p.labels.none}</option>
+                    </select>
+                  </LineField>
+                  <LineField label={p.labels.whtType} always>
+                    <select className="input text-xs" value={r.wht_code} disabled={readOnly}
+                            onChange={(e) => onPickWht(i, e.target.value)}>
+                      {WHT_PRESETS.map((w) => (
+                        <option key={w.code} value={w.code}>{w.label}{w.rate ? ` ${w.rate}%` : ''}</option>
+                      ))}
+                    </select>
+                  </LineField>
+                </div>
+              </div>
+            );
+          })}
         </div>
         {!readOnly && (
           <div className="border-t border-ink-200 px-4 py-3">

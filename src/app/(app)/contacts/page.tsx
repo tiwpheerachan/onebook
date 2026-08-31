@@ -96,6 +96,7 @@ export default async function ContactsPage({
   const labels = {
     create: d.common.create, edit: d.common.edit, save: d.common.save,
     cancel: d.common.cancel, required: d.common.required,
+    creditLimit: d.ui.credit.limit, creditHint: d.ui.credit.zeroMeansUnlimited,
   };
 
   return (

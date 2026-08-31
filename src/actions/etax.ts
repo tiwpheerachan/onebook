@@ -22,7 +22,7 @@ async function loadEtaxInput(companyId: string, documentId: string): Promise<{ i
   const [{ data: doc }, { data: company }] = await Promise.all([
     supabase
       .from('documents')
-      .select('id, kind, doc_number, doc_date, subtotal, vat_amount, grand_total, reference, contact_id, contact_snapshot, company_id')
+      .select('id, kind, doc_number, doc_date, subtotal, vat_amount, grand_total, reference, contact_id, contact_snapshot, company_id, currency')
       .eq('id', documentId)
       .eq('company_id', companyId)
       .maybeSingle(),
@@ -90,7 +90,7 @@ async function loadEtaxInput(companyId: string, documentId: string): Promise<{ i
       subtotal: Number(doc.subtotal),
       vat_amount: Number(doc.vat_amount),
       grand_total: Number(doc.grand_total),
-      currency: 'THB',
+      currency: doc.currency || 'THB',
     },
   };
 }

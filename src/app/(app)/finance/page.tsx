@@ -80,7 +80,8 @@ export default async function FinanceOverviewPage() {
             <Link href="/finance/channels" className="text-brand-700 hover:underline">เพิ่มบัญชีแรก</Link>
           </p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-full text-sm">
             <thead>
               <tr className="bg-ink-50">
                 <th className="th-cell">ประเภท</th>
@@ -121,7 +122,8 @@ export default async function FinanceOverviewPage() {
                 <td className="td-cell num">100%</td>
               </tr>
             </tfoot>
-          </table>
+            </table>
+          </div>
         )}
       </Card>
     </>

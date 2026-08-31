@@ -92,7 +92,8 @@ export function DepreciationRunner({ labels }: { labels: Record<string, string> 
                 <span className="text-sm font-semibold text-ink-900">{fmt(preview.total_amount)}</span>
               </div>
               <div className="overflow-hidden rounded-lg border border-ink-200">
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-full text-sm">
                   <thead className="bg-ink-50">
                     <tr>
                       <th className="th-cell">{labels.code}</th>
@@ -111,7 +112,8 @@ export function DepreciationRunner({ labels }: { labels: Record<string, string> 
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               </div>
             </>
           )

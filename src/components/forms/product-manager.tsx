@@ -9,7 +9,7 @@ import { saveProduct } from '@/actions/master';
 const blank = {
   id: null as string | null, sku: '', name: '', name_en: '', name_zh: '', kind: 'good',
   unit: 'ชิ้น', category: '', sale_price: 0, purchase_price: 0,
-  vat_treatment: 'exclusive', track_inventory: true,
+  vat_treatment: 'exclusive', track_inventory: true, tracking: 'none',
   income_account_id: '', expense_account_id: '', is_active: true,
 };
 
@@ -93,6 +93,17 @@ export function ProductManager({
               <option value="1">ใช่</option><option value="0">ไม่</option>
             </select>
           </F>
+          {/* ตามรอยรายล็อตหรือรายชิ้นได้เฉพาะสินค้าที่ตัดสต๊อก */}
+          {form.track_inventory && (
+            <F label={labels.tracking}>
+              <select className="input" value={form.tracking || 'none'}
+                      onChange={(e) => set('tracking', e.target.value)}>
+                <option value="none">{labels.trackNone}</option>
+                <option value="lot">{labels.trackLot}</option>
+                <option value="serial">{labels.trackSerial}</option>
+              </select>
+            </F>
+          )}
           <F label="บัญชีรายได้" span>
             <select className="input" value={form.income_account_id || ''} onChange={(e) => set('income_account_id', e.target.value)}>
               <option value="">— อัตโนมัติ —</option>

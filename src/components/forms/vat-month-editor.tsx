@@ -18,6 +18,15 @@ export interface VatRow {
   vat_tax_month: string | null;
   vat_note: string | null;
   months_aged: number;
+  tax_invoice_number: string | null;
+  tax_invoice_date: string | null;
+}
+
+/** บวกเดือนให้ 'YYYY-MM' — เทียบกันด้วยสตริงได้ตรง ๆ เพราะรูปแบบเรียงตามเวลาอยู่แล้ว */
+function addMonths(ym: string, n: number) {
+  const [y, m] = ym.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1 + n, 1));
+  return dt.toISOString().slice(0, 7);
 }
 
 /** เลือกเดือนภาษีที่จะใช้สิทธิ์ หรือพักไว้ก่อน */
@@ -29,20 +38,36 @@ export function VatMonthEditor({ row, d, canEdit }: { row: VatRow; d: Dictionary
     row.vat_deferred ? 'defer' : row.vat_tax_month ? 'month' : 'reset'
   );
   const [month, setMonth] = useState(row.vat_tax_month ? row.vat_tax_month.slice(0, 7) : '');
+  const [tiNumber, setTiNumber] = useState(row.tax_invoice_number || '');
+  const [tiDate, setTiDate] = useState(row.tax_invoice_date ? row.tax_invoice_date.slice(0, 10) : '');
   const [note, setNote] = useState(row.vat_note || '');
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
 
   if (!canEdit) return null;
 
+  // กรอบหกเดือนนับจากเดือนในใบกำกับ ไม่ใช่เดือนของเอกสารที่ตั้งไว้
+  // บิลซื้อมักตั้งจากใบแจ้งหนี้ก่อนได้รับใบกำกับ สองวันที่นี้จึงคนละตัวกัน
+  const anchor = (tiDate || row.doc_date).slice(0, 7);
+  const lastMonth = addMonths(anchor, 6);
+  const futureTi = !!tiDate && tiDate > new Date().toISOString().slice(0, 10);
+  const monthOutOfRange = mode === 'month' && !!month && (month < anchor || month > lastMonth);
+
   const submit = () => {
     setErr('');
+    if (futureTi) { setErr(L.tiDateFuture); return; }
+    if (monthOutOfRange) {
+      setErr(month < anchor ? L.beforeDoc : L.overSixBlock.replace('{to}', lastMonth));
+      return;
+    }
     start(async () => {
       const res = await setVatTaxMonth({
         document_id: row.id,
         month: mode === 'month' ? month : null,
         defer: mode === 'defer',
         note: note.trim() || undefined,
+        tax_invoice_number: tiNumber.trim() || null,
+        tax_invoice_date: tiDate || null,
       });
       if (!res.ok) { setErr(res.error || ''); return; }
       setOpen(false);
@@ -82,7 +107,7 @@ export function VatMonthEditor({ row, d, canEdit }: { row: VatRow; d: Dictionary
             <button className="btn-secondary" onClick={() => setOpen(false)}>{d.common.cancel}</button>
             <button
               className="btn-primary"
-              disabled={pending || (mode === 'month' && !month)}
+              disabled={pending || futureTi || monthOutOfRange || (mode === 'month' && !month)}
               onClick={submit}
             >
               {pending && <ShdSpinner size={16} />} {L.save}
@@ -103,16 +128,49 @@ export function VatMonthEditor({ row, d, canEdit }: { row: VatRow; d: Dictionary
           </p>
         )}
 
+        {/* ใบกำกับภาษีที่ได้รับจริง — คนละใบกับเอกสารที่ตั้งไว้เมื่อตั้งจากใบแจ้งหนี้ */}
+        <div className="mb-4 rounded-lg border border-ink-200 p-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="label">{L.taxInvoiceNumber}</label>
+              <input
+                className="input"
+                placeholder={row.doc_number}
+                value={tiNumber}
+                onChange={(e) => setTiNumber(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="label">{L.taxInvoiceDate}</label>
+              <input
+                type="date"
+                className={cn('input', futureTi && 'border-rose-400 focus:border-rose-400 focus:ring-rose-100')}
+                max={new Date().toISOString().slice(0, 10)}
+                value={tiDate}
+                onChange={(e) => setTiDate(e.target.value)}
+              />
+            </div>
+          </div>
+          <p className="mt-2 text-xxs leading-relaxed text-ink-400">{L.taxInvoiceHint}</p>
+          {futureTi && <p className="mt-1 text-xxs text-rose-600">{L.tiDateFuture}</p>}
+        </div>
+
         <div className="space-y-2">
           <Opt id="month" icon={<CalendarClock className="h-4 w-4" strokeWidth={1.8} />} label={L.useMonth} />
           {mode === 'month' && (
-            <input
-              type="month"
-              className="input ml-6 w-auto"
-              min={row.doc_date.slice(0, 7)}
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-            />
+            <div className="ml-6">
+              <input
+                type="month"
+                className={cn('input w-auto', monthOutOfRange && 'border-rose-400 focus:border-rose-400 focus:ring-rose-100')}
+                min={anchor}
+                max={lastMonth}
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+              />
+              <p className={cn('mt-1 text-xxs', monthOutOfRange ? 'text-rose-600' : 'text-ink-400')}>
+                {L.windowRange.replace('{from}', anchor).replace('{to}', lastMonth)}
+              </p>
+            </div>
           )}
           <Opt id="defer" icon={<PauseCircle className="h-4 w-4" strokeWidth={1.8} />} label={L.defer} />
           <Opt id="reset" icon={<RotateCcw className="h-4 w-4" strokeWidth={1.8} />} label={L.reset} />

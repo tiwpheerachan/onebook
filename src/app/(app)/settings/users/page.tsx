@@ -81,10 +81,8 @@ export default async function UsersPage() {
                   <span className="font-mono text-xs text-ink-600">{r.profiles?.employee_code || '–'}</span>
                   {r.profiles?.auth_source === 'goodhr' && <Badge tone="brand">GoodHR</Badge>}
                 </TD>
-                <TD className="max-w-[16rem] truncate text-xs text-ink-600">
-                  {r.profiles?.department || '–'}
-                  {r.profiles?.position && <span className="text-ink-400"> · {r.profiles.position}</span>}
-                </TD>
+                <TD className="text-xs text-ink-600"><span className="block truncate max-w-[16rem]">{r.profiles?.department || '–'}
+                  {r.profiles?.position && <span className="text-ink-400"> · {r.profiles.position}</span>}</span></TD>
                 <TD>
                   <Badge tone="neutral">{r.roles?.name_th}</Badge>
                   {/* GoodHR เสนอบทบาทมาคนละตัวกับที่ให้จริง — เตือนให้ผู้ดูแลรู้ */}

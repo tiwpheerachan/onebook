@@ -58,6 +58,8 @@ export async function saveProduct(form: any): Promise<Res> {
     purchase_price: Number(form.purchase_price) || 0,
     vat_treatment: form.vat_treatment || 'exclusive',
     track_inventory: form.track_inventory ?? true,
+    // ตามรอยรายล็อตได้เฉพาะสินค้าที่ตัดสต๊อก ปิดตัดสต๊อกแล้วต้องล้างค่าตามรอยด้วย
+    tracking: (form.track_inventory ?? true) ? (form.tracking || 'none') : 'none',
     income_account_id: form.income_account_id || null,
     expense_account_id: form.expense_account_id || null,
     is_active: form.is_active ?? true,
