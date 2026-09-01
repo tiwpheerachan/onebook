@@ -1,5 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { t } from '@/i18n/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
 
@@ -28,16 +29,16 @@ function safeName(name: string): string {
 
 export async function uploadAttachment(fd: FormData): Promise<AttachResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'documents', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์แนบไฟล์' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'documents', 'edit')) return { ok: false, error: t().ui.act.attachNoPerm };
 
   const documentId = String(fd.get('document_id') || '');
   const file = fd.get('file');
-  if (!documentId) return { ok: false, error: 'ไม่พบเอกสารที่ต้องการแนบไฟล์' };
-  if (!(file instanceof File) || file.size === 0) return { ok: false, error: 'กรุณาเลือกไฟล์' };
-  if (file.size > MAX_BYTES) return { ok: false, error: 'ไฟล์ใหญ่เกิน 25 MB' };
+  if (!documentId) return { ok: false, error: t().ui.act.attachNoDoc };
+  if (!(file instanceof File) || file.size === 0) return { ok: false, error: t().ui.act.fileRequired };
+  if (file.size > MAX_BYTES) return { ok: false, error: t().ui.act.fileTooBig25 };
   if (file.type && !ALLOWED.has(file.type)) {
-    return { ok: false, error: 'รองรับเฉพาะ PDF รูปภาพ Excel และ CSV' };
+    return { ok: false, error: t().ui.act.fileTypeNotAllowed };
   }
 
   const supabase = createClient();
@@ -48,13 +49,13 @@ export async function uploadAttachment(fd: FormData): Promise<AttachResult> {
     .select('id, company_id')
     .eq('id', documentId)
     .maybeSingle();
-  if (!doc || doc.company_id !== ctx.company.id) return { ok: false, error: 'ไม่พบเอกสาร' };
+  if (!doc || doc.company_id !== ctx.company.id) return { ok: false, error: t().ui.act.docNotFound };
 
   const path = `${ctx.company.id}/${documentId}/${crypto.randomUUID()}-${safeName(file.name)}`;
   const { error: upErr } = await supabase.storage
     .from(BUCKET)
     .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
-  if (upErr) return { ok: false, error: `อัปโหลดไม่สำเร็จ : ${upErr.message}` };
+  if (upErr) return { ok: false, error: t().ui.misc.uploadFailed.replace('{detail}', upErr.message) };
 
   const { data, error } = await supabase
     .from('attachments')
@@ -84,8 +85,8 @@ export async function uploadAttachment(fd: FormData): Promise<AttachResult> {
 /** สร้างลิงก์ชั่วคราวสำหรับเปิดไฟล์ (bucket เป็นแบบปิด เข้าถึงตรงไม่ได้) */
 export async function attachmentUrl(id: string): Promise<{ ok: boolean; url?: string; error?: string }> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน' };
-  if (!can(ctx, 'documents', 'view')) return { ok: false, error: 'ไม่มีสิทธิ์เปิดไฟล์' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'documents', 'view')) return { ok: false, error: t().ui.act.fileNoOpen };
 
   const supabase = createClient();
   const { data: row } = await supabase
@@ -93,7 +94,7 @@ export async function attachmentUrl(id: string): Promise<{ ok: boolean; url?: st
     .select('storage_path, company_id')
     .eq('id', id)
     .maybeSingle();
-  if (!row) return { ok: false, error: 'ไม่พบไฟล์' };
+  if (!row) return { ok: false, error: t().ui.act.fileNotFound };
 
   const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(row.storage_path, 300);
   if (error) return { ok: false, error: error.message };
@@ -102,8 +103,8 @@ export async function attachmentUrl(id: string): Promise<{ ok: boolean; url?: st
 
 export async function deleteAttachment(id: string): Promise<AttachResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน' };
-  if (!can(ctx, 'documents', 'delete')) return { ok: false, error: 'คุณไม่มีสิทธิ์ลบไฟล์แนบ' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'documents', 'delete')) return { ok: false, error: t().ui.act.fileNoDelete };
 
   const supabase = createClient();
   const { data: row } = await supabase
@@ -111,7 +112,7 @@ export async function deleteAttachment(id: string): Promise<AttachResult> {
     .select('storage_path')
     .eq('id', id)
     .maybeSingle();
-  if (!row) return { ok: false, error: 'ไม่พบไฟล์' };
+  if (!row) return { ok: false, error: t().ui.act.fileNotFound };
 
   const { error: rmErr } = await supabase.storage.from(BUCKET).remove([row.storage_path]);
   if (rmErr) return { ok: false, error: rmErr.message };

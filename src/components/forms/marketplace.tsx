@@ -14,7 +14,7 @@ const PLATFORMS = [
   { v: 'tiktok', l: 'TikTok Shop' },
   { v: 'line_myshop', l: 'LINE MyShop' },
   { v: 'woocommerce', l: 'WooCommerce' },
-  { v: 'other', l: 'อื่น ๆ' },
+  { v: 'other', l: 'Other' },
 ];
 
 const blank = {

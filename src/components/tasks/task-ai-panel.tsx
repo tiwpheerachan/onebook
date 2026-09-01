@@ -5,6 +5,7 @@ import {
   Sparkles, CalendarPlus, Info, Check, PanelRightClose, PanelRightOpen, Plus, ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/i18n/provider';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { seedTaxDeadlines, addSuggestedTasks } from '@/actions/tasks';
 import { kindMeta, priorityMeta } from '@/lib/task-meta';
@@ -23,6 +24,8 @@ export function TaskAiPanel({
   suggestions: Suggestion[];
   canCreate: boolean;
 }) {
+  const { dict } = useI18n();
+  const L = dict.ui.task;
   const router = useRouter();
   const [open, setOpen] = useState(true);
   const [picked, setPicked] = useState<string[]>(
@@ -34,10 +37,10 @@ export function TaskAiPanel({
 
   const open_ = summary.counts.todo + summary.counts.in_progress + summary.counts.blocked + summary.counts.review;
   const stats = [
-    { label: 'ค้างอยู่', value: open_, tone: 'text-ink-900' },
-    { label: 'เลยกำหนด', value: summary.overdue_count, tone: summary.overdue_count > 0 ? 'text-rose-600' : 'text-ink-900' },
-    { label: 'ครบวันนี้', value: summary.due_today, tone: summary.due_today > 0 ? 'text-amber-600' : 'text-ink-900' },
-    { label: 'ปิดใน 7 วัน', value: summary.done_last_7_days, tone: 'text-emerald-600' },
+    { label: L.statOpen, value: open_, tone: 'text-ink-900' },
+    { label: L.statOverdue, value: summary.overdue_count, tone: summary.overdue_count > 0 ? 'text-rose-600' : 'text-ink-900' },
+    { label: L.statDueToday, value: summary.due_today, tone: summary.due_today > 0 ? 'text-amber-600' : 'text-ink-900' },
+    { label: L.statDone7, value: summary.done_last_7_days, tone: 'text-emerald-600' },
   ];
 
   const chosen = useMemo(() => suggestions.filter((s) => picked.includes(s.key)), [suggestions, picked]);
@@ -52,7 +55,7 @@ export function TaskAiPanel({
         }))
       );
       if (!res.ok) { setErr(res.error || ''); return; }
-      setMsg(res.count ? `เพิ่มเข้าตารางงานแล้ว ${res.count} รายการ` : 'งานเหล่านี้ถูกเพิ่มไว้แล้ว');
+      setMsg(res.count ? L.addedN.replace('{n}', String(res.count)) : L.alreadyAdded);
       setPicked([]);
       router.refresh();
     });
@@ -65,7 +68,7 @@ export function TaskAiPanel({
     start(async () => {
       const res = await seedTaxDeadlines(d.getFullYear(), d.getMonth() + 1);
       if (!res.ok) { setErr(res.error || ''); return; }
-      setMsg(res.count ? `เพิ่มกำหนดยื่นภาษี ${res.count} รายการ` : 'ปฏิทินภาษีงวดนี้ถูกเพิ่มไว้แล้ว');
+      setMsg(res.count ? L.taxAddedN.replace('{n}', String(res.count)) : L.taxAlreadyAdded);
       router.refresh();
     });
   }
@@ -74,7 +77,7 @@ export function TaskAiPanel({
     return (
       <button
         onClick={() => setOpen(true)}
-        title="เปิดแถบผู้ช่วย"
+        title={L.openPanel}
         className="sticky top-20 flex h-11 w-11 items-center justify-center rounded-xl border border-ink-200 bg-white text-brand-700 shadow-card transition hover:bg-brand-50"
       >
         <PanelRightOpen className="h-4 w-4" strokeWidth={1.8} />
@@ -91,10 +94,10 @@ export function TaskAiPanel({
             <span className="rounded-lg bg-white/15 p-1.5">
               <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
             </span>
-            <h2 className="text-sm font-semibold">ผู้ช่วยสรุปงาน</h2>
+            <h2 className="text-sm font-semibold">{L.assistant}</h2>
             <button
               onClick={() => setOpen(false)}
-              title="ย่อแถบผู้ช่วย"
+              title={L.collapsePanel}
               className="ml-auto rounded-lg p-1 text-white/70 transition hover:bg-white/15 hover:text-white"
             >
               <PanelRightClose className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -105,7 +108,7 @@ export function TaskAiPanel({
             'chip mt-2 ring-0',
             brief.byAi ? 'bg-white/20 text-white' : 'bg-white/10 text-white/70'
           )}>
-            {brief.byAi ? 'เรียบเรียงโดย AI' : 'สรุปอัตโนมัติ'}
+            {brief.byAi ? L.byAi : L.autoBrief}
           </span>
 
           <div className="mt-2 space-y-1.5">
@@ -140,16 +143,12 @@ export function TaskAiPanel({
       {canCreate && (
         <div className="card overflow-hidden">
           <div className="border-b border-ink-200 px-4 py-3">
-            <h2 className="text-sm font-semibold text-ink-900">งานที่แนะนำให้เพิ่ม</h2>
-            <p className="mt-0.5 text-xxs leading-relaxed text-ink-400">
-              ทุกข้อมาจากข้อมูลจริงในระบบ ติ๊กเลือกแล้วกดเพิ่มเข้าตารางงานได้เลย
-            </p>
+            <h2 className="text-sm font-semibold text-ink-900">{L.suggestTitle}</h2>
+            <p className="mt-0.5 text-xxs leading-relaxed text-ink-400">{L.suggestHint}</p>
           </div>
 
           {suggestions.length === 0 ? (
-            <p className="px-4 py-4 text-xs text-ink-400">
-              ยังไม่มีงานที่ต้องเสนอเพิ่ม — บิลค้างชำระและงานค้างอยู่ในเกณฑ์ปกติ
-            </p>
+            <p className="px-4 py-4 text-xs text-ink-400">{L.noSuggest}</p>
           ) : (
             <ul className="divide-y divide-ink-100">
               {suggestions.map((s) => {
@@ -175,13 +174,13 @@ export function TaskAiPanel({
                         <span className="mt-0.5 block text-xxs leading-relaxed text-ink-500">{s.reason}</span>
                         <span className="mt-1 flex flex-wrap items-center gap-1">
                           <span className={cn('chip', priorityMeta(s.priority).chip)}>
-                            {priorityMeta(s.priority).label}
+                            {(dict.ui.taskPriority as Record<string, string>)[priorityMeta(s.priority).key]}
                           </span>
                           <span className={cn('chip ring-0', kindMeta(s.kind).block)}>
-                            {kindMeta(s.kind).label}
+                            {(dict.ui.taskKind as Record<string, string>)[kindMeta(s.kind).key]}
                           </span>
                           <span className="text-xxs text-ink-400">
-                            {s.dueInDays === 0 ? 'ครบกำหนดวันนี้' : `อีก ${s.dueInDays} วัน`}
+                            {s.dueInDays === 0 ? L.dueTodayShort : L.inNDays.replace('{n}', String(s.dueInDays))}
                           </span>
                         </span>
                       </span>
@@ -200,7 +199,7 @@ export function TaskAiPanel({
                 onClick={addPicked}
               >
                 {pending ? <ShdSpinner size={16} /> : <Plus className="h-4 w-4" strokeWidth={2} />}
-                เพิ่มเข้าตารางงาน {chosen.length > 0 && `(${chosen.length})`}
+                {L.addToBoard} {chosen.length > 0 && `(${chosen.length})`}
               </button>
             </div>
           )}
@@ -210,15 +209,15 @@ export function TaskAiPanel({
       {/* ภาระงานรายคน */}
       {summary.workload.length > 0 && (
         <div className="card card-pad">
-          <p className="section-title mb-2.5">ภาระงานรายคน</p>
+          <p className="section-title mb-2.5">{L.workload}</p>
           <ul className="space-y-2">
             {summary.workload.slice(0, 6).map((w) => (
               <li key={w.id}>
                 <div className="flex items-center justify-between text-xs">
                   <span className="truncate text-ink-700">{w.name}</span>
                   <span className="shrink-0 tabular-nums text-ink-500">
-                    {w.open_tasks} งาน
-                    {w.overdue_tasks > 0 && <b className="ml-1 text-rose-600">·{w.overdue_tasks} เลยกำหนด</b>}
+                    {L.nTasks.replace('{n}', String(w.open_tasks))}
+                    {w.overdue_tasks > 0 && <b className="ml-1 text-rose-600">·{w.overdue_tasks} {L.overdueShort}</b>}
                   </span>
                 </div>
                 <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-ink-100">
@@ -238,7 +237,7 @@ export function TaskAiPanel({
         {canCreate && (
           <button className="btn-secondary w-full" disabled={pending} onClick={seed}>
             {pending ? <ShdSpinner size={16} /> : <CalendarPlus className="h-4 w-4 text-ink-400" strokeWidth={1.8} />}
-            ดึงปฏิทินภาษีเดือนนี้
+            {L.pullTaxCalendar}
           </button>
         )}
         {msg && (

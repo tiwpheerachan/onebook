@@ -24,7 +24,7 @@ export async function DocumentList({
 
   let query = supabase
     .from('documents')
-    .select('id, doc_number, doc_date, due_date, grand_total, net_payable, paid_amount, status, contact_id, contacts(name)')
+    .select('id, doc_number, doc_date, due_date, description, grand_total, net_payable, paid_amount, status, contact_id, contacts(name)')
     .eq('company_id', ctx.company.id)
     .eq('kind', kind)
     .order('doc_date', { ascending: false })
@@ -37,8 +37,9 @@ export async function DocumentList({
   const { data, error } = await query;
   const rows = (data || []) as any[];
 
+  const M = d.ui.misc;
   const csv = [
-    ['เลขที่', 'วันที่', 'ผู้ติดต่อ', 'ยอดรวม', 'คงค้าง', 'สถานะ'],
+    [M.docNo, M.date, M.docContact, M.docTotal, M.docOutstanding, d.common.status],
     ...rows.map((r) => [
       r.doc_number, r.doc_date, r.contacts?.name || '',
       r.grand_total, Number(r.net_payable) - Number(r.paid_amount), r.status,
@@ -80,13 +81,14 @@ export async function DocumentList({
               <TH>{d.doc.docDate}</TH>
               <TH>{d.doc.dueDate}</TH>
               <TH>{d.doc.contact}</TH>
+              <TH>{d.doc.entryDescription}</TH>
               <TH align="right">{d.doc.grandTotal}</TH>
-              <TH align="right">คงค้าง</TH>
+              <TH align="right">{d.ui.credit.outstanding}</TH>
               <TH>{d.common.status}</TH>
             </TR>
           </THead>
           <TBody>
-            {rows.length === 0 && <EmptyRow colSpan={7} label={d.common.noData} />}
+            {rows.length === 0 && <EmptyRow colSpan={8} label={d.common.noData} />}
             {rows.map((r) => (
               <TR key={r.id}>
                 <TD>
@@ -97,6 +99,9 @@ export async function DocumentList({
                 <TD>{localeDate(r.doc_date, locale)}</TD>
                 <TD>{r.due_date ? localeDate(r.due_date, locale) : '–'}</TD>
                 <TD><span className="block truncate max-w-[18rem]">{r.contacts?.name || '–'}</span></TD>
+                <TD className="text-ink-600">
+                  <span className="block truncate max-w-[20rem]">{r.description || '–'}</span>
+                </TD>
                 <TD align="right">{money(r.grand_total)}</TD>
                 <TD align="right">{money(Number(r.net_payable) - Number(r.paid_amount))}</TD>
                 <TD><StatusBadge status={r.status} label={(d.status as any)[r.status]} /></TD>

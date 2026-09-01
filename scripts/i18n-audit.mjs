@@ -28,6 +28,9 @@ const EXEMPT = [
   { p: 'src/components/documents/print-meta.ts', why: 'แบบพิมพ์ตามกฎหมาย' },
   { p: 'src/components/tax/vat-report.tsx', why: 'หัวคอลัมน์ตามแบบรายงานภาษี' },
   { p: 'src/app/api/ai/', why: 'พรอมต์ที่ส่งให้โมเดล ไม่ใช่ UI' },
+  { p: 'src/lib/ai-prompts.ts', why: 'พรอมต์ที่ส่งให้โมเดล ไม่ใช่ UI' },
+  { p: 'src/lib/ai-actions.ts', why: 'ชื่อฟิลด์เก็บเป็น {th,en,zh} อยู่แล้ว' },
+  { p: 'src/lib/goodhr.ts', why: 'ข้อความ error ลง log ฝั่งเซิร์ฟเวอร์ (ผู้ใช้เห็นข้อความจาก ui.sso.err) และตารางจับคู่ชื่อบทบาทไทยที่ GoodHR ส่งมา' },
 ];
 
 const exemptFor = (rel) => EXEMPT.find((e) => rel.startsWith(e.p) || rel === e.p);
@@ -36,6 +39,8 @@ const exemptFor = (rel) => EXEMPT.find((e) => rel.startsWith(e.p) || rel === e.p
 const LINE_EXEMPT = [
   /name_th|nameTh/,                 // ชื่อไทยของผังบัญชี/ข้อมูลหลัก เป็นข้อมูล ไม่ใช่ UI
   /pnd_form|WHT_PRESETS|ภ\.ง\.ด|ภ\.พ\.30|50 ทวิ/,
+  /THAI_MONTHS/,                    // ชื่อเดือนย่อภาษาไทย เป็นรูปแบบวันที่ ไม่ใช่ข้อความ UI
+  /BUCKET_KEY/,          // คีย์ช่วงอายุที่ฐานข้อมูลส่งกลับมา ใช้จับคู่ ไม่ใช่ข้อความที่แสดง
   /^\s*(\/\/|\*|\/\*)/,             // คอมเมนต์ — โครงการกำหนดให้เขียนไทย
 ];
 
@@ -66,8 +71,10 @@ const thVals = [...pairs(thSrc).values()];
 const enVals = [...pairs(enSrc).values()];
 const zhVals = [...pairs(zhSrc).values()];
 
-const enThai = enVals.filter((v) => THAI.test(v));
-const zhThai = zhVals.filter((v) => THAI.test(v));
+/** ชื่อแบบพิมพ์ตามกฎหมายห้ามแปล ปล่อยให้ปนอยู่ในค่าภาษาอื่นได้ */
+const LEGAL_FORM = /ภ\.พ\.30|ภ\.ง\.ด|50 ทวิ/;
+const enThai = enVals.filter((v) => THAI.test(v) && !LEGAL_FORM.test(v));
+const zhThai = zhVals.filter((v) => THAI.test(v) && !LEGAL_FORM.test(v));
 
 console.log('=== 1. พจนานุกรม ===');
 console.log(`th: ${thVals.length} ค่า · en: ${enVals.length} ค่า · zh: ${zhVals.length} ค่า`);
@@ -106,10 +113,13 @@ offenders.sort((a, b) => b.hits - a.hits);
 const total = offenders.reduce((a, x) => a + x.hits, 0);
 console.log(`ยกเว้นตามข้อตกลง: ${exemptCount} บรรทัด`);
 console.log(`ต้องแก้: ${total} บรรทัด ใน ${offenders.length} ไฟล์\n`);
-offenders.slice(0, 25).forEach((o) => {
+// --all ไว้ดูรายการเต็มตอนไล่เก็บ ไม่งั้นเอาแค่ยอดใหญ่สุดพอ
+const full = process.argv.includes('--all');
+const show = full ? offenders : offenders.slice(0, 25);
+show.forEach((o) => {
   console.log(`${String(o.hits).padStart(4)}  ${o.rel}`);
-  o.samples.forEach((s) => console.log('        ' + s));
+  if (!full) o.samples.forEach((s) => console.log('        ' + s));
 });
-if (offenders.length > 25) console.log(`\n... และอีก ${offenders.length - 25} ไฟล์`);
+if (!full && offenders.length > 25) console.log(`\n... และอีก ${offenders.length - 25} ไฟล์`);
 
 process.exit(total > 0 || enThai.length > 0 || zhThai.length > 0 ? 1 : 0);

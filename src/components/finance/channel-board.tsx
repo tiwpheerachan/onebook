@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useI18n } from '@/i18n/provider';
 import Link from 'next/link';
 import {
   Banknote, Landmark, Wallet, CreditCard, FileCheck, ChevronUp, MoreVertical, AlertTriangle, Link2,
@@ -64,6 +65,7 @@ export function ChannelBoard({
    */
   editSlots?: Record<string, React.ReactNode>;
 }) {
+  const M = useI18n().dict.ui.misc;
   const [collapsed, setCollapsed] = useState<string[]>([]);
   const allCollapsed = collapsed.length === groups.length && groups.length > 0;
 
@@ -74,7 +76,7 @@ export function ChannelBoard({
     return (
       <div className="card card-pad text-center">
         <Wallet className="mx-auto h-8 w-8 text-ink-300" strokeWidth={1.5} />
-        <p className="mt-2 text-sm text-ink-500">ยังไม่มีช่องทางการเงิน — เพิ่มบัญชีเงินสด ธนาคาร หรือ e-Wallet เพื่อเริ่มใช้งาน</p>
+        <p className="mt-2 text-sm text-ink-500">{M.noChannels}</p>
       </div>
     );
   }
@@ -108,7 +110,7 @@ export function ChannelBoard({
               <div className="mb-3 flex flex-wrap items-center gap-2 border-b border-ink-200 pb-2">
                 <Icon className="h-4 w-4 text-ink-400" strokeWidth={1.8} />
                 <h2 className="text-sm font-semibold text-ink-900">{g.label}</h2>
-                <span className="text-xs text-ink-500">{g.count} บัญชี</span>
+                <span className="text-xs text-ink-500">{M.nAccounts.replace('{n}', String(g.count))}</span>
                 <span className="ml-auto text-sm text-ink-600">
                   รวม <b className={cn('tabular-nums', Number(g.total) < 0 ? 'text-rose-600' : 'text-ink-900')}>
                     {money(g.total)}
@@ -153,14 +155,14 @@ export function ChannelBoard({
                           <p className="mx-3.5 mb-1 flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-xxs text-amber-700">
                             <Link2 className="h-3 w-3" strokeWidth={2} />
                             ใช้บัญชี {c.account_code} ร่วมกับช่องทางอื่น
-                            {!c.counts_in_total && ' · ไม่นับซ้ำในยอดรวม'}
+                            {!c.counts_in_total && ` · ${M.notCounted}`}
                           </p>
                         )}
 
                         <div className="mt-auto flex items-baseline justify-between border-t border-ink-100 px-3.5 py-2">
                           <span className="font-mono text-xxs text-ink-400">{c.code}</span>
                           <span className={cn('text-sm font-semibold tabular-nums', neg ? 'text-rose-600' : 'text-emerald-600')}>
-                            {money(c.balance)} <span className="text-xxs font-normal text-ink-400">บาท</span>
+                            {money(c.balance)} <span className="text-xxs font-normal text-ink-400">{M.baht}</span>
                           </span>
                         </div>
                       </div>

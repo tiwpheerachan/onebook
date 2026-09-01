@@ -8,8 +8,8 @@ type Res = { ok: boolean; error?: string; id?: string };
 
 export async function saveContact(form: any): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน' };
-  if (!can(ctx, 'contacts', form.id ? 'edit' : 'create')) return { ok: false, error: 'ไม่มีสิทธิ์' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'contacts', form.id ? 'edit' : 'create')) return { ok: false, error: t().ui.act.noPermission };
   const supabase = createClient();
   const row = {
     company_id: ctx.company.id,
@@ -19,7 +19,7 @@ export async function saveContact(form: any): Promise<Res> {
     name_en: form.name_en || null,
     tax_id: form.tax_id || null,
     branch_code: form.branch_code || '00000',
-    branch_name: form.branch_name || 'สำนักงานใหญ่',
+    branch_name: form.branch_name || t().ui.act.headOffice,
     is_juristic: form.is_juristic ?? true,
     address: form.address || null,
     district: form.district || null,
@@ -30,6 +30,8 @@ export async function saveContact(form: any): Promise<Res> {
     contact_person: form.contact_person || null,
     credit_days: Number(form.credit_days) || 0,
     credit_limit: Number(form.credit_limit) || 0,
+    sales_rep_id: form.sales_rep_id || null,
+    sales_zone_id: form.sales_zone_id || null,
     is_active: form.is_active ?? true,
   };
   const q = form.id
@@ -42,8 +44,8 @@ export async function saveContact(form: any): Promise<Res> {
 
 export async function saveProduct(form: any): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน' };
-  if (!can(ctx, 'products', form.id ? 'edit' : 'create')) return { ok: false, error: 'ไม่มีสิทธิ์' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'products', form.id ? 'edit' : 'create')) return { ok: false, error: t().ui.act.noPermission };
   const supabase = createClient();
   const row = {
     company_id: ctx.company.id,
@@ -52,7 +54,7 @@ export async function saveProduct(form: any): Promise<Res> {
     name_en: form.name_en || null,
     name_zh: form.name_zh || null,
     kind: form.kind || 'good',
-    unit: form.unit || 'ชิ้น',
+    unit: form.unit || t().ui.act.pieceUnit,
     category: form.category || null,
     sale_price: Number(form.sale_price) || 0,
     purchase_price: Number(form.purchase_price) || 0,
@@ -83,8 +85,8 @@ export async function saveProduct(form: any): Promise<Res> {
 
 export async function saveChannel(form: any): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน' };
-  if (!can(ctx, 'finance.channels', form.id ? 'edit' : 'create')) return { ok: false, error: 'ไม่มีสิทธิ์' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'finance.channels', form.id ? 'edit' : 'create')) return { ok: false, error: t().ui.act.noPermission };
   const supabase = createClient();
   const row = {
     company_id: ctx.company.id,
@@ -104,21 +106,53 @@ export async function saveChannel(form: any): Promise<Res> {
 
 export async function saveAccount(form: any): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน' };
-  if (!can(ctx, 'accounting.coa', form.id ? 'edit' : 'create')) return { ok: false, error: 'ไม่มีสิทธิ์' };
+  const L = t().ui.coa;
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'accounting.coa', form.id ? 'edit' : 'create')) return { ok: false, error: t().ui.act.noPermission };
+
+  const code = String(form.code || '').trim();
+  const nameTh = String(form.name_th || '').trim();
+  if (!code || !nameTh) return { ok: false, error: L.codeRequired };
+
   const supabase = createClient();
+
+  // บัญชีที่เครื่องลงบัญชีอ้างถึงด้วย system_key ห้ามเปลี่ยนรหัสหรือหมวด
+  // เพราะ app.acc() ค้นด้วย system_key แล้วเอา id ไปลงบรรทัดสมุดรายวัน
+  // ถ้าหมวดเปลี่ยน งบจะจัดกลุ่มผิดทั้งหมดโดยไม่มีอะไรฟ้อง
+  if (form.id) {
+    const { data: cur } = await supabase
+      .from('accounts').select('code, type, system_key, is_active')
+      .eq('id', form.id).eq('company_id', ctx.company.id).maybeSingle();
+    if (cur?.system_key && (cur.code !== code || cur.type !== form.type)) {
+      return { ok: false, error: L.systemLocked };
+    }
+    // ปิดบัญชีที่ยังมีรายการค้างอยู่ไม่ได้ ยอดจะหายจากรายงานที่กรองเฉพาะบัญชีที่ใช้งาน
+    if (cur?.is_active && form.is_active === false) {
+      const { count } = await supabase
+        .from('journal_lines').select('id', { count: 'exact', head: true })
+        .eq('company_id', ctx.company.id).eq('account_id', form.id);
+      if ((count || 0) > 0) return { ok: false, error: L.hasEntries };
+    }
+  }
+
   const row = {
     company_id: ctx.company.id,
-    code: form.code, name_th: form.name_th, name_en: form.name_en || null, name_zh: form.name_zh || null,
+    code, name_th: nameTh, name_en: form.name_en || null, name_zh: form.name_zh || null,
     type: form.type, parent_code: form.parent_code || null,
     is_header: form.is_header ?? false, normal_side: form.normal_side || 'D',
     is_active: form.is_active ?? true,
   };
   const q = form.id
-    ? await supabase.from('accounts').update(row).eq('id', form.id).select('id').single()
+    ? await supabase.from('accounts').update(row).eq('id', form.id)
+        .eq('company_id', ctx.company.id).select('id').single()
     : await supabase.from('accounts').insert(row).select('id').single();
-  if (q.error) return { ok: false, error: q.error.message };
+
+  if (q.error) {
+    if ((q.error as any).code === '23505') return { ok: false, error: L.duplicate };
+    return { ok: false, error: q.error.message };
+  }
   revalidatePath('/accounting/coa');
+  revalidatePath('/reports/trial-balance');
   return { ok: true, id: q.data.id };
 }
 
@@ -126,10 +160,10 @@ export async function saveAccount(form: any): Promise<Res> {
 
 export async function saveContactGroup(form: { id?: string; name: string; color: string }): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'contacts', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์จัดการกลุ่มผู้ติดต่อ' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'contacts', 'edit')) return { ok: false, error: t().ui.act.groupNoManage };
   const name = String(form.name || '').trim();
-  if (!name) return { ok: false, error: 'กรุณาตั้งชื่อกลุ่ม' };
+  if (!name) return { ok: false, error: t().ui.act.groupNameRequired };
 
   const supabase = createClient();
   const row = { company_id: ctx.company.id, name, color: form.color || 'brand', created_by: ctx.userId };
@@ -139,7 +173,7 @@ export async function saveContactGroup(form: { id?: string; name: string; color:
 
   const { data, error } = await q;
   if (error) {
-    if (error.code === '23505') return { ok: false, error: 'มีกลุ่มชื่อนี้อยู่แล้ว' };
+    if (error.code === '23505') return { ok: false, error: t().ui.act.groupDuplicate };
     return { ok: false, error: error.message };
   }
   revalidatePath('/contacts');
@@ -148,8 +182,8 @@ export async function saveContactGroup(form: { id?: string; name: string; color:
 
 export async function deleteContactGroup(id: string): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'contacts', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์จัดการกลุ่มผู้ติดต่อ' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'contacts', 'edit')) return { ok: false, error: t().ui.act.groupNoManage };
 
   const supabase = createClient();
   const { error } = await supabase.from('contact_groups').delete().eq('id', id);
@@ -163,9 +197,9 @@ export async function assignContactGroup(
   groupId: string, contactIds: string[], attach: boolean
 ): Promise<Res & { count?: number }> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'contacts', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์จัดกลุ่มผู้ติดต่อ' };
-  if (!contactIds.length) return { ok: false, error: 'ยังไม่ได้เลือกผู้ติดต่อ' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'contacts', 'edit')) return { ok: false, error: t().ui.act.groupNoAssign };
+  if (!contactIds.length) return { ok: false, error: t().ui.act.contactNoneSelected };
 
   const supabase = createClient();
   const { data, error } = await supabase.rpc('set_contact_group', {
@@ -190,7 +224,7 @@ export async function setContactCycle(form: {
 }) {
   const ctx = await getSessionContext();
   if (!ctx || !can(ctx, 'contacts', 'edit')) {
-    return { ok: false, error: 'ไม่มีสิทธิ์แก้ไขผู้ติดต่อ' };
+    return { ok: false, error: t().ui.act.contactNoEdit };
   }
 
   const supabase = createClient();
@@ -203,7 +237,7 @@ export async function setContactCycle(form: {
 
   if (error) {
     if (error.message.includes('INVALID_CYCLE')) {
-      return { ok: false, error: 'รอบการขายต้องอยู่ระหว่าง 1 ถึง 730 วัน' };
+      return { ok: false, error: t().ui.act.cycleRange };
     }
     return { ok: false, error: error.message };
   }

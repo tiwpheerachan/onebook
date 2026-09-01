@@ -1,5 +1,6 @@
 'use client';
 import { useId, useState } from 'react';
+import { useI18n } from '@/i18n/provider';
 import { cn } from '@/lib/cn';
 import { compact, money } from '@/lib/format';
 
@@ -8,7 +9,8 @@ import { compact, money } from '@/lib/format';
  * ทำให้ขนาดไฟล์เล็ก คุมสีให้เข้าธีมได้เอง และไม่มีปัญหาตอน render ฝั่งเซิร์ฟเวอร์
  */
 
-const TH_MONTH_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+import { THAI_MONTHS } from '@/lib/format';
+const TH_MONTH_SHORT = THAI_MONTHS;
 
 export interface Series {
   key: string;
@@ -121,17 +123,18 @@ export function DonutBreakdown({
   topN?: number;
 }) {
   const uid = useId().replace(/:/g, '');
+  const M = useI18n().dict.ui.misc;
   const sum = total ?? slices.reduce((a, s) => a + s.amount, 0);
   const top = slices.slice(0, topN);
   const restAmount = Math.max(0, sum - top.reduce((a, s) => a + s.amount, 0));
 
   if (sum <= 0) {
-    return <p className="py-8 text-center text-sm text-ink-400">ยังไม่มีข้อมูลในช่วงนี้</p>;
+    return <p className="py-8 text-center text-sm text-ink-400">{M.chartEmpty}</p>;
   }
 
   const parts = [
     ...top.map((s, i) => ({ ...s, color: DONUT_COLORS[i % DONUT_COLORS.length] })),
-    ...(restAmount > 0 ? [{ id: 'rest', label: 'อื่น ๆ', amount: restAmount, mom: null, color: REST_COLOR }] : []),
+    ...(restAmount > 0 ? [{ id: 'rest', label: M.chartRest, amount: restAmount, mom: null, color: REST_COLOR }] : []),
   ];
 
   const R = 42;
@@ -191,6 +194,7 @@ export function ProgressRow({
 }: {
   label: string; amount: number; count: number; ratio: number; color?: string;
 }) {
+  const M = useI18n().dict.ui.misc;
   return (
     <div className="py-2">
       <div className="flex items-baseline justify-between gap-3">
@@ -201,7 +205,7 @@ export function ProgressRow({
         <div className={cn('h-full rounded-full transition-all', color)}
              style={{ width: `${Math.min(100, Math.max(0, ratio * 100))}%` }} />
       </div>
-      <p className="mt-0.5 text-right text-xxs text-ink-400">{count} รายการ</p>
+      <p className="mt-0.5 text-right text-xxs text-ink-400">{M.chartItems.replace('{n}', String(count))}</p>
     </div>
   );
 }

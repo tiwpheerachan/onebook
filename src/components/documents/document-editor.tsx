@@ -6,8 +6,25 @@ import { ShdSpinner } from '@/components/ui/shd-loader';
 import { calcDocument, calcLine, WHT_PRESETS, type VatTreatment } from '@/lib/tax';
 import { money, bahtTextSafe } from '@/lib/ui-helpers';
 import { saveDocument, approveDocument, voidDocument } from '@/actions/documents';
+import { FxPanel, type FxState } from './fx-panel';
 
-interface Option { id: string; label: string; sub?: string; price?: number; unit?: string }
+interface Option {
+  id: string; label: string; sub?: string; price?: number; unit?: string;
+  /** หน่วยบรรจุที่เลือกได้ พร้อมตัวคูณและราคาต่อหน่วยนั้น */
+  units?: { code: string; factor: number; sale_price?: number; purchase_price?: number }[];
+  /** ประเภทภาษีที่ผูกกับตัวสินค้าเอง เช่น สินค้ายกเว้นภาษีตามกฎหมาย */
+  vat?: VatTreatment;
+}
+
+/**
+ * ประเภทภาษีของเราปนสองเรื่องไว้ในช่องเดียว
+ *   exclusive / inclusive  = "ราคาที่เสนอรวมภาษีหรือยัง" เป็นวิธีตั้งราคา
+ *   zero_rated / exempt / none = "สินค้านี้เสียภาษีไหม" เป็นข้อเท็จจริงตามกฎหมาย
+ *
+ * ตัวหลังต้องมาจากตัวสินค้าเสมอและมีผลเหนือค่าที่ตั้งไว้ที่หัวเอกสาร
+ * เพราะอาหารสดยกเว้นภาษีก็ยกเว้นเสมอ ไม่ว่าจะเสนอราคาแบบไหน
+ */
+const TAX_STATUS: VatTreatment[] = ['zero_rated', 'exempt', 'none'];
 
 export interface EditorProps {
   slug: string;
@@ -75,10 +92,10 @@ function LineField(
   );
 }
 
-const emptyRow = (): Row => ({
+const emptyRow = (vat: VatTreatment = 'exclusive'): Row => ({
   key: Math.random().toString(36).slice(2),
   product_id: '', description: '', quantity: 1, unit: '', unit_price: 0,
-  discount_pct: 0, vat_treatment: 'exclusive', vat_rate: 7,
+  discount_pct: 0, vat_treatment: vat, vat_rate: 7,
   wht_code: 'NONE', wht_rate: 0, account_id: '',
 });
 
@@ -96,6 +113,7 @@ export function DocumentEditor(p: EditorProps) {
   const [contactId, setContactId] = useState<string>(p.doc?.contact_id || p.initialContactId || '');
   const [reference, setReference] = useState<string>(p.doc?.reference || '');
   const [notes, setNotes] = useState<string>(p.doc?.notes || '');
+  const [description, setDescription] = useState<string>(p.doc?.description || '');
   const [dimensionId, setDimensionId] = useState<string>(p.doc?.dimension_id || '');
   const [headerDiscount, setHeaderDiscount] = useState<number>(0);
   const [rows, setRows] = useState<Row[]>(
@@ -119,17 +137,47 @@ export function DocumentEditor(p: EditorProps) {
 
   const totals = useMemo(() => calcDocument(rows as any, headerDiscount), [rows, headerDiscount]);
 
+  // เงินตราต่างประเทศ — ยอดบาทยังเป็นตัวที่ลงบัญชี
+  // ยอดต่างประเทศคำนวณย้อนจากยอดบาทหารด้วยอัตรา สองฝั่งจึงไม่มีทางหลุดจากกัน
+  const [fx, setFx] = useState<FxState | null>(
+    p.doc?.fx_currency
+      ? {
+          currency: p.doc.fx_currency,
+          rate: Number(p.doc.fx_rate) || 0,
+          rateDate: String(p.doc.fx_rate_date || p.doc.doc_date || '').slice(0, 10),
+          source: p.doc.fx_rate_source || 'manual',
+        }
+      : null
+  );
+
+  // ประเภทราคาระดับเอกสารอ่านจากบรรทัดเสมอ ไม่เก็บซ้ำไว้อีกที่
+  // เก็บสองที่แล้ววันหนึ่งจะไม่ตรงกันโดยไม่มีใครรู้ว่าอันไหนถูก
+  const docVat: VatTreatment | 'mixed' = useMemo(() => {
+    if (!rows.length) return 'exclusive';
+    const first = rows[0].vat_treatment;
+    return rows.every((r) => r.vat_treatment === first) ? first : 'mixed';
+  }, [rows]);
+
+  /** ตั้งประเภทราคาให้ทุกบรรทัดพร้อมกัน แบบที่ Express ทำ */
+  function setAllVat(v: VatTreatment) {
+    setRows((prev) => prev.map((r) => ({ ...r, vat_treatment: v })));
+  }
+
   function update(i: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   }
 
   function onPickProduct(i: number, productId: string) {
     const prod = p.products.find((x) => x.id === productId);
+    // สินค้าที่ยกเว้นภาษีหรืออัตราศูนย์ ต้องใช้ค่าของตัวสินค้าเสมอ
+    // ส่วนสินค้าที่ตั้งเป็นแยกนอก/รวมใน ปล่อยให้ตามประเภทราคาของเอกสาร
+    const legalStatus = prod?.vat && TAX_STATUS.includes(prod.vat) ? prod.vat : null;
     update(i, {
       product_id: productId,
       description: prod?.label || rows[i].description,
       unit_price: prod?.price ?? rows[i].unit_price,
       unit: prod?.unit || rows[i].unit,
+      ...(legalStatus ? { vat_treatment: legalStatus } : {}),
     });
   }
 
@@ -140,6 +188,10 @@ export function DocumentEditor(p: EditorProps) {
 
   function submit(thenApprove = false) {
     setMsg(null);
+    if (!description.trim()) {
+      setMsg({ type: 'err', text: p.labels.entryDescriptionRequired });
+      return;
+    }
     start(async () => {
       const res = await saveDocument({
         id: p.doc?.id || null,
@@ -148,6 +200,7 @@ export function DocumentEditor(p: EditorProps) {
         due_date: dueDate || null,
         contact_id: contactId || null,
         dimension_id: dimensionId || null,
+        description,
         reference,
         notes,
         discount_amount: headerDiscount,
@@ -164,6 +217,16 @@ export function DocumentEditor(p: EditorProps) {
           wht_rate: Number(r.wht_rate) || 0,
           account_id: r.account_id || null,
         })),
+        fx: fx && fx.rate > 0
+          ? {
+              currency: fx.currency,
+              rate: fx.rate,
+              rate_date: fx.rateDate,
+              source: fx.source,
+              subtotal: Math.round((totals.subtotal / fx.rate) * 100) / 100,
+              grand_total: Math.round((totals.grand_total / fx.rate) * 100) / 100,
+            }
+          : null,
       });
       if (!res.ok) { setMsg({ type: 'err', text: res.error || '' }); return; }
       if (thenApprove) {
@@ -184,7 +247,7 @@ export function DocumentEditor(p: EditorProps) {
   }
 
   function doVoid() {
-    const reason = window.prompt(p.labels.voidReason || 'ระบุเหตุผลการยกเลิก');
+    const reason = window.prompt(p.labels.voidReason || '');
     if (reason === null) return;
     start(async () => {
       const res = await voidDocument(p.doc.id, reason);
@@ -253,6 +316,40 @@ export function DocumentEditor(p: EditorProps) {
             <label className="label">{p.labels.dueDate}</label>
             <input type="date" className="input" value={dueDate} disabled={readOnly}
                    onChange={(e) => setDueDate(e.target.value)} />
+          </div>
+          {/* คำอธิบายรายการบันทึกบัญชี — ข้อความนี้ไปเป็นคำอธิบายในสมุดรายวัน
+              คนละหน้าที่กับหมายเหตุซึ่งเป็นบันทึกภายในและไม่ลงบัญชี */}
+          <div className="md:col-span-4">
+            <label className="label">
+              {p.labels.entryDescription} <span className="text-rose-600">*</span>
+            </label>
+            <input
+              className={'input' + (!description.trim() && !readOnly ? ' border-rose-300' : '')}
+              value={description}
+              disabled={readOnly}
+              placeholder={p.labels.entryDescriptionHint}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <p className="mt-1 text-xxs text-ink-400">{p.labels.entryDescriptionHint}</p>
+          </div>
+          {/* ประเภทราคาระดับเอกสาร — เลือกครั้งเดียวแล้วทุกบรรทัดตามทันที
+            * แบบเดียวกับช่องประเภทราคาของ Express ที่คีย์บิลสิบบรรทัดได้เร็วกว่ามาก
+            * ยังแก้รายบรรทัดทับได้ พอต่างกันช่องนี้จะขึ้นว่าผสม */}
+          <div className="md:col-span-2">
+            <label className="label">{p.labels.priceType}</label>
+            <select
+              className="input"
+              value={docVat}
+              disabled={readOnly}
+              onChange={(e) => setAllVat(e.target.value as VatTreatment)}
+            >
+              {docVat === 'mixed' && <option value="mixed">{p.labels.vatMixed}</option>}
+              <option value="exclusive">{p.labels.exclusive}</option>
+              <option value="inclusive">{p.labels.inclusive}</option>
+              <option value="zero_rated">{p.labels.zeroRated}</option>
+              <option value="exempt">{p.labels.exempt}</option>
+              <option value="none">{p.labels.none}</option>
+            </select>
           </div>
           <div className="md:col-span-2">
             <label className="label">{p.labels.reference}</label>
@@ -333,8 +430,28 @@ export function DocumentEditor(p: EditorProps) {
                              onChange={(e) => update(i, { quantity: Number(e.target.value) })} />
                     </LineField>
                     <LineField label={p.labels.unit}>
-                      <input className="input" value={r.unit} disabled={readOnly}
-                             onChange={(e) => update(i, { unit: e.target.value })} />
+                      {/* สินค้าที่ตั้งหน่วยบรรจุไว้จะได้ตัวเลือก ส่วนบรรทัดอิสระยังพิมพ์เองได้
+                        * เปลี่ยนหน่วยแล้วราคาต่อหน่วยปรับตามให้ เพราะราคาต่อลังกับต่อชิ้นไม่เท่ากัน */}
+                      {(() => {
+                        const prod = p.products.find((x) => x.id === r.product_id);
+                        const opts = prod?.units || [];
+                        if (opts.length < 2) {
+                          return (
+                            <input className="input" value={r.unit} disabled={readOnly}
+                                   onChange={(e) => update(i, { unit: e.target.value })} />
+                          );
+                        }
+                        return (
+                          <select className="input" value={r.unit} disabled={readOnly}
+                                  onChange={(e) => {
+                                    const u = opts.find((x) => x.code === e.target.value);
+                                    const price = p.section === 'sales' ? u?.sale_price : u?.purchase_price;
+                                    update(i, { unit: e.target.value, ...(price != null ? { unit_price: price } : {}) });
+                                  }}>
+                            {opts.map((u) => <option key={u.code} value={u.code}>{u.code}</option>)}
+                          </select>
+                        );
+                      })()}
                     </LineField>
                     <LineField label={p.labels.unitPrice} align="right">
                       <input type="number" step="0.0001" className="input num" value={r.unit_price} disabled={readOnly}
@@ -401,7 +518,7 @@ export function DocumentEditor(p: EditorProps) {
         </div>
         {!readOnly && (
           <div className="border-t border-ink-200 px-4 py-3">
-            <button type="button" onClick={() => setRows([...rows, emptyRow()])} className="btn-ghost text-brand-700">
+            <button type="button" onClick={() => setRows([...rows, emptyRow(docVat === 'mixed' ? 'exclusive' : docVat)])} className="btn-ghost text-brand-700">
               <Plus className="h-4 w-4" /> {p.labels.addLine}
             </button>
           </div>
@@ -411,6 +528,8 @@ export function DocumentEditor(p: EditorProps) {
       {/* ---------- สรุปยอด ---------- */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="card card-pad lg:col-span-2">
+          <p className="section-title mb-2">{p.labels.entryDescription}</p>
+          <p className="mb-4 text-sm text-ink-800">{description || '—'}</p>
           <p className="section-title mb-2">{p.labels.amountInWords}</p>
           <p className="text-sm text-ink-700">{bahtTextSafe(totals.net_payable)}</p>
         </div>
@@ -434,6 +553,17 @@ export function DocumentEditor(p: EditorProps) {
           </dl>
         </div>
       </div>
+
+      {/* เงินตราต่างประเทศ แสดงเฉพาะฝั่งซื้อ เพราะขายในประเทศเป็นบาททั้งหมด */}
+      {p.section === 'purchase' && (
+        <FxPanel
+          value={fx}
+          onChange={setFx}
+          bahtTotal={totals.grand_total}
+          readOnly={readOnly}
+          docDate={docDate}
+        />
+      )}
 
       {/* ---------- ปุ่มดำเนินการ ---------- */}
       <div className="no-print flex flex-wrap items-center gap-2">

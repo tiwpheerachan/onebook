@@ -1,5 +1,6 @@
 'use client';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/i18n/provider';
 import { initials, avatarTone, statusMeta, priorityMeta, kindMeta } from '@/lib/task-meta';
 
 export interface Member {
@@ -50,25 +51,27 @@ export function AvatarStack({
 }
 
 export function StatusChip({ status }: { status: string }) {
+  const { dict } = useI18n();
   const m = statusMeta(status);
-  return <span className={cn('chip', m.chip)}>{m.label}</span>;
+  return <span className={cn('chip', m.chip)}>{(dict.ui.taskStatus as Record<string, string>)[m.key]}</span>;
 }
 
 export function PriorityChip({ priority }: { priority: string }) {
+  const { dict } = useI18n();
   const m = priorityMeta(priority);
   if (priority === 'normal') return null;
-  return <span className={cn('chip', m.chip)}>{m.label}</span>;
+  return <span className={cn('chip', m.chip)}>{(dict.ui.taskPriority as Record<string, string>)[m.key]}</span>;
 }
 
 export function KindDot({ kind }: { kind: string }) {
   return <span className={cn('inline-block h-2 w-2 shrink-0 rounded-full', kindMeta(kind).bar)} />;
 }
 
-/** เวลาแบบสั้นสำหรับบล็อกบนปฏิทิน */
+/** เวลาแบบสั้นสำหรับบล็อกบนปฏิทิน — ใช้รูปแบบ 24 ชั่วโมงทุกภาษาเพื่อให้ความกว้างคงที่ */
 export function timeLabel(iso?: string | null): string {
   if (!iso) return '';
   const d = new Date(iso);
-  return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 export function dayKey(d: Date): string {

@@ -4,6 +4,7 @@ import { t, currentLocale } from '@/i18n/server';
 import { buildNav } from '@/components/layout/nav-config';
 import { AppShell, type QuickAction } from '@/components/layout/app-shell';
 import { CompanySwitcher, LanguageSwitcher, UserMenu, LockBanner } from '@/components/layout/switchers';
+import { LiveBar } from '@/components/layout/live-bar';
 import { localeDate } from '@/lib/format';
 import { HELP } from '@/lib/help/content';
 import { tx } from '@/lib/help/types';
@@ -53,6 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {ctx.lockedThrough && <LockBanner date={localeDate(ctx.lockedThrough, locale)} />}
       </div>
       <div className="flex items-center gap-2">
+        <LiveBar />
         <LanguageSwitcher locale={locale} />
         <UserMenu name={ctx.fullName} email={ctx.email} isGroupAdmin={ctx.isGroupAdmin} />
       </div>

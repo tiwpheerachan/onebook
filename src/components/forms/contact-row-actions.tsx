@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '@/i18n/provider';
+import type { Dictionary } from '@/i18n';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { ChevronDown, FileText, ShoppingCart, Receipt, Pencil, ListFilter } from 'lucide-react';
@@ -29,11 +31,12 @@ const MENU_W = 208;
  * ถ้าวาดในตารางตรง ๆ เมนูจะถูกตัดหายไปทั้งอัน
  */
 export function ContactRowActions({
-  actions, label = 'ทำรายการ',
+  actions, label,
 }: {
   actions: RowAction[];
   label?: string;
 }) {
+  const menuLabel = label ?? useI18n().dict.ui.rowAction.act;
   const btnRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
@@ -77,7 +80,7 @@ export function ContactRowActions({
             : 'border-ink-200 text-ink-600 hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-700'
         )}
       >
-        {label}
+        {menuLabel}
         <ChevronDown className={cn('h-3 w-3 transition', open && 'rotate-180')} strokeWidth={2.5} />
       </button>
 
@@ -114,29 +117,30 @@ export function ContactRowActions({
 }
 
 /** สร้างรายการคำสั่งตามว่าผู้ติดต่อรายนี้เป็นลูกค้าหรือผู้ขาย */
-export function buildRowActions(contactId: string, kind: string): RowAction[] {
+export function buildRowActions(contactId: string, kind: string, d: Dictionary): RowAction[] {
+  const L = d.ui.rowAction;
   const isCustomer = kind === 'customer' || kind === 'both';
   const isVendor = kind === 'vendor' || kind === 'both';
   const out: RowAction[] = [];
 
   if (isCustomer) {
     out.push(
-      { label: 'สร้างใบเสนอราคา', href: `/sales/quotations/new?contact=${contactId}`, icon: 'sales' },
-      { label: 'สร้างใบแจ้งหนี้', href: `/sales/invoices/new?contact=${contactId}`, icon: 'sales' },
-      { label: 'สร้างใบกำกับภาษี', href: `/sales/tax-invoices/new?contact=${contactId}`, icon: 'sales' },
-      { label: 'สร้างใบเสร็จรับเงิน', href: `/sales/receipts/new?contact=${contactId}`, icon: 'sales' },
+      { label: L.quotation, href: `/sales/quotations/new?contact=${contactId}`, icon: 'sales' },
+      { label: L.invoice, href: `/sales/invoices/new?contact=${contactId}`, icon: 'sales' },
+      { label: L.taxInvoice, href: `/sales/tax-invoices/new?contact=${contactId}`, icon: 'sales' },
+      { label: L.receipt, href: `/sales/receipts/new?contact=${contactId}`, icon: 'sales' },
     );
   }
   if (isVendor) {
     out.push(
-      { label: 'สร้างใบสั่งซื้อ', href: `/purchase/purchase-orders/new?contact=${contactId}`, icon: 'purchase' },
-      { label: 'บันทึกค่าใช้จ่าย', href: `/purchase/expenses/new?contact=${contactId}`, icon: 'purchase' },
-      { label: 'ซื้อสินค้า/บริการ', href: `/purchase/bills/new?contact=${contactId}`, icon: 'purchase' },
+      { label: L.purchaseOrder, href: `/purchase/purchase-orders/new?contact=${contactId}`, icon: 'purchase' },
+      { label: L.expense, href: `/purchase/expenses/new?contact=${contactId}`, icon: 'purchase' },
+      { label: L.bill, href: `/purchase/bills/new?contact=${contactId}`, icon: 'purchase' },
     );
   }
 
   out.push({
-    label: isCustomer ? 'ดูใบแจ้งหนี้ของรายนี้' : 'ดูเอกสารซื้อของรายนี้',
+    label: isCustomer ? L.viewSales : L.viewPurchase,
     href: isCustomer
       ? `/sales/invoices?contact=${contactId}`
       : `/purchase/bills?contact=${contactId}`,

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { UnitManager, type UnitRow } from '@/components/forms/unit-manager';
 import { requirePermission, can } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { t } from '@/i18n/server';
@@ -8,12 +9,6 @@ import { ExportCsvButton } from '@/components/ui/export-csv';
 import { money, firstDayOfYear, lastDayOfMonth } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
-
-const KIND_LABEL: Record<string, string> = {
-  receive: 'รับเข้า',
-  issue: 'ตัดออก',
-  adjust: 'ปรับปรุง',
-};
 
 export default async function StockCardPage({
   params, searchParams,
@@ -27,7 +22,7 @@ export default async function StockCardPage({
   const from = searchParams.from || firstDayOfYear();
   const to = searchParams.to || lastDayOfMonth();
 
-  const [{ data: product }, { data: moves }] = await Promise.all([
+  const [{ data: product }, { data: moves }, { data: units }, { data: packed }] = await Promise.all([
     supabase
       .from('products')
       .select('id, sku, name, unit')
@@ -40,11 +35,17 @@ export default async function StockCardPage({
       p_from: from,
       p_to: to,
     }),
+    supabase.from('product_units').select('id, code, factor, barcode, sale_price, is_base')
+      .eq('product_id', params.productId).eq('is_active', true).order('factor'),
+    supabase.rpc('rpt_stock_in_units', { p_company: ctx.company.id, p_product: params.productId }),
   ]);
 
   if (!product) notFound();
   const rows = (moves || []) as any[];
   const last = rows[rows.length - 1];
+  const unitRows = (units || []) as UnitRow[];
+  const baseCode = unitRows.find((u) => u.is_base)?.code || product.unit || '-';
+  const pk = (packed || {}) as any;
 
   return (
     <>
@@ -99,7 +100,7 @@ export default async function StockCardPage({
             {rows.map((r, i) => (
               <TR key={i}>
                 <TD className="whitespace-nowrap">{r.move_date}</TD>
-                <TD className="text-ink-600">{KIND_LABEL[r.kind] || r.kind}</TD>
+                <TD className="text-ink-600">{(d.ui.misc as Record<string, string>)[`move${r.kind.charAt(0).toUpperCase()}${r.kind.slice(1)}`] || r.kind}</TD>
                 <TD className="font-mono text-xxs text-ink-500">{r.doc_number || '—'}</TD>
                 <TD className="text-ink-500">{r.note || '—'}</TD>
                 <TD className="num">{Number(r.qty_in) ? money(r.qty_in) : '—'}</TD>
@@ -111,6 +112,27 @@ export default async function StockCardPage({
           </TBody>
         </Table>
       </Card>
+      {/* ยอดคงเหลือแปลงเป็นหน่วยบรรจุ อ่านง่ายกว่าเลขหน่วยฐานล้วน */}
+      {pk.pack_unit && Number(pk.base_qty) > 0 && (
+        <p className="mt-4 text-xs text-ink-500">
+          {d.ui.unitMgr.onHand}{' '}
+          <b className="tabular-nums text-ink-800">
+            {d.ui.unitMgr.packHint
+              .replace('{pack}', String(pk.pack_qty))
+              .replace('{packUnit}', pk.pack_unit)
+              .replace('{loose}', String(pk.loose_qty))
+              .replace('{baseUnit}', pk.base_unit || baseCode)}
+          </b>
+        </p>
+      )}
+
+      <UnitManager
+        productId={params.productId}
+        units={unitRows}
+        baseCode={baseCode}
+        canEdit={can(ctx, 'products', 'edit')}
+      />
+
     </>
   );
 }

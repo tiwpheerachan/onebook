@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Printer, GitBranch } from 'lucide-react';
+import { Printer, GitBranch, Info } from 'lucide-react';
 import { requirePermission, can } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { t, currentLocale } from '@/i18n/server';
@@ -14,6 +14,9 @@ import { ConvertButton } from './convert-button';
 import { ReserveButton } from './reserve-button';
 import { AttachmentPanel } from './attachment-panel';
 import { DepositPanel } from './deposit-panel';
+import { MatchPanel, type MatchResult } from './match-panel';
+import { BudgetPanel, type BudgetResult } from './budget-panel';
+import { ApprovalPanel, type ApprovalState } from './approval-panel';
 import { docTitle, isPurchase } from './doc-meta';
 
 export async function DocumentPage({
@@ -33,11 +36,14 @@ export async function DocumentPage({
   const supabase = createClient();
   const section: 'sales' | 'purchase' = isPurchase(slug) ? 'purchase' : 'sales';
 
-  const [{ data: contacts }, { data: products }, { data: accounts }, { data: dimensions }] = await Promise.all([
+  const [{ data: contacts }, { data: products }, { data: productUnits }, { data: accounts }, { data: dimensions }] = await Promise.all([
     supabase.from('contacts').select('id, name, tax_id')
       .eq('company_id', ctx.company.id).eq('is_active', true).order('name').limit(1000),
-    supabase.from('products_masked').select('id, name, sku, sale_price, purchase_price, unit')
+    supabase.from('products_masked').select('id, name, sku, sale_price, purchase_price, unit, vat_treatment')
       .eq('company_id', ctx.company.id).eq('is_active', true).order('sku').limit(1000),
+    // หน่วยบรรจุของทุกสินค้าในบริษัท ดึงรวดเดียวแล้วจับกลุ่มฝั่งเซิร์ฟเวอร์
+    supabase.from('product_units').select('product_id, code, factor, sale_price')
+      .eq('company_id', ctx.company.id).eq('is_active', true).order('factor'),
     supabase.from('accounts').select('id, code, name_th')
       .eq('company_id', ctx.company.id).eq('is_active', true).eq('is_header', false).order('code').limit(500),
     // ผู้ที่ไม่มีสิทธิ์ settings.dimensions จะได้ข้อมูลว่างจาก RLS ช่องเลือกจึงหายไปเอง
@@ -51,10 +57,43 @@ export async function DocumentPage({
   let credit: any = null;
   let openDeposits: any[] = [];
   let appliedDeposits: any[] = [];
+  // ใบต้นทางที่ถือรายการบัญชี ใช้แสดงแถบอธิบายบนหัวเอกสาร
+  // จับกลุ่มหน่วยตามสินค้า เพื่อส่งให้แต่ละบรรทัดใช้
+  const unitsByProduct = new Map<string, any[]>();
+  for (const u of (productUnits || []) as any[]) {
+    const list = unitsByProduct.get(u.product_id) || [];
+    list.push(u);
+    unitsByProduct.set(u.product_id, list);
+  }
+
+  let acctSrc: { id: string; doc_number: string; kind: string } | null = null;
+  // ผลจับคู่สามทาง เรียกตัวตรวจตัวเดียวกับที่ใช้ตอนอนุมัติ
+  let match: MatchResult | null = null;
+  // ผลเช็กงบของใบขอซื้อ/ใบสั่งซื้อ
+  let budget: BudgetResult | null = null;
+  // สายอนุมัติของเอกสารใบนี้
+  let approval: ApprovalState | null = null;
   if (!isNew) {
     const { data } = await supabase.from('documents').select('*').eq('id', id).maybeSingle();
     if (!data) notFound();
     doc = data;
+    if (['bill', 'goods_receipt'].includes(data.kind)) {
+      const { data: m } = await supabase.rpc('rpt_three_way', { p_document: id });
+      match = (m as MatchResult) || null;
+    }
+    if (data.status !== 'void') {
+      const { data: ap } = await supabase.rpc('rpt_approval', { p_document: id });
+      approval = (ap as ApprovalState) || null;
+    }
+    if (['purchase_request', 'purchase_order'].includes(data.kind)) {
+      const { data: b } = await supabase.rpc('rpt_budget_check', { p_document: id });
+      budget = (b as BudgetResult) || null;
+    }
+    if (data.accounting_doc_id) {
+      const { data: src } = await supabase.from('documents')
+        .select('id, doc_number, kind').eq('id', data.accounting_doc_id).maybeSingle();
+      acctSrc = (src as any) || null;
+    }
     const { data: ls } = await supabase.from('document_lines').select('*').eq('document_id', id).order('line_no');
     lines = ls || [];
     const { data: at } = await supabase
@@ -140,6 +179,19 @@ export async function DocumentPage({
         }
       />
 
+      {/* ใบที่แปลงต่อจากใบที่ลงบัญชีแล้ว ต้องบอกให้ชัดว่าตัวเลขอยู่ที่ใบไหน
+          ไม่งั้นผู้ใช้จะงงว่าทำไมอนุมัติแล้วแต่ไม่มีสมุดรายวัน */}
+      {doc?.accounting_doc_id && acctSrc && (
+        <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-sky-50 px-3.5 py-2.5 text-xs leading-relaxed text-sky-900 ring-1 ring-inset ring-sky-200">
+          <Info className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+          <span>{d.ui.delivery.continuation.replace('{doc}', acctSrc.doc_number)}</span>
+          <a href={`/${isPurchase(SLUG_BY_KIND[acctSrc.kind]) ? 'purchase' : 'sales'}/${SLUG_BY_KIND[acctSrc.kind]}/${acctSrc.id}`}
+             className="font-medium underline underline-offset-2">
+            {d.ui.delivery.viewSource}
+          </a>
+        </p>
+      )}
+
       <DocumentEditor
         slug={slug}
         kind={kind}
@@ -151,6 +203,15 @@ export async function DocumentPage({
           label: `${p.sku} · ${p.name}`,
           price: section === 'sales' ? Number(p.sale_price) : Number(p.purchase_price),
           unit: p.unit,
+          vat: p.vat_treatment,
+          units: unitsByProduct.get(p.id)?.map((u: any) => ({
+            code: u.code,
+            factor: Number(u.factor),
+            // ราคาต่อหน่วยนั้น ถ้าไม่ได้ตั้งไว้ให้คิดจากราคาต่อหน่วยฐานคูณตัวคูณ
+            sale_price: u.sale_price != null ? Number(u.sale_price)
+                        : Number(p.sale_price) * Number(u.factor),
+            purchase_price: Number(p.purchase_price) * Number(u.factor),
+          })),
         }))}
         accounts={(accounts || []).map((a: any) => ({ id: a.id, label: `${a.code} ${a.name_th}` }))}
         dimensions={(dimensions || []).map((x: any) => ({ id: x.id, label: `${x.code} · ${x.name}` }))}
@@ -174,6 +235,10 @@ export async function DocumentPage({
           vat: d.doc.vat, wht: d.doc.wht, grandTotal: d.doc.grandTotal, netPayable: d.doc.netPayable,
           addLine: d.doc.addLine, account: d.doc.account,
           dimension: d.ui.dimension.title, noDimension: d.ui.dimension.none,
+          priceType: d.doc.priceType, vatMixed: d.doc.vatMixed,
+          entryDescription: d.doc.entryDescription,
+          entryDescriptionHint: d.doc.entryDescriptionHint,
+          entryDescriptionRequired: d.doc.entryDescriptionRequired,
           creditLimit: d.ui.credit.limit, creditOutstanding: d.ui.credit.outstanding,
           creditAvailable: d.ui.credit.available, creditOver: d.ui.credit.over,
           creditNear: d.ui.credit.near, creditOverrideHint: d.ui.credit.overrideHint,
@@ -188,6 +253,17 @@ export async function DocumentPage({
           voidReason: d.security.reason,
         }}
       />
+
+      {match?.checked && <MatchPanel result={match} d={d} />}
+      {budget?.checked && <BudgetPanel result={budget} d={d} />}
+      {doc && approval && (
+        <ApprovalPanel
+          documentId={doc.id}
+          state={approval}
+          canEdit={can(ctx, 'documents', 'edit')}
+          canApprove={can(ctx, 'documents', 'approve')}
+        />
+      )}
 
       {doc && (
         <DepositPanel

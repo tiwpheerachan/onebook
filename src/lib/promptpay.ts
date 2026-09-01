@@ -64,7 +64,7 @@ export interface PromptPayInput {
  */
 export function buildPromptPayPayload({ id, idType, amount, merchantName }: PromptPayInput): string {
   const type = idType || detectIdType(id);
-  if (!type) throw new Error('หมายเลขพร้อมเพย์ไม่ถูกต้อง (ต้องเป็นเบอร์โทร 10 หลัก, เลขผู้เสียภาษี 13 หลัก หรือ e-Wallet 15 หลัก)');
+  if (!type) throw new Error('INVALID_PROMPTPAY_ID');
 
   const target = formatTarget(id, type);
   const hasAmount = typeof amount === 'number' && Number.isFinite(amount) && amount > 0;

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
+import { useI18n } from '@/i18n/provider';
 import { useRouter } from 'next/navigation';
 import { FileCheck2, Printer, Ban } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
@@ -7,6 +8,7 @@ import { issueWhtCertificate, cancelWhtCertificate } from '@/actions/wht';
 
 /** ออกหนังสือรับรองหัก ณ ที่จ่ายจากเอกสาร แล้วเปิดหน้าพิมพ์ให้ทันที */
 export function IssueWhtButton({ documentId, canIssue }: { documentId: string; canIssue: boolean }) {
+  const M = useI18n().dict.ui.misc;
   const router = useRouter();
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
@@ -19,7 +21,7 @@ export function IssueWhtButton({ documentId, canIssue }: { documentId: string; c
       <button
         className="btn-secondary h-7 px-2 py-1 text-xs"
         disabled={pending}
-        title="ออกหนังสือรับรองหัก ณ ที่จ่าย (50 ทวิ)"
+        title={M.whtIssue}
         onClick={() =>
           start(async () => {
             setErr('');
@@ -44,6 +46,7 @@ export function WhtCertActions({
   status: string;
   canEdit: boolean;
 }) {
+  const M = useI18n().dict.ui.misc;
   const router = useRouter();
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
@@ -55,14 +58,14 @@ export function WhtCertActions({
         href={`/wht/${certId}`}
         target="_blank"
         rel="noopener"
-        title="พิมพ์ 50 ทวิ"
+        title={M.whtPrint}
         className="rounded p-1 text-ink-400 hover:bg-brand-50 hover:text-brand-600"
       >
         <Printer className="h-4 w-4" strokeWidth={1.8} />
       </a>
       {canEdit && status === 'issued' && (
         <button
-          title="ยกเลิกหนังสือรับรอง"
+          title={M.whtCancel}
           disabled={pending}
           className="rounded p-1 text-ink-400 hover:bg-rose-50 hover:text-rose-600"
           onClick={() =>

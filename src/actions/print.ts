@@ -1,5 +1,6 @@
 'use server';
 import { createClient } from '@/lib/supabase/server';
+import { t } from '@/i18n/server';
 import { getSessionContext } from '@/lib/session';
 
 /**
@@ -8,7 +9,7 @@ import { getSessionContext } from '@/lib/session';
  */
 export async function recordPrint(documentId: string): Promise<{ ok: boolean; copyNo?: number; error?: string }> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
 
   const supabase = createClient();
   const { data, error } = await supabase.rpc('record_document_print', { p_document: documentId });

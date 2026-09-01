@@ -5,6 +5,7 @@ import {
   ShieldCheck, AlertOctagon, AlertTriangle, Info, ChevronDown, ExternalLink, Plus, Check, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/i18n/provider';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { addCloseCheckTasks } from '@/actions/tasks';
 import { SLUG_BY_KIND } from '@/lib/constants';
@@ -20,10 +21,11 @@ export interface FindingView {
   samples: { id: string; label: string; kind: string }[] | null;
 }
 
+/** ชื่อระดับอยู่ในพจนานุกรม (ui.closeBrief.sev*) ที่นี่เหลือแต่ไอคอนและสี */
 const TONE = {
-  error:   { label: 'ต้องแก้ก่อนปิดงบ', chip: 'bg-rose-50 text-rose-700 ring-rose-200',    icon: AlertOctagon,  color: 'text-rose-600',  edge: 'border-l-rose-500' },
-  warning: { label: 'ควรตรวจสอบ',      chip: 'bg-amber-50 text-amber-800 ring-amber-200', icon: AlertTriangle, color: 'text-amber-600', edge: 'border-l-amber-500' },
-  info:    { label: 'ข้อเสนอแนะ',       chip: 'bg-sky-50 text-sky-700 ring-sky-200',       icon: Info,          color: 'text-sky-600',   edge: 'border-l-sky-500' },
+  error:   { chip: 'bg-rose-50 text-rose-700 ring-rose-200',    icon: AlertOctagon,  color: 'text-rose-600',  edge: 'border-l-rose-500' },
+  warning: { chip: 'bg-amber-50 text-amber-800 ring-amber-200', icon: AlertTriangle, color: 'text-amber-600', edge: 'border-l-amber-500' },
+  info:    { chip: 'bg-sky-50 text-sky-700 ring-sky-200',       icon: Info,          color: 'text-sky-600',   edge: 'border-l-sky-500' },
 } as const;
 
 /** ลิงก์ไปยังสิ่งที่ตรวจพบ ตามชนิดของมัน */
@@ -47,6 +49,13 @@ export function CloseCheckPanel({
   period: string;
   canCreateTask: boolean;
 }) {
+  const { dict } = useI18n();
+  const L = dict.ui.closeCheck;
+  const sevLabel: Record<string, string> = {
+    error: dict.ui.closeBrief.sevError,
+    warning: dict.ui.closeBrief.sevWarning,
+    info: dict.ui.closeBrief.sevInfo,
+  };
   const router = useRouter();
   const [open, setOpen] = useState<string[]>(
     () => findings.filter((f) => f.severity === 'error').slice(0, 2).map((f) => f.key)
@@ -67,7 +76,7 @@ export function CloseCheckPanel({
     start(async () => {
       const res = await addCloseCheckTasks(chosen.map((f) => ({ key: f.key, title: f.title, period })));
       if (!res.ok) { setErr(res.error || ''); return; }
-      setMsg(res.count ? `สร้างงานติดตาม ${res.count} รายการในตารางงานแล้ว` : 'รายการเหล่านี้ถูกสร้างเป็นงานไว้แล้ว');
+      setMsg(res.count ? L.tasksMade.replace('{n}', String(res.count)) : L.tasksExist);
       router.refresh();
     });
   }
@@ -76,8 +85,8 @@ export function CloseCheckPanel({
     return (
       <div className="card card-pad text-center">
         <ShieldCheck className="mx-auto h-10 w-10 text-emerald-500" strokeWidth={1.5} />
-        <p className="mt-3 text-base font-semibold text-ink-900">ตรวจครบทุกข้อแล้วไม่พบปัญหา</p>
-        <p className="mt-1 text-sm text-ink-500">งวดนี้พร้อมปิดงบ — ปิดงวดได้ที่เมนู ตั้งค่า → ปิดงวด</p>
+        <p className="mt-3 text-base font-semibold text-ink-900">{L.allClearTitle}</p>
+        <p className="mt-1 text-sm text-ink-500">{L.allClearHint}</p>
       </div>
     );
   }
@@ -87,7 +96,7 @@ export function CloseCheckPanel({
       {canCreateTask && (
         <div className="card flex flex-wrap items-center gap-3 px-4 py-3">
           <span className="text-sm text-ink-600">
-            เลือกไว้ {picked.length} รายการ
+            {L.selectedN.replace('{n}', String(picked.length))}
           </span>
           <div className="ml-auto flex items-center gap-2">
             {msg && (
@@ -98,7 +107,7 @@ export function CloseCheckPanel({
             {err && <span className="text-xs text-rose-600">{err}</span>}
             <button className="btn-primary" disabled={pending || picked.length === 0} onClick={createTasks}>
               {pending ? <ShdSpinner size={16} /> : <Plus className="h-4 w-4" strokeWidth={2} />}
-              สร้างเป็นงานติดตาม
+              {L.makeTasks}
             </button>
           </div>
         </div>
@@ -126,7 +135,7 @@ export function CloseCheckPanel({
               <button onClick={() => toggle(f.key)} className="min-w-0 flex-1 text-left">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-semibold text-ink-900">{f.title}</span>
-                  <span className={cn('chip', tone.chip)}>{tone.label}</span>
+                  <span className={cn('chip', tone.chip)}>{sevLabel[f.severity]}</span>
                   <span className="chip bg-ink-100 text-ink-600 ring-ink-200">{f.category}</span>
                 </p>
                 <p className={cn('mt-1 text-xs leading-relaxed text-ink-500', !isOpen && 'line-clamp-1')}>
@@ -143,7 +152,7 @@ export function CloseCheckPanel({
 
             {isOpen && f.samples && f.samples.length > 0 && (
               <div className="border-t border-ink-100 bg-ink-50/60 px-4 py-2.5">
-                <p className="section-title mb-1.5">รายการที่พบ (แสดงไม่เกิน 8 รายการ)</p>
+                <p className="section-title mb-1.5">{L.samplesTitle}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {f.samples.map((s) => {
                     const href = linkTo(s.kind, s.id);
@@ -166,7 +175,7 @@ export function CloseCheckPanel({
                   })}
                   {f.count > (f.samples?.length || 0) && (
                     <span className="px-1 py-1 text-xxs text-ink-400">
-                      และอีก {f.count - (f.samples?.length || 0)} รายการ
+                      {L.andMore.replace('{n}', String(f.count - (f.samples?.length || 0)))}
                     </span>
                   )}
                 </div>
@@ -186,6 +195,7 @@ export function CloseSummary({
   errors: number; warnings: number; infos: number;
   lines: string[]; actions: string[]; byAi: boolean; note?: string;
 }) {
+  const { dict } = useI18n();
   const ready = errors === 0;
   return (
     <div className="card mb-5 overflow-hidden">
@@ -194,9 +204,9 @@ export function CloseSummary({
           <span className="rounded-lg bg-white/15 p-1.5">
             {ready ? <ShieldCheck className="h-4 w-4" strokeWidth={2} /> : <Sparkles className="h-4 w-4" strokeWidth={2} />}
           </span>
-          <h2 className="text-sm font-semibold">ผลตรวจก่อนปิดงบ</h2>
+          <h2 className="text-sm font-semibold">{dict.ui.closeCheck.resultTitle}</h2>
           <span className={cn('chip ring-0', byAi ? 'bg-white/20 text-white' : 'bg-white/10 text-white/70')}>
-            {byAi ? 'เรียบเรียงโดย AI' : 'สรุปอัตโนมัติ'}
+            {byAi ? dict.ui.task.byAi : dict.ui.task.autoBrief}
           </span>
         </div>
         <div className="mt-2 space-y-1">
@@ -206,9 +216,9 @@ export function CloseSummary({
 
       <div className="grid grid-cols-3 divide-x divide-ink-100 border-b border-ink-200">
         {[
-          { label: 'ต้องแก้ก่อนปิดงบ', value: errors, tone: errors > 0 ? 'text-rose-600' : 'text-emerald-600' },
-          { label: 'ควรตรวจสอบ', value: warnings, tone: warnings > 0 ? 'text-amber-600' : 'text-ink-900' },
-          { label: 'ข้อเสนอแนะ', value: infos, tone: 'text-sky-600' },
+          { label: dict.ui.closeBrief.sevError, value: errors, tone: errors > 0 ? 'text-rose-600' : 'text-emerald-600' },
+          { label: dict.ui.closeBrief.sevWarning, value: warnings, tone: warnings > 0 ? 'text-amber-600' : 'text-ink-900' },
+          { label: dict.ui.closeBrief.sevInfo, value: infos, tone: 'text-sky-600' },
         ].map((s) => (
           <div key={s.label} className="px-3 py-3 text-center">
             <p className={cn('text-2xl font-semibold tabular-nums', s.tone)}>{s.value}</p>

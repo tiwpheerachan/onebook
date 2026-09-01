@@ -10,12 +10,6 @@ import { docTitle } from '@/components/documents/doc-meta';
 
 export const dynamic = 'force-dynamic';
 
-const CYCLE_LABEL: Record<string, string> = {
-  monthly: 'ทุกเดือน',
-  yearly: 'ทุกปี',
-  never: 'ไม่รีเซ็ต',
-};
-
 /** ค่าเริ่มต้นเดียวกับที่ next_doc_number ใช้ตอนยังไม่เคยตั้งค่า */
 const defaultRow = (kind: DocKind) => ({
   doc_kind: kind,
@@ -28,6 +22,8 @@ const defaultRow = (kind: DocKind) => ({
 export default async function NumberingPage() {
   const ctx = await requirePermission('settings.numbering', 'view');
   const d = t();
+  const L = d.ui.numbering;
+  const CYCLE_LABEL: Record<string, string> = { monthly: L.monthly, yearly: L.yearly, never: L.never };
   const canEdit = can(ctx, 'settings.numbering', 'edit');
   const supabase = createClient();
 
@@ -44,12 +40,12 @@ export default async function NumberingPage() {
       <Table>
         <THead>
           <TR>
-            <TH>ประเภทเอกสาร</TH>
-            <TH>อักษรนำหน้า</TH>
-            <TH>รูปแบบ</TH>
-            <TH>รีเซ็ต</TH>
-            <TH className="text-right">เลขถัดไป</TH>
-            <TH>ตัวอย่าง</TH>
+            <TH>{L.docKind}</TH>
+            <TH>{L.prefix}</TH>
+            <TH>{L.pattern}</TH>
+            <TH>{L.reset}</TH>
+            <TH className="text-right">{L.nextNo}</TH>
+            <TH>{L.sample}</TH>
             <TH className="text-right">{d.common.actions}</TH>
           </TR>
         </THead>
@@ -61,7 +57,7 @@ export default async function NumberingPage() {
               <TR key={kind}>
                 <TD className="font-medium text-ink-800">
                   {docTitle(d, SLUG_BY_KIND[kind])}
-                  {isDefault && <Badge>ค่าเริ่มต้น</Badge>}
+                  {isDefault && <Badge>{L.isDefault}</Badge>}
                 </TD>
                 <TD className="font-mono text-xs">{row.prefix}</TD>
                 <TD className="font-mono text-xxs text-ink-500">{row.pattern}</TD>
@@ -84,11 +80,11 @@ export default async function NumberingPage() {
   return (
     <>
       <PageHeader
-        title="รูปแบบเลขที่เอกสาร"
-        subtitle={`${ctx.company.name_th} · ระบบออกเลขให้อัตโนมัติตอนบันทึกเอกสารใหม่ ตั้งค่าแยกได้ทุกประเภท`}
+        title={L.title}
+        subtitle={`${ctx.company.name_th} · ${L.subtitle}`}
       />
-      {section(SALES_KINDS, d.nav.sales, 'เอกสารที่ออกให้ลูกค้า')}
-      {section(PURCHASE_KINDS, d.nav.purchase, 'เอกสารฝั่งซื้อและค่าใช้จ่าย')}
+      {section(SALES_KINDS, d.nav.sales, L.salesHint)}
+      {section(PURCHASE_KINDS, d.nav.purchase, L.purchaseHint)}
     </>
   );
 }

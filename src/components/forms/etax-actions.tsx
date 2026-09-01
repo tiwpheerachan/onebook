@@ -83,7 +83,7 @@ export function EtaxActions({
           <button
             onClick={submit}
             disabled={pending || !configured}
-            title={configured ? labels.submit : labels.submit + ' (ยังไม่ได้ตั้งค่าผู้ให้บริการ)'}
+            title={configured ? labels.submit : `${labels.submit} (${d.ui.misc.etaxNotConfiguredShort})`}
             className="rounded p-1 text-ink-400 hover:bg-brand-50 hover:text-brand-600 disabled:opacity-40"
           >
             <Send className="h-4 w-4" strokeWidth={1.8} />

@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function ChannelsPage() {
   const ctx = await requirePermission('finance.channels', 'view');
   const d = t();
+  const M = d.ui.misc;
   const locale = currentLocale();
   const supabase = createClient();
 
@@ -40,13 +41,13 @@ export default async function ChannelsPage() {
       <PageHeader
         title={d.nav.finance}
         subtitle={ctx.company.name_th}
-        breadcrumb={[{ label: d.nav.finance }, { label: 'เงินสด/ธนาคาร/e-Wallet' }]}
+        breadcrumb={[{ label: d.nav.finance }, { label: M.channelsCrumb }]}
       />
 
       <FinanceTabs />
 
       {error ? (
-        <p className="card card-pad text-sm text-rose-700">ดึงยอดคงเหลือไม่สำเร็จ : {error.message}</p>
+        <p className="card card-pad text-sm text-rose-700">{M.balanceFailed} : {error.message}</p>
       ) : (
         <>
           <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
@@ -66,7 +67,7 @@ export default async function ChannelsPage() {
                 accounts={accountOptions}
                 labels={managerLabels}
               />
-              <PrintButton label="พิมพ์รายงาน" />
+              <PrintButton label={M.printReport} />
               <span className="ml-2 text-sm text-ink-600">
                 รวม{' '}
                 <b className={cn('text-lg tabular-nums', total < 0 ? 'text-rose-600' : 'text-ink-900')}>

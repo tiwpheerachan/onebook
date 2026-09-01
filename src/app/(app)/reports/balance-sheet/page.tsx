@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 export default async function BalanceSheetPage({ searchParams }: { searchParams: { to?: string; from?: string } }) {
   const ctx = await requirePermission('report', 'view');
   const d = t();
+  const L = d.ui.bs;
   const locale = currentLocale();
   const asOf = searchParams.to || lastDayOfMonth();
   const supabase = createClient();
@@ -28,7 +29,7 @@ export default async function BalanceSheetPage({ searchParams }: { searchParams:
   const drill = (code: string) =>
     `/reports/drill?code=${encodeURIComponent(code)}&from=${yearStart}&to=${asOf}&back=${back}`;
 
-  const Block = ({ title, items, total }: { title: string; items: any[]; total: number }) => (
+  const Block = ({ title, totalLabel, items, total }: { title: string; totalLabel: string; items: any[]; total: number }) => (
     <div className="mb-6">
       <p className="mb-1.5 text-sm font-semibold text-ink-900">{title}</p>
       {items.map((r, i) => (
@@ -46,7 +47,7 @@ export default async function BalanceSheetPage({ searchParams }: { searchParams:
         </div>
       ))}
       <div className="flex justify-between py-1.5 text-sm font-semibold">
-        <span>รวม{title}</span><span className="tabular-nums">{money(total)}</span>
+        <span>{totalLabel}</span><span className="tabular-nums">{money(total)}</span>
       </div>
     </div>
   );
@@ -57,13 +58,13 @@ export default async function BalanceSheetPage({ searchParams }: { searchParams:
     <>
       <PageHeader
         title={d.nav.balanceSheet}
-        subtitle={`${ctx.company.name_th} · ณ ${localeDate(asOf, locale)}`}
+        subtitle={`${ctx.company.name_th} · ${d.ui.aging.asOf} ${localeDate(asOf, locale)}`}
         action={<>
           <DateRangeFilter from={searchParams.from || firstDayOfYear()} to={asOf} singleDate
-            labels={{ from: d.common.from, to: 'ณ วันที่', apply: d.common.filter }} />
+            labels={{ from: d.common.from, to: d.ui.aging.asOf, apply: d.common.filter }} />
           {can(ctx, 'report', 'export') && (
             <ExportCsvButton label={d.common.export} filename="balance-sheet.csv"
-              rows={[['หมวด','รหัส','ชื่อบัญชี','จำนวนเงิน'], ...rows.map((r) => [r.section, r.account_code, r.account_name, r.amount])]} />
+              rows={[[d.ui.pl.section, d.ui.pl.code, d.ui.pl.accountName, d.ui.pl.amount], ...rows.map((r) => [r.section, r.account_code, r.account_name, r.amount])]} />
           )}
           <PrintButton label={d.common.print} />
         </>}
@@ -72,14 +73,17 @@ export default async function BalanceSheetPage({ searchParams }: { searchParams:
         <div className="px-6 py-5">
           <div className="mb-6 text-center">
             <p className="text-base font-semibold text-ink-900">{ctx.company.name_th}</p>
-            <p className="text-sm text-ink-600">งบแสดงฐานะการเงิน</p>
-            <p className="text-xs text-ink-500">ณ วันที่ {localeDate(asOf, locale)}</p>
+            <p className="text-sm text-ink-600">{L.heading}</p>
+            <p className="text-xs text-ink-500">{L.asOfDate.replace('{date}', localeDate(asOf, locale))}</p>
           </div>
-          <Block title="สินทรัพย์" items={sec('1_asset')} total={tot('1_asset')} />
-          <Block title="หนี้สิน" items={sec('2_liability')} total={tot('2_liability')} />
-          <Block title="ส่วนของผู้ถือหุ้น" items={sec('3_equity')} total={tot('3_equity')} />
+          <Block title={L.asset} totalLabel={d.ui.pl.totalOf.replace('{name}', L.asset)}
+                 items={sec('1_asset')} total={tot('1_asset')} />
+          <Block title={L.liability} totalLabel={d.ui.pl.totalOf.replace('{name}', L.liability)}
+                 items={sec('2_liability')} total={tot('2_liability')} />
+          <Block title={L.equity} totalLabel={d.ui.pl.totalOf.replace('{name}', L.equity)}
+                 items={sec('3_equity')} total={tot('3_equity')} />
           <div className="flex justify-between rounded-lg bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-800">
-            <span>รวมหนี้สินและส่วนของผู้ถือหุ้น</span>
+            <span>{L.totalLiabEquity}</span>
             <span className="tabular-nums">{money(liabEquity)}</span>
           </div>
           {Math.abs(tot('1_asset') - liabEquity) > 0.01 && (

@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 export default async function JournalDetail({ params }: { params: { id: string } }) {
   const ctx = await requirePermission('journal', 'view');
   const d = t();
+  const M = d.ui.misc;
   const locale = currentLocale();
   const supabase = createClient();
 
@@ -39,8 +40,8 @@ export default async function JournalDetail({ params }: { params: { id: string }
         <div className="border-b border-ink-200 px-5 py-4 text-sm text-ink-600">{entry.description}</div>
         <Table>
           <THead>
-            <TR><TH>#</TH><TH>รหัสบัญชี</TH><TH>ชื่อบัญชี</TH><TH>คำอธิบาย</TH><TH>คู่ค้า</TH>
-              <TH align="right">เดบิต</TH><TH align="right">เครดิต</TH></TR>
+            <TR><TH>{M.jlNo}</TH><TH>{M.jlAccountCode}</TH><TH>{M.jlAccountName}</TH><TH>{M.jlDescription}</TH><TH>{M.jlParty}</TH>
+              <TH align="right">{M.debit}</TH><TH align="right">{M.credit}</TH></TR>
           </THead>
           <TBody>
             {rows.map((l) => (

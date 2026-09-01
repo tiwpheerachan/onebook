@@ -10,14 +10,10 @@ import { useI18n } from '@/i18n/provider';
 
 const fmt = (n: any) => Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const FIELDS: { key: keyof ColumnMapping; label: string }[] = [
-  { key: 'date', label: 'วันที่' },
-  { key: 'description', label: 'รายละเอียด' },
-  { key: 'reference', label: 'อ้างอิง' },
-  { key: 'deposit', label: 'เงินเข้า' },
-  { key: 'withdrawal', label: 'เงินออก' },
-  { key: 'amount', label: 'จำนวนเงิน (คอลัมน์เดียว)' },
-  { key: 'balance', label: 'ยอดคงเหลือ' },
+const FIELDS: { key: keyof ColumnMapping }[] = [
+  { key: 'date' as const }, { key: 'description' as const }, { key: 'reference' as const },
+  { key: 'deposit' as const }, { key: 'withdrawal' as const },
+  { key: 'amount' as const }, { key: 'balance' as const },
 ];
 
 export function StatementImport({
@@ -132,7 +128,7 @@ export function StatementImport({
             <div className="grid grid-cols-2 gap-3">
               {FIELDS.map((f) => (
                 <div key={f.key}>
-                  <label className="label">{f.label}</label>
+                  <label className="label">{(dd.ui.stmtImport as Record<string, string>)[f.key]}</label>
                   <select
                     className="input"
                     value={String(mapping[f.key] ?? -1)}
@@ -140,7 +136,7 @@ export function StatementImport({
                   >
                     <option value="-1">— {labels.notUsed} —</option>
                     {headers.map((h, i) => (
-                      <option key={i} value={i}>{h || `คอลัมน์ ${i + 1}`}</option>
+                      <option key={i} value={i}>{h || dd.ui.dataImport.columnN.replace('{n}', String(i + 1))}</option>
                     ))}
                   </select>
                 </div>

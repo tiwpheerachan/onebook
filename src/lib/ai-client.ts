@@ -1,4 +1,5 @@
 import 'server-only';
+import { t } from '@/i18n/server';
 
 /**
  * ตัวเรียก AI ตัวเดียวที่ใช้ร่วมกันทั้งระบบ
@@ -64,13 +65,9 @@ export async function askJson(
   user: string,
   opts: { maxTokens?: number; temperature?: number; timeoutMs?: number } = {}
 ): Promise<AskResult> {
+  const L = t().ui.aiClient;
   const provider = aiProvider();
-  if (!provider) {
-    return {
-      ok: false,
-      note: 'ยังไม่ได้ตั้งค่า AI — ตั้ง AI_API_URL และ AI_API_KEY เพื่อให้ AI ช่วยเรียบเรียง',
-    };
-  }
+  if (!provider) return { ok: false, note: L.notConfigured };
 
   const base = (process.env.AI_API_URL || '').replace(/\/+$/, '');
   const model = process.env.AI_MODEL || DEFAULT_MODEL[provider];
@@ -123,12 +120,12 @@ export async function askJson(
     if (!res.ok) {
       const detail = await res.text().catch(() => '');
       const hint =
-        res.status === 401 ? ' (คีย์ไม่ถูกต้อง)' :
-        res.status === 404 ? ' (AI_API_URL ไม่ถูกต้อง)' :
-        res.status === 429 ? ' (เรียกถี่เกินไปหรือโควตาหมด)' : '';
+        res.status === 401 ? ` (${L.hintKey})` :
+        res.status === 404 ? ` (${L.hintUrl})` :
+        res.status === 429 ? ` (${L.hintQuota})` : '';
       return {
         ok: false,
-        note: `เรียก AI ไม่สำเร็จ HTTP ${res.status}${hint} จึงใช้สรุปอัตโนมัติแทน`,
+        note: `${L.httpFailed.replace('{status}', String(res.status))}${hint} ${L.usingFallback}`,
         data: detail.slice(0, 200),
       };
     }
@@ -141,12 +138,12 @@ export async function askJson(
 
     const parsed = extractJson(raw || '');
     if (!parsed) {
-      return { ok: false, note: 'AI ตอบกลับมาในรูปแบบที่อ่านไม่ได้ จึงใช้สรุปอัตโนมัติแทน' };
+      return { ok: false, note: `${L.unreadable} ${L.usingFallback}` };
     }
     return { ok: true, data: parsed };
   } catch (e: any) {
     clearTimeout(timer);
-    const reason = e?.name === 'AbortError' ? 'AI ตอบช้าเกินไป' : 'เรียก AI ไม่สำเร็จ';
-    return { ok: false, note: `${reason} จึงใช้สรุปอัตโนมัติแทน` };
+    const reason = e?.name === 'AbortError' ? L.timeout : L.callFailed;
+    return { ok: false, note: `${reason} ${L.usingFallback}` };
   }
 }

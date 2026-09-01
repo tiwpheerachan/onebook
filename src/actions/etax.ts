@@ -1,5 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { t } from '@/i18n/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
 import { buildEtaxXml, validateEtax, hashXml, ETAX_TYPE_BY_KIND, type EtaxInput } from '@/lib/etax';
@@ -33,8 +34,8 @@ async function loadEtaxInput(companyId: string, documentId: string): Promise<{ i
       .maybeSingle(),
   ]);
 
-  if (!doc) return { error: 'ไม่พบเอกสาร' };
-  if (!company) return { error: 'ไม่พบข้อมูลบริษัท' };
+  if (!doc) return { error: t().ui.act.docNotFound };
+  if (!company) return { error: t().ui.act.companyNotFound2 };
 
   const [{ data: lines }, { data: contact }] = await Promise.all([
     supabase
@@ -98,14 +99,14 @@ async function loadEtaxInput(companyId: string, documentId: string): Promise<{ i
 /** สร้างไฟล์ XML และเก็บไว้ (ยังไม่ส่งกรมสรรพากร) */
 export async function prepareEtax(documentId: string): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tax.etax', 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์จัดทำ e-Tax Invoice' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tax.etax', 'create')) return { ok: false, error: t().ui.act.etaxNoCreate };
 
   const { input, error } = await loadEtaxInput(ctx.company.id, documentId);
   if (!input) return { ok: false, error };
 
   const errs = validateEtax(input);
-  if (errs.length) return { ok: false, error: 'ข้อมูลยังไม่ครบตามที่กรมสรรพากรกำหนด', errors: errs };
+  if (errs.length) return { ok: false, error: t().ui.act.etaxIncomplete, errors: errs };
 
   const xml = buildEtaxXml(input);
   const hash = await hashXml(xml);
@@ -137,8 +138,8 @@ export async function prepareEtax(documentId: string): Promise<Res> {
 /** ส่งไปลงลายมือชื่อและนำส่งกรมสรรพากรผ่านผู้ให้บริการ */
 export async function submitEtax(etaxId: string): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tax.etax', 'approve')) return { ok: false, error: 'คุณไม่มีสิทธิ์นำส่ง e-Tax Invoice' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tax.etax', 'approve')) return { ok: false, error: t().ui.act.etaxNoSubmit };
 
   const supabase = createClient();
   const { data: row } = await supabase
@@ -148,17 +149,16 @@ export async function submitEtax(etaxId: string): Promise<Res> {
     .eq('company_id', ctx.company.id)
     .maybeSingle();
 
-  if (!row) return { ok: false, error: 'ไม่พบรายการ e-Tax' };
-  if (!row.xml_payload) return { ok: false, error: 'ยังไม่ได้สร้างไฟล์ XML' };
-  if (row.status === 'accepted') return { ok: false, error: 'เอกสารนี้นำส่งสำเร็จแล้ว' };
+  if (!row) return { ok: false, error: t().ui.act.etaxRowNotFound };
+  if (!row.xml_payload) return { ok: false, error: t().ui.act.etaxNoXml };
+  if (row.status === 'accepted') return { ok: false, error: t().ui.act.etaxAlreadySent };
 
   if (!isEtaxConfigured()) {
     return {
       ok: false,
       notConfigured: true,
       error:
-        'ยังไม่ได้ตั้งค่าผู้ให้บริการ e-Tax Invoice — ต้องมีใบรับรองดิจิทัลจาก CA และผู้ให้บริการที่ ETDA รับรอง ' +
-        'จากนั้นตั้งค่า ETAX_API_URL / ETAX_API_KEY / ETAX_CERT_ID ใน .env.local',
+        t().ui.act.etaxNoProvider,
     };
   }
 
@@ -177,7 +177,7 @@ export async function submitEtax(etaxId: string): Promise<Res> {
             submitted_at: new Date().toISOString(),
             error_message: null,
           }
-        : { status: 'rejected', error_message: res.error || 'ส่งไม่สำเร็จ' }
+        : { status: 'rejected', error_message: res.error || t().ui.act.sendFailed }
     )
     .eq('id', etaxId);
 

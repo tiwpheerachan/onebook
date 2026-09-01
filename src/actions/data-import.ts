@@ -1,5 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { t } from '@/i18n/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
 import { IMPORT_SET_BY_KEY, coerce } from '@/lib/import-map';
@@ -34,15 +35,15 @@ export async function importRows(
   rows: Record<string, string>[]
 ): Promise<ImportResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
 
   const set = IMPORT_SET_BY_KEY[setKey];
-  if (!set) return { ok: false, error: 'ไม่รู้จักชุดข้อมูลนี้' };
+  if (!set) return { ok: false, error: t().ui.act.importSetUnknown };
 
   const resource = RESOURCE[setKey];
-  if (!can(ctx, resource, 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์นำเข้าข้อมูลชุดนี้' };
-  if (!rows.length) return { ok: false, error: 'ไม่มีข้อมูลให้นำเข้า' };
-  if (rows.length > MAX_ROWS) return { ok: false, error: `นำเข้าได้ครั้งละไม่เกิน ${MAX_ROWS} แถว` };
+  if (!can(ctx, resource, 'create')) return { ok: false, error: t().ui.act.importNoPerm };
+  if (!rows.length) return { ok: false, error: t().ui.act.importEmpty };
+  if (rows.length > MAX_ROWS) return { ok: false, error: t().ui.misc.importMax.replace('{n}', String(MAX_ROWS)) };
 
   const failed: ImportRowResult[] = [];
   const payload: any[] = [];
@@ -55,7 +56,7 @@ export async function importRows(
     for (const f of set.fields) {
       const v = coerce(raw[f.key] ?? '', f.type);
       if (f.required && (v === null || v === '')) {
-        failed.push({ row: rowNo, error: `ขาด${f.label}` });
+        failed.push({ row: rowNo, error: t().ui.misc.importMissing.replace('{field}', f.label) });
         return;
       }
       if (v !== null) out[f.key] = v;
@@ -65,7 +66,7 @@ export async function importRows(
     if (out.tax_id) {
       const digits = String(out.tax_id).replace(/\D/g, '');
       if (digits.length === 13 && !isValidThaiTaxId(digits)) {
-        failed.push({ row: rowNo, error: `เลขผู้เสียภาษี ${digits} ไม่ถูกต้อง` });
+        failed.push({ row: rowNo, error: t().ui.misc.importBadTaxId.replace('{id}', digits) });
         return;
       }
       out.tax_id = digits || null;
@@ -74,7 +75,7 @@ export async function importRows(
     if (setKey === 'accounts') {
       const ok = ['asset', 'liability', 'equity', 'revenue', 'expense', 'other_income', 'other_expense'];
       if (!ok.includes(out.type)) {
-        failed.push({ row: rowNo, error: `หมวดบัญชี "${out.type}" ไม่ถูกต้อง (ใช้ ${ok.join(' / ')})` });
+        failed.push({ row: rowNo, error: t().ui.misc.importBadType.replace('{type}', String(out.type)).replace('{allowed}', ok.join(' / ')) });
         return;
       }
     }
@@ -86,7 +87,7 @@ export async function importRows(
     // กันข้อมูลซ้ำภายในไฟล์เดียวกัน ไม่งั้น upsert จะชนกันเองในชุดเดียว
     const key = String(out[set.fields[0].key] ?? '').toLowerCase();
     if (seen.has(key)) {
-      failed.push({ row: rowNo, error: `รหัส "${key}" ซ้ำกับแถวก่อนหน้าในไฟล์เดียวกัน` });
+      failed.push({ row: rowNo, error: t().ui.misc.importDupKey.replace('{key}', key) });
       return;
     }
     seen.add(key);
@@ -94,7 +95,7 @@ export async function importRows(
     payload.push(out);
   });
 
-  if (!payload.length) return { ok: false, error: 'ไม่มีแถวที่นำเข้าได้', failed };
+  if (!payload.length) return { ok: false, error: t().ui.act.importNoValidRow, failed };
 
   const supabase = createClient();
   const { error } = await supabase.from(set.table).upsert(payload, { onConflict: set.conflict });

@@ -11,12 +11,18 @@ import { cn } from '@/lib/cn';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * คีย์ช่วงเวลาที่ rpt_expense_overview ส่งกลับมาเป็นภาษาไทย
+ * ใช้จับคู่เท่านั้น ไม่ใช่ข้อความที่แสดงบนหน้าจอ — ชื่อที่แสดงอยู่ในพจนานุกรม
+ */
+const BUCKET_KEY = { overdue: 'เลยกำหนดแล้ว', d7: 'ภายใน 7 วัน', d30: 'ภายใน 30 วัน', over30: 'เกิน 30 วัน' } as const;
+
 /** สีของแต่ละช่วงเวลาที่ต้องจ่าย เรียงจากเร่งด่วนไปไม่เร่ง */
 const BUCKET_TONE: Record<string, { bar: string; text: string }> = {
-  'เลยกำหนดแล้ว': { bar: 'bg-rose-500', text: 'text-rose-600' },
-  'ภายใน 7 วัน':  { bar: 'bg-amber-500', text: 'text-amber-600' },
-  'ภายใน 30 วัน': { bar: 'bg-brand-500', text: 'text-brand-700' },
-  'เกิน 30 วัน':  { bar: 'bg-ink-300', text: 'text-ink-500' },
+  [BUCKET_KEY.overdue]: { bar: 'bg-rose-500', text: 'text-rose-600' },
+  [BUCKET_KEY.d7]:      { bar: 'bg-amber-500', text: 'text-amber-600' },
+  [BUCKET_KEY.d30]:     { bar: 'bg-brand-500', text: 'text-brand-700' },
+  [BUCKET_KEY.over30]:  { bar: 'bg-ink-300', text: 'text-ink-500' },
 };
 
 /** ภาพรวมรายจ่ายและตารางการเบิกจ่าย */
@@ -52,8 +58,8 @@ export default async function ExpenseOverviewPage({
   const mLabel = monthName(month, locale);
   // ชื่อช่วงเวลามาจากฐานข้อมูลเป็นภาษาไทย จับคู่กับข้อความตามภาษาที่เลือก
   const BUCKET_LABEL: Record<string, string> = {
-    'เลยกำหนดแล้ว': L.bucketOverdue, 'ภายใน 7 วัน': L.bucket7,
-    'ภายใน 30 วัน': L.bucket30, 'เกิน 30 วัน': L.bucketOver30,
+    [BUCKET_KEY.overdue]: L.bucketOverdue, [BUCKET_KEY.d7]: L.bucket7,
+    [BUCKET_KEY.d30]: L.bucket30, [BUCKET_KEY.over30]: L.bucketOver30,
   };
   const monthly: any[] = ov.monthly || [];
   const byMonth = (key: string) =>
@@ -130,7 +136,7 @@ export default async function ExpenseOverviewPage({
               </p>
             )}
             {schedule.map((b) => {
-              const tone = BUCKET_TONE[b.bucket] || BUCKET_TONE['เกิน 30 วัน'];
+              const tone = BUCKET_TONE[b.bucket] || BUCKET_TONE[BUCKET_KEY.over30];
               return (
                 <ProgressRow
                   key={b.bucket}

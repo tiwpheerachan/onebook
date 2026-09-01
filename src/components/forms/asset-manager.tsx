@@ -1,5 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
+import { useI18n } from '@/i18n/provider';
 import { useRouter } from 'next/navigation';
 import { Plus, Pencil } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
@@ -26,6 +27,7 @@ export function AssetManager({
   accounts: { id: string; label: string }[];
   labels: Record<string, string>;
 }) {
+  const M = useI18n().dict.ui.misc;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(blank);
@@ -120,7 +122,7 @@ export function AssetManager({
           {form.method === 'declining_balance' && (
             <F label={labels.decliningRate} span>
               <input type="number" step="0.0001" className="input num" value={form.declining_rate}
-                     onChange={(e) => set('declining_rate', e.target.value)} placeholder="0.20 = 20% ต่อปี" />
+                     onChange={(e) => set('declining_rate', e.target.value)} placeholder={M.decliningHint} />
             </F>
           )}
 

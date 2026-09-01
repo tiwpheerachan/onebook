@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useI18n } from '@/i18n/provider';
 import { useState } from 'react';
 import { Upload, Printer, MoreHorizontal, Download, FolderPlus } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -18,18 +19,19 @@ export function ContactToolbar({
   /** ปุ่มส่งออก CSV ส่งมาจากฝั่งเซิร์ฟเวอร์เพราะต้องใช้ข้อมูลทั้งชุด */
   exportButton?: React.ReactNode;
 }) {
+  const M = useI18n().dict.ui.misc;
   const [showOptions, setShowOptions] = useState(false);
 
   return (
     <div className="mb-3 flex flex-wrap items-center gap-2">
       {canEdit && (
         <span
-          title="ติ๊กเลือกผู้ติดต่อในตารางก่อน แล้วแถบจัดกลุ่มจะแสดงขึ้นมา"
+          title={M.pickContactsFirst}
           className="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-dashed border-ink-300 px-2.5 py-1.5 text-xs text-ink-400"
         >
           <FolderPlus className="h-3.5 w-3.5" strokeWidth={1.8} />
           เพิ่มเข้ากลุ่ม / ออกจากกลุ่ม
-          <span className="text-ink-300">— ติ๊กเลือกก่อน</span>
+          <span className="text-ink-300">{M.pickFirstShort}</span>
         </span>
       )}
 
@@ -61,7 +63,7 @@ export function ContactToolbar({
               </p>
               <div className="max-h-56 overflow-auto pb-1">
                 {groups.length === 0 && (
-                  <p className="px-3.5 py-2 text-xs text-ink-400">ยังไม่มีกลุ่มกำหนดเอง</p>
+                  <p className="px-3.5 py-2 text-xs text-ink-400">{M.noCustomGroup}</p>
                 )}
                 {groups.map((g) => (
                   <Link

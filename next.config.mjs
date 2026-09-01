@@ -15,6 +15,10 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: 'standalone',
+
+  // สั่ง build ทับ .next ขณะ dev server เปิดอยู่จะทำให้ dev server เสิร์ฟของค้าง
+  // ตั้ง NEXT_DIST_DIR ตอนตรวจงานเพื่อให้ build ไปลงโฟลเดอร์อื่น ไม่ชนกัน
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   eslint: { ignoreDuringBuilds: true },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];

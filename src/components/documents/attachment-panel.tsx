@@ -1,5 +1,6 @@
 'use client';
 import { useRef, useState, useTransition } from 'react';
+import { useI18n } from '@/i18n/provider';
 import { useRouter } from 'next/navigation';
 import { Paperclip, Trash2, ExternalLink, Upload } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
@@ -33,6 +34,7 @@ export function AttachmentPanel({
   canDelete: boolean;
   label: string;
 }) {
+  const M = useI18n().dict.ui.misc;
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [err, setErr] = useState('');
@@ -58,7 +60,7 @@ export function AttachmentPanel({
     setErr(''); setBusyId(id);
     const res = await attachmentUrl(id);
     setBusyId('');
-    if (!res.ok || !res.url) { setErr(res.error || 'เปิดไฟล์ไม่สำเร็จ'); return; }
+    if (!res.ok || !res.url) { setErr(res.error || M.openFileFailedFallback); return; }
     window.open(res.url, '_blank', 'noopener');
   }
 
@@ -121,7 +123,7 @@ export function AttachmentPanel({
                 <button
                   onClick={() => remove(r.id)}
                   disabled={pending}
-                  title="ลบไฟล์แนบ"
+                  title={M.deleteAttachment}
                   className="shrink-0 rounded p-1 text-ink-400 hover:bg-rose-50 hover:text-rose-600"
                 >
                   <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />

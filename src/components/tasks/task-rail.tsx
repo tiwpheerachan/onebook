@@ -4,13 +4,11 @@ import {
   CalendarDays, AlertTriangle, Inbox, SlidersHorizontal, ChevronLeft, ChevronRight, ChevronDown, User,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/i18n/provider';
+import { monthName, localeYear, weekdayShort } from '@/lib/format';
 import { TASK_KIND } from '@/lib/task-meta';
 import { KindDot, dayKey, type Member } from './task-bits';
 import type { TaskRow } from './task-workspace';
-
-const TH_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
-  'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-const TH_DOW = ['อา','จ','อ','พ','พฤ','ศ','ส'];
 
 const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
 const startOfWeek = (d: Date) => addDays(d, -d.getDay());
@@ -77,6 +75,9 @@ export function TaskRail({
   onOpenTask: (id: string) => void;
   currentUserId: string;
 }) {
+  const { dict, locale } = useI18n();
+  const L = dict.ui.task;
+  const dow = weekdayShort(locale);
   const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
   const cells = Array.from({ length: 42 }, (_, i) => addDays(startOfWeek(first), i));
   const today = new Date();
@@ -92,7 +93,7 @@ export function TaskRail({
             assignee === '' ? 'bg-brand-600 text-white' : 'text-ink-600 hover:bg-ink-100'
           )}
         >
-          ทั้งทีม
+          {L.allTeam}
         </button>
         <button
           onClick={() => setAssignee(currentUserId)}
@@ -102,11 +103,11 @@ export function TaskRail({
           )}
         >
           <User className="mr-1 inline h-3 w-3" strokeWidth={2} />
-          งานของฉัน
+          {L.mine}
         </button>
       </div>
 
-      <Section icon={<CalendarDays className="h-4 w-4" strokeWidth={1.8} />} label={`${TH_MONTHS[anchor.getMonth()]} ${anchor.getFullYear() + 543}`}>
+      <Section icon={<CalendarDays className="h-4 w-4" strokeWidth={1.8} />} label={`${monthName(anchor.getMonth() + 1, locale)} ${localeYear(anchor.getFullYear(), locale)}`}>
         <div className="mb-2 flex justify-end gap-0.5">
           <button
             onClick={() => { const d = new Date(anchor); d.setMonth(d.getMonth() - 1); onPickDate(d); }}
@@ -115,7 +116,7 @@ export function TaskRail({
             <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
           <button onClick={() => onPickDate(new Date())} className="rounded px-1.5 text-xxs text-ink-500 hover:bg-ink-100">
-            วันนี้
+            {L.today}
           </button>
           <button
             onClick={() => { const d = new Date(anchor); d.setMonth(d.getMonth() + 1); onPickDate(d); }}
@@ -125,7 +126,7 @@ export function TaskRail({
           </button>
         </div>
         <div className="grid grid-cols-7 gap-y-1 text-center">
-          {TH_DOW.map((d) => <span key={d} className="text-xxs font-medium text-ink-400">{d}</span>)}
+          {dow.map((d, i) => <span key={i} className="text-xxs font-medium text-ink-400">{d}</span>)}
           {cells.map((d) => {
             const out = d.getMonth() !== anchor.getMonth();
             const on = sameDay(d, anchor);
@@ -135,7 +136,7 @@ export function TaskRail({
               <button
                 key={dayKey(d)}
                 onClick={() => onPickDate(d)}
-                title={n ? `${n} งาน` : undefined}
+                title={n ? L.nTasks.replace('{n}', String(n)) : undefined}
                 className={cn(
                   'relative mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs transition',
                   out ? 'text-ink-300' : 'text-ink-700 hover:bg-ink-100',
@@ -153,12 +154,12 @@ export function TaskRail({
 
       <Section
         icon={<AlertTriangle className={cn('h-4 w-4', overdue.length > 0 && 'text-rose-500')} strokeWidth={1.8} />}
-        label="งานตกหล่น"
+        label={L.overdue}
         badge={overdue.length}
         badgeTone="danger"
       >
         {overdue.length === 0 ? (
-          <p className="text-xs text-ink-400">ไม่มีงานเลยกำหนด</p>
+          <p className="text-xs text-ink-400">{L.noOverdue}</p>
         ) : (
           <ul className="-mx-2 space-y-0.5">
             {overdue.slice(0, 8).map((t) => (
@@ -166,7 +167,7 @@ export function TaskRail({
                 <button onClick={() => onOpenTask(t.id)} className="w-full rounded-lg px-2 py-1.5 text-left hover:bg-rose-50">
                   <p className="truncate text-xs font-medium text-ink-800">{t.title}</p>
                   <p className="mt-0.5 text-xxs text-rose-600">
-                    เลยมา {Math.max(1, Math.floor((Date.now() - new Date(t.due_at!).getTime()) / 86400000))} วัน
+                    {L.lateBy.replace('{n}', String(Math.max(1, Math.floor((Date.now() - new Date(t.due_at!).getTime()) / 86400000))))}
                   </p>
                 </button>
               </li>
@@ -177,12 +178,12 @@ export function TaskRail({
 
       <Section
         icon={<Inbox className="h-4 w-4" strokeWidth={1.8} />}
-        label="ยังไม่กำหนดวัน"
+        label={L.undated}
         badge={undated.length}
         defaultOpen={false}
       >
         {undated.length === 0 ? (
-          <p className="text-xs text-ink-400">ทุกงานมีกำหนดแล้ว</p>
+          <p className="text-xs text-ink-400">{L.allScheduled}</p>
         ) : (
           <ul className="-mx-2 space-y-0.5">
             {undated.slice(0, 8).map((t) => (
@@ -197,8 +198,8 @@ export function TaskRail({
         )}
       </Section>
 
-      <Section icon={<SlidersHorizontal className="h-4 w-4" strokeWidth={1.8} />} label="ตัวกรอง">
-        <p className="section-title mb-2">ประเภทงาน</p>
+      <Section icon={<SlidersHorizontal className="h-4 w-4" strokeWidth={1.8} />} label={L.filters}>
+        <p className="section-title mb-2">{L.kindFilter}</p>
         <ul className="space-y-1.5">
           {TASK_KIND.map((k) => (
             <li key={k.key}>
@@ -212,15 +213,15 @@ export function TaskRail({
                   }
                 />
                 <span className={cn('h-2.5 w-2.5 rounded-full', k.swatch)} />
-                {k.label}
+                {(dict.ui.taskKind as Record<string, string>)[k.key]}
               </label>
             </li>
           ))}
         </ul>
 
-        <p className="section-title mb-2 mt-4">ผู้รับผิดชอบ</p>
+        <p className="section-title mb-2 mt-4">{L.assignee}</p>
         <select className="input py-1.5 text-sm" value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-          <option value="">ทุกคน</option>
+          <option value="">{L.everyone}</option>
           {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
 
@@ -231,7 +232,7 @@ export function TaskRail({
             checked={hideDone}
             onChange={(e) => setHideDone(e.target.checked)}
           />
-          ซ่อนงานที่เสร็จแล้ว
+          {L.hideDone}
         </label>
       </Section>
     </nav>

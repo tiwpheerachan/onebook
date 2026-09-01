@@ -14,6 +14,7 @@ export default async function LedgerPage({
 }: { searchParams: { from?: string; to?: string; account?: string } }) {
   const ctx = await requirePermission('journal', 'view');
   const d = t();
+  const M = d.ui.misc;
   const locale = currentLocale();
   const supabase = createClient();
   const from = searchParams.from || firstDayOfMonth();
@@ -71,12 +72,12 @@ export default async function LedgerPage({
         <CardHeader title={acc ? `${acc.code} · ${acc.name_th}` : d.nav.ledger} />
         <Table>
           <THead>
-            <TR><TH>วันที่</TH><TH>เลขที่</TH><TH>คำอธิบาย</TH>
-              <TH align="right">เดบิต</TH><TH align="right">เครดิต</TH><TH align="right">ยอดคงเหลือ</TH></TR>
+            <TR><TH>{M.date}</TH><TH>{M.docNo}</TH><TH>{M.description}</TH>
+              <TH align="right">{M.debit}</TH><TH align="right">{M.credit}</TH><TH align="right">{M.balance}</TH></TR>
           </THead>
           <TBody>
             <TR className="bg-ink-50/60">
-              <TD colSpan={3}>ยอดยกมา</TD><TD /><TD /><TD align="right">{money(opening)}</TD>
+              <TD colSpan={3}>{M.openingBalance}</TD><TD /><TD /><TD align="right">{money(opening)}</TD>
             </TR>
             {rows.length === 0 && <EmptyRow colSpan={6} label={d.common.noData} />}
             {rows.map((l: any, i: number) => {

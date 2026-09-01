@@ -1,5 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
+import { useI18n } from '@/i18n/provider';
 import { ShieldCheck, ShieldAlert, ShieldQuestion, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { ShdSpinner } from '@/components/ui/shd-loader';
@@ -23,6 +24,7 @@ interface VerifyResult {
  * ระบบเก็บยอดคงเหลือรายบัญชีไว้ตอนปิดงวด แล้วคำนวณใหม่มาเทียบ
  */
 export function PeriodVerify({ lockId }: { lockId: string }) {
+  const M = useI18n().dict.ui.misc;
   const [res, setRes] = useState<VerifyResult | null>(null);
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
@@ -78,10 +80,10 @@ export function PeriodVerify({ lockId }: { lockId: string }) {
                 <table className="mt-1.5 w-full text-xxs">
                   <thead>
                     <tr className="text-left opacity-70">
-                      <th className="py-0.5 pr-2">บัญชี</th>
-                      <th className="py-0.5 pr-2 text-right">ตอนปิดงวด</th>
-                      <th className="py-0.5 pr-2 text-right">ตอนนี้</th>
-                      <th className="py-0.5 text-right">ผลต่าง</th>
+                      <th className="py-0.5 pr-2">{M.verifyAccount}</th>
+                      <th className="py-0.5 pr-2 text-right">{M.verifyAtLock}</th>
+                      <th className="py-0.5 pr-2 text-right">{M.verifyNow}</th>
+                      <th className="py-0.5 text-right">{M.verifyDiff}</th>
                     </tr>
                   </thead>
                   <tbody>

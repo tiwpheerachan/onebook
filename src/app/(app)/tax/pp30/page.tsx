@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function PP30Page({ searchParams }: { searchParams: { y?: string; m?: string } }) {
   const ctx = await requirePermission('tax', 'view');
   const d = t();
+  const L = d.ui.pp30;
   const now = new Date();
   const year = Number(searchParams.y) || now.getFullYear();
   const month = Number(searchParams.m) || now.getMonth() + 1;
@@ -37,30 +38,30 @@ export default async function PP30Page({ searchParams }: { searchParams: { y?: s
     <>
       <PageHeader
         title={d.nav.pp30}
-        subtitle={`${ctx.company.name_th} · ภาษีมูลค่าเพิ่มเดือน ${month}/${year}`}
+        subtitle={`${ctx.company.name_th} · ${L.subtitle.replace('{m}', String(month)).replace('{y}', String(year))}`}
         action={<><MonthPicker year={year} month={month} /><PrintButton label={d.common.print} /></>}
       />
       <Card className="mx-auto max-w-2xl">
         <div className="px-6 py-5">
           <div className="mb-6 text-center">
-            <p className="text-base font-semibold text-ink-900">แบบแสดงรายการภาษีมูลค่าเพิ่ม (ภ.พ.30)</p>
+            <p className="text-base font-semibold text-ink-900">{L.formTitle}</p>
             <p className="text-sm text-ink-600">{ctx.company.name_th}</p>
             <p className="text-xs text-ink-500">
               เลขประจำตัวผู้เสียภาษี {ctx.company.tax_id || '–'} · เดือนภาษี {month}/{year}
             </p>
           </div>
-          <Line n="1" label="ยอดขายที่ต้องเสียภาษี" value={s(sales, 'base_amount')} />
-          <Line n="7" label="ภาษีขายเดือนนี้" value={result.output_vat} />
-          <Line n="8" label="ยอดซื้อที่มีสิทธิ์นำภาษีซื้อมาหัก" value={s(purch, 'base_amount')} />
-          <Line n="9" label="ภาษีซื้อเดือนนี้" value={result.input_vat} />
+          <Line n="1" label={L.line1} value={s(sales, 'base_amount')} />
+          <Line n="7" label={L.line7} value={result.output_vat} />
+          <Line n="8" label={L.line8} value={s(purch, 'base_amount')} />
+          <Line n="9" label={L.line9} value={result.input_vat} />
           <div className="mt-4 rounded-lg bg-brand-50 px-4 py-3">
             {result.payable > 0 ? (
               <div className="flex justify-between text-base font-semibold text-brand-800">
-                <span>ภาษีที่ต้องชำระ</span><span className="tabular-nums">{money(result.payable)}</span>
+                <span>{L.payable}</span><span className="tabular-nums">{money(result.payable)}</span>
               </div>
             ) : (
               <div className="flex justify-between text-base font-semibold text-emerald-700">
-                <span>ภาษีที่ชำระเกิน (ยกไปเดือนถัดไป)</span><span className="tabular-nums">{money(result.carry_forward)}</span>
+                <span>{L.carryForward}</span><span className="tabular-nums">{money(result.carry_forward)}</span>
               </div>
             )}
           </div>

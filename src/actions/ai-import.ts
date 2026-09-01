@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
+import { t } from '@/i18n/server';
 import { extractDocument, mapToDocument, isAicomConfigured } from '@/lib/aicom';
 
 export interface Res {
@@ -15,12 +16,12 @@ export interface Res {
 /** อัปโหลดเอกสารให้ AICOM อ่านและดึงข้อมูล แล้วเก็บเป็นงานรอตรวจ */
 export async function uploadForExtraction(formData: FormData): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'documents.ai_import', 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์นำเข้าเอกสารด้วย AI' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'documents.ai_import', 'create')) return { ok: false, error: t().ui.act.aiNoImport };
 
   const file = formData.get('file') as File | null;
-  if (!file || file.size === 0) return { ok: false, error: 'กรุณาเลือกไฟล์' };
-  if (file.size > 20 * 1024 * 1024) return { ok: false, error: 'ไฟล์ใหญ่เกิน 20 MB' };
+  if (!file || file.size === 0) return { ok: false, error: t().ui.act.fileRequired };
+  if (file.size > 20 * 1024 * 1024) return { ok: false, error: t().ui.act.fileTooBig };
 
   const supabase = createClient();
   const { data: job, error } = await supabase
@@ -36,14 +37,14 @@ export async function uploadForExtraction(formData: FormData): Promise<Res> {
     .select('id')
     .maybeSingle();
 
-  if (error || !job) return { ok: false, error: error?.message || 'สร้างงานไม่สำเร็จ' };
+  if (error || !job) return { ok: false, error: error?.message || t().ui.act.aiCreateJobFailed };
 
   if (!isAicomConfigured()) {
     await supabase
       .from('ai_import_jobs')
       .update({
         status: 'queued',
-        error_message: 'ยังไม่ได้ตั้งค่า AICOM_API_URL — งานจะค้างอยู่ในคิวจนกว่าจะเชื่อมบริการ',
+        error_message: t().ui.act.aicomNotSet,
       })
       .eq('id', job.id);
     revalidatePath('/documents/ai-import');
@@ -52,8 +53,7 @@ export async function uploadForExtraction(formData: FormData): Promise<Res> {
       id: job.id,
       notConfigured: true,
       error:
-        'ยังไม่ได้เชื่อมบริการ AICOM — รัน AICOM (docker compose up) แล้วตั้งค่า AICOM_API_URL ใน .env.local ' +
-        'ฝั่ง AICOM ต้องมี OPENAI_API_KEY ด้วย',
+        t().ui.act.aicomNotConnected,
     };
   }
 
@@ -88,8 +88,8 @@ export async function uploadForExtraction(formData: FormData): Promise<Res> {
 /** สร้างเอกสารจริงจากข้อมูลที่ตรวจแล้ว */
 export async function createDocumentFromJob(jobId: string): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'documents', 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์สร้างเอกสาร' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'documents', 'create')) return { ok: false, error: t().ui.act.aiNoCreateDoc };
 
   const supabase = createClient();
   const { data: job } = await supabase
@@ -99,10 +99,10 @@ export async function createDocumentFromJob(jobId: string): Promise<Res> {
     .eq('company_id', ctx.company.id)
     .maybeSingle();
 
-  if (!job) return { ok: false, error: 'ไม่พบงานนำเข้า' };
-  if (job.document_id) return { ok: false, error: 'งานนี้สร้างเอกสารไปแล้ว' };
+  if (!job) return { ok: false, error: t().ui.act.aiJobNotFound };
+  if (job.document_id) return { ok: false, error: t().ui.act.aiAlreadyCreated };
   const m = (job.mapped || {}) as any;
-  if (!m.doc_date) return { ok: false, error: 'ข้อมูลที่ดึงมายังไม่มีวันที่เอกสาร กรุณาแก้ไขก่อน' };
+  if (!m.doc_date) return { ok: false, error: t().ui.act.aiNeedDocDate };
 
   const { data: doc, error } = await supabase
     .from('documents')
@@ -117,12 +117,12 @@ export async function createDocumentFromJob(jobId: string): Promise<Res> {
       grand_total: m.grand_total || 0,
       net_payable: m.grand_total || 0,
       status: 'draft',
-      notes: 'สร้างจากการอ่านเอกสารด้วย AI — กรุณาตรวจก่อนอนุมัติ',
+      notes: t().ui.act.aiFromScan,
     })
     .select('id')
     .maybeSingle();
 
-  if (error || !doc) return { ok: false, error: error?.message || 'สร้างเอกสารไม่สำเร็จ' };
+  if (error || !doc) return { ok: false, error: error?.message || t().ui.act.aiCreateDocFailed };
 
   const lines = (m.lines || []).map((l: any, i: number) => ({
     document_id: doc.id,
@@ -147,8 +147,8 @@ export async function createDocumentFromJob(jobId: string): Promise<Res> {
 /** ทิ้งงานที่ไม่ต้องการ */
 export async function discardJob(jobId: string): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'documents.ai_import', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์ดำเนินการนี้' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'documents.ai_import', 'edit')) return { ok: false, error: t().ui.act.noPermission };
 
   const supabase = createClient();
   const { error } = await supabase

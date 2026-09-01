@@ -1,3 +1,5 @@
+import type { Dictionary } from '@/i18n';
+import { moneyIn } from './format';
 import type { TaskKind, TaskPriority } from './task-meta';
 
 /**
@@ -43,21 +45,24 @@ export interface SuggestFacts {
   hasTaxTasks: boolean;
 }
 
-const money = (n: number) => n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
 /**
  * สร้างข้อเสนอจากข้อมูลจริง
  * เรียงตามความเร่งด่วน : เก็บเงินเข้าก่อน แล้วค่อยงานภายใน
+ *
+ * ข้อความที่ได้จะถูกบันทึกลงฐานข้อมูลตอนผู้ใช้กดเพิ่ม จึงใช้ภาษาที่ผู้ใช้กำลังใช้อยู่
  */
-export function buildSuggestions(f: SuggestFacts): Suggestion[] {
+export function buildSuggestions(f: SuggestFacts, d: Dictionary, currency: string, locale: string): Suggestion[] {
+  const L = d.ui.taskSuggest;
   const out: Suggestion[] = [];
+  // ใช้สกุลเงินของบริษัท ไม่ฝัง ฿ ไว้ตรง ๆ เพราะบริษัทในกลุ่มอาจตั้งสกุลอื่น
+  const money = (n: number) => moneyIn(n, currency, locale);
 
   // 1) ตามเก็บเงินจากบิลที่เลยกำหนดชำระ — กระทบกระแสเงินสดโดยตรง จึงมาก่อน
   for (const d of f.overdueDocs.slice(0, 5)) {
     out.push({
       key: `ar-${d.id}`,
-      title: `ตามเก็บเงิน ${d.doc_number} — ${d.contact_name}`,
-      reason: `เลยกำหนดชำระ ${d.days_late} วัน · ค้าง ฿${money(d.outstanding)}`,
+      title: L.collect.replace('{doc}', d.doc_number).replace('{contact}', d.contact_name),
+      reason: L.collectWhy.replace('{days}', String(d.days_late)).replace('{amount}', money(d.outstanding)),
       kind: 'task',
       priority: d.days_late > 30 ? 'urgent' : 'high',
       dueInDays: 0,
@@ -71,8 +76,8 @@ export function buildSuggestions(f: SuggestFacts): Suggestion[] {
   if (!f.hasTaxTasks) {
     out.push({
       key: `prep-vat-${f.taxPeriod}`,
-      title: `เตรียมเอกสารยื่น ภ.พ.30 งวด ${f.taxPeriodLabel}`,
-      reason: 'ยังไม่มีงานเตรียมยื่นภาษีของงวดนี้ในตาราง',
+      title: L.prepVat.replace('{period}', f.taxPeriodLabel),
+      reason: L.prepVatWhy,
       kind: 'deadline',
       priority: 'high',
       dueInDays: 12 - new Date().getDate() > 0 ? 12 - new Date().getDate() : 2,
@@ -84,8 +89,8 @@ export function buildSuggestions(f: SuggestFacts): Suggestion[] {
   if (f.blocked > 0) {
     out.push({
       key: `unblock-${f.taxPeriod}`,
-      title: `ประชุมเคลียร์งานที่ติดปัญหา ${f.blocked} รายการ`,
-      reason: `มีงานสถานะ "ติดปัญหา" ค้างอยู่ ${f.blocked} รายการ`,
+      title: L.unblock.replace('{n}', String(f.blocked)),
+      reason: L.unblockWhy.replace('{n}', String(f.blocked)),
       kind: 'meeting',
       priority: 'high',
       dueInDays: 1,
@@ -97,8 +102,8 @@ export function buildSuggestions(f: SuggestFacts): Suggestion[] {
   if (f.unassigned >= 3) {
     out.push({
       key: `assign-${f.taxPeriod}`,
-      title: `มอบหมายผู้รับผิดชอบให้งานที่ยังไม่มีเจ้าภาพ ${f.unassigned} รายการ`,
-      reason: 'งานที่ไม่มีผู้รับผิดชอบมักถูกลืมจนเลยกำหนด',
+      title: L.assign.replace('{n}', String(f.unassigned)),
+      reason: L.assignWhy,
       kind: 'task',
       priority: 'normal',
       dueInDays: 1,
@@ -110,8 +115,8 @@ export function buildSuggestions(f: SuggestFacts): Suggestion[] {
   if (f.overdueTasks >= 5) {
     out.push({
       key: `catchup-${f.taxPeriod}`,
-      title: `กันเวลาสะสางงานที่เลยกำหนด ${f.overdueTasks} รายการ`,
-      reason: `มีงานเลยกำหนดสะสม ${f.overdueTasks} รายการ`,
+      title: L.catchup.replace('{n}', String(f.overdueTasks)),
+      reason: L.catchupWhy.replace('{n}', String(f.overdueTasks)),
       kind: 'task',
       priority: 'urgent',
       dueInDays: 0,

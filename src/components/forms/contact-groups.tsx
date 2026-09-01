@@ -1,5 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
+import { useI18n } from '@/i18n/provider';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, Pencil, Trash2, Check, X, FolderPlus } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -20,11 +21,12 @@ export const GROUP_COLORS: Record<string, string> = {
   slate: 'bg-slate-500', pink: 'bg-pink-500',
 };
 
+/** กลุ่มมาตรฐาน — โครงสร้างและสี ส่วนชื่ออยู่ในพจนานุกรม (ui.contactGroup) */
 const STANDARD = [
-  { key: '', label: 'ทั้งหมด', dot: 'bg-ink-400' },
-  { key: 'customer', label: 'ลูกค้า', dot: 'bg-emerald-500' },
-  { key: 'vendor', label: 'ผู้ขาย', dot: 'bg-amber-500' },
-  { key: 'inactive', label: 'ปิดใช้งาน', dot: 'bg-ink-300' },
+  { key: '', labelKey: 'all' as const, dot: 'bg-ink-400' },
+  { key: 'customer', labelKey: 'customer' as const, dot: 'bg-emerald-500' },
+  { key: 'vendor', labelKey: 'vendor' as const, dot: 'bg-amber-500' },
+  { key: 'inactive', labelKey: 'inactive' as const, dot: 'bg-ink-300' },
 ];
 
 /** แถบกลุ่มผู้ติดต่อฝั่งซ้าย : กลุ่มมาตรฐาน + กลุ่มที่ตั้งเอง */
@@ -35,6 +37,8 @@ export function ContactGroupRail({
   canEdit: boolean;
   counts: Record<string, number>;
 }) {
+  const { dict: d } = useI18n();
+  const L = d.ui.contactGroup;
   const router = useRouter();
   const params = useSearchParams();
   const activeStd = params.get('t') || '';
@@ -71,7 +75,7 @@ export function ContactGroupRail({
       <input
         autoFocus
         className="input py-1.5 text-sm"
-        placeholder="ชื่อกลุ่ม เช่น Shop Shopee"
+        placeholder={L.namePh}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') { setAdding(false); setEditing(null); } }}
@@ -99,7 +103,7 @@ export function ContactGroupRail({
   return (
     <nav className="card sticky top-20 divide-y divide-ink-100 overflow-hidden">
       <div className="px-4 py-3">
-        <p className="section-title mb-2">กลุ่มมาตรฐาน</p>
+        <p className="section-title mb-2">{L.standard}</p>
         <ul className="-mx-2 space-y-0.5">
           {STANDARD.map((s) => (
             <li key={s.key}>
@@ -111,7 +115,7 @@ export function ContactGroupRail({
                 )}
               >
                 <span className={cn('h-2 w-2 shrink-0 rounded-full', s.dot)} />
-                <span className="flex-1 truncate">{s.label}</span>
+                <span className="flex-1 truncate">{L[s.labelKey]}</span>
                 <span className="shrink-0 text-xxs tabular-nums text-ink-400">{counts[s.key || 'all'] ?? ''}</span>
               </button>
             </li>
@@ -121,7 +125,7 @@ export function ContactGroupRail({
 
       <div className="px-4 py-3">
         <div className="mb-2 flex items-center justify-between">
-          <p className="section-title">กลุ่มกำหนดเอง</p>
+          <p className="section-title">{L.custom}</p>
           {canEdit && !adding && (
             <button
               onClick={() => { setAdding(true); setEditing(null); setName(''); setColor('brand'); setErr(''); }}
@@ -200,6 +204,8 @@ export function BulkGroupBar({
   currentGroup?: string;
   onDone: () => void;
 }) {
+  const { dict: d } = useI18n();
+  const L = d.ui.contactGroup;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState('');
@@ -213,7 +219,7 @@ export function BulkGroupBar({
     start(async () => {
       const res = await assignContactGroup(groupId, selected, attach);
       if (!res.ok) { setErr(res.error || ''); return; }
-      setMsg(attach ? `เพิ่มเข้ากลุ่ม ${res.count} ราย` : `เอาออกจากกลุ่ม ${res.count} ราย`);
+      setMsg((attach ? L.added : L.removed).replace('{n}', String(res.count)));
       onDone();
       router.refresh();
     });
@@ -221,7 +227,7 @@ export function BulkGroupBar({
 
   return (
     <div className="sticky top-16 z-20 mb-3 flex flex-wrap items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5">
-      <span className="text-sm font-medium text-brand-800">เลือกไว้ {selected.length} ราย</span>
+      <span className="text-sm font-medium text-brand-800">{L.selected.replace('{n}', String(selected.length))}</span>
 
       <div className="relative">
         <button className="btn-secondary" disabled={pending || groups.length === 0} onClick={() => setOpen((v) => !v)}>
@@ -253,7 +259,7 @@ export function BulkGroupBar({
         </button>
       )}
 
-      <button className="btn-ghost text-xs" onClick={onDone}>ยกเลิกการเลือก</button>
+      <button className="btn-ghost text-xs" onClick={onDone}>{L.clearSelection}</button>
 
       {msg && <span className="text-xs text-emerald-700">{msg}</span>}
       {err && <span className="text-xs text-rose-600">{err}</span>}

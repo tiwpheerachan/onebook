@@ -14,11 +14,20 @@ export function compact(n: number | null | undefined): string {
   return money(v, 0);
 }
 
+/**
+ * วันที่รูปแบบ YYYY-MM-DD ตามเวลาท้องถิ่น
+ *
+ * ห้ามใช้ toISOString() ตรงนี้เด็ดขาด เพราะมันแปลงเป็น UTC ก่อน
+ * ประเทศไทยเป็น UTC+7 วันที่ที่สร้างจากเที่ยงคืนท้องถิ่น เช่น
+ * new Date(2026, 7, 1) จะกลายเป็น 2026-07-31T17:00Z แล้วได้ '2026-07-31'
+ * ซึ่งเลื่อนไปหนึ่งวันเต็ม ทำให้ช่วงวันตั้งต้นของรายงานทุกตัวคลาดไปหนึ่งวันทั้งสองด้าน
+ */
 export function toDateStr(d: Date | string | null | undefined): string {
   if (!d) return '';
   const dt = typeof d === 'string' ? new Date(d) : d;
   if (Number.isNaN(dt.getTime())) return '';
-  return dt.toISOString().slice(0, 10);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
 }
 
 /** วันที่แบบไทย พ.ศ. เช่น 11 ส.ค. 2569 */
@@ -102,7 +111,35 @@ export function monthName(month: number, locale: string): string {
     .format(new Date(Date.UTC(2000, Math.max(0, Math.min(11, month - 1)), 1)));
 }
 
+/** ชื่อวันในสัปดาห์แบบสั้น เรียงอาทิตย์→เสาร์ ใช้เป็นหัวคอลัมน์ปฏิทิน */
+export function weekdayShort(locale: string): string[] {
+  const tag = locale === 'th' ? 'th-TH' : locale === 'zh' ? 'zh-CN' : 'en-GB';
+  const fmt = new Intl.DateTimeFormat(tag, { weekday: 'short' });
+  // 2023-01-01 เป็นวันอาทิตย์ ใช้เป็นจุดตั้งต้นให้ลำดับวันตรงกับ getDay()
+  return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(Date.UTC(2023, 0, 1 + i))));
+}
+
+/** วันที่แบบสั้น วัน+เดือน ไม่มีปี ใช้ในป้ายกำกับที่พื้นที่จำกัด */
+export function dayMonth(d: string | Date | null | undefined, locale: string): string {
+  if (!d) return '';
+  const dt = typeof d === 'string' ? new Date(d) : d;
+  if (Number.isNaN(dt.getTime())) return '';
+  if (locale === 'th') return `${dt.getDate()} ${THAI_MONTHS[dt.getMonth()]}`;
+  return dt.toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en-GB', { day: 'numeric', month: 'short' });
+}
+
 /** ปีที่แสดงตามภาษา — ภาษาไทยใช้ พ.ศ. อีกสองภาษาใช้ ค.ศ. */
 export function localeYear(year: number, locale: string): number {
   return locale === 'th' ? year + 543 : year;
+}
+
+/**
+ * วันที่ตามเวลาประเทศไทย
+ *
+ * ใช้บนเซิร์ฟเวอร์ซึ่งมักตั้งเขตเวลาเป็น UTC — ถ้าใช้ toDateStr ตรง ๆ
+ * ช่วงเที่ยงคืนถึงเจ็ดโมงเช้าบ้านเราจะได้วันที่ของเมื่อวาน
+ * ซึ่งทำให้ไปถามอัตราแลกเปลี่ยนผิดวัน
+ */
+export function bangkokToday(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
 }

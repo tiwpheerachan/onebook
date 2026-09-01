@@ -12,7 +12,7 @@ import { isValidPromptPayId, detectIdType } from '@/lib/promptpay';
  */
 export async function lockPeriod(form: { locked_through: string; scope: string; reason?: string }) {
   const ctx = await getSessionContext();
-  if (!ctx || !can(ctx, 'period', 'create')) return { ok: false, error: 'ไม่มีสิทธิ์ปิดงวด' };
+  if (!ctx || !can(ctx, 'period', 'create')) return { ok: false, error: t().ui.act.periodNoLock };
   const supabase = createClient();
   const { error } = await supabase.rpc('freeze_period', {
     p_company: ctx.company.id,
@@ -22,9 +22,9 @@ export async function lockPeriod(form: { locked_through: string; scope: string; 
   });
   if (error) {
     const m = error.message;
-    if (m.includes('ALREADY_LOCKED')) return { ok: false, error: 'งวดนี้ถูกปิดไปแล้ว เลือกวันที่หลังจากงวดที่ปิดล่าสุด' };
-    if (m.includes('FUTURE_PERIOD')) return { ok: false, error: 'ปิดงวดล่วงหน้าไม่ได้' };
-    if (m.includes('FORBIDDEN')) return { ok: false, error: 'คุณไม่มีสิทธิ์ปิดงวด' };
+    if (m.includes('ALREADY_LOCKED')) return { ok: false, error: t().ui.act.periodAlreadyLocked };
+    if (m.includes('FUTURE_PERIOD')) return { ok: false, error: t().ui.act.periodFuture };
+    if (m.includes('FORBIDDEN')) return { ok: false, error: t().ui.act.periodNoLock };
     return { ok: false, error: m };
   }
   revalidatePath('/settings/period-lock');
@@ -34,7 +34,7 @@ export async function lockPeriod(form: { locked_through: string; scope: string; 
 /** ตรวจสอบว่าตัวเลขของงวดที่ปิดไปแล้วยังตรงกับตอนปิดหรือไม่ */
 export async function verifyPeriod(lockId: string) {
   const ctx = await getSessionContext();
-  if (!ctx || !can(ctx, 'period', 'view')) return { ok: false, error: 'ไม่มีสิทธิ์ตรวจสอบงวด' };
+  if (!ctx || !can(ctx, 'period', 'view')) return { ok: false, error: t().ui.act.periodNoCheck };
   const supabase = createClient();
   const { data, error } = await supabase.rpc('verify_period_integrity', { p_lock: lockId });
   if (error) return { ok: false, error: error.message };
@@ -43,7 +43,7 @@ export async function verifyPeriod(lockId: string) {
 
 export async function releasePeriod(id: string) {
   const ctx = await getSessionContext();
-  if (!ctx || !can(ctx, 'period', 'unlock')) return { ok: false, error: 'ไม่มีสิทธิ์ปลดล็อกงวด' };
+  if (!ctx || !can(ctx, 'period', 'unlock')) return { ok: false, error: t().ui.act.periodNoUnlock };
   const supabase = createClient();
   const { error } = await supabase
     .from('period_locks')
@@ -56,7 +56,7 @@ export async function releasePeriod(id: string) {
 
 export async function saveRolePermission(form: { role_id: string; resource: string; actions: string[]; field_mask?: string[] }) {
   const ctx = await getSessionContext();
-  if (!ctx || !can(ctx, 'settings.roles', 'edit')) return { ok: false, error: 'ไม่มีสิทธิ์แก้ไขบทบาท' };
+  if (!ctx || !can(ctx, 'settings.roles', 'edit')) return { ok: false, error: t().ui.act.roleNoEdit };
   const supabase = createClient();
   if (form.actions.length === 0) {
     const { error } = await supabase.from('role_permissions').delete()
@@ -74,7 +74,7 @@ export async function saveRolePermission(form: { role_id: string; resource: stri
 
 export async function createRole(form: { code: string; name_th: string; description?: string }) {
   const ctx = await getSessionContext();
-  if (!ctx || !can(ctx, 'settings.roles', 'create')) return { ok: false, error: 'ไม่มีสิทธิ์' };
+  if (!ctx || !can(ctx, 'settings.roles', 'create')) return { ok: false, error: t().ui.act.noPermission };
   const supabase = createClient();
   const { error } = await supabase.from('roles').insert({
     company_id: ctx.company.id, code: form.code, name_th: form.name_th, description: form.description || null,
@@ -86,7 +86,7 @@ export async function createRole(form: { code: string; name_th: string; descript
 
 export async function assignUser(form: { user_id: string; role_id: string; can_view_subsidiaries: boolean }) {
   const ctx = await getSessionContext();
-  if (!ctx || !can(ctx, 'settings.users', 'create')) return { ok: false, error: 'ไม่มีสิทธิ์' };
+  if (!ctx || !can(ctx, 'settings.users', 'create')) return { ok: false, error: t().ui.act.noPermission };
   const supabase = createClient();
   const { error } = await supabase.from('user_companies').upsert({
     user_id: form.user_id,
@@ -102,7 +102,7 @@ export async function assignUser(form: { user_id: string; role_id: string; can_v
 
 export async function setUserAccess(form: { id: string; is_active: boolean }) {
   const ctx = await getSessionContext();
-  if (!ctx || !can(ctx, 'settings.users', 'edit')) return { ok: false, error: 'ไม่มีสิทธิ์' };
+  if (!ctx || !can(ctx, 'settings.users', 'edit')) return { ok: false, error: t().ui.act.noPermission };
   const supabase = createClient();
   const { error } = await supabase.from('user_companies').update({ is_active: form.is_active }).eq('id', form.id);
   if (error) return { ok: false, error: error.message };
@@ -112,7 +112,7 @@ export async function setUserAccess(form: { id: string; is_active: boolean }) {
 
 export async function createCompany(form: { code: string; name_th: string; name_en?: string; name_zh?: string; tax_id?: string; parent_code?: string }) {
   const ctx = await getSessionContext();
-  if (!ctx?.isGroupAdmin) return { ok: false, error: 'เฉพาะผู้ดูแลระดับกลุ่มเท่านั้น' };
+  if (!ctx?.isGroupAdmin) return { ok: false, error: t().ui.act.groupAdminOnly };
   const supabase = createClient();
   const { error } = await supabase.rpc('provision_company', {
     p_code: form.code, p_name_th: form.name_th,
@@ -130,17 +130,17 @@ export async function createCompany(form: { code: string; name_th: string; name_
  */
 export async function updateCompanyProfile(form: Record<string, any>) {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'settings.companies', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์แก้ไขข้อมูลบริษัท' };
-  if (!form.id) return { ok: false, error: 'ไม่พบบริษัทที่ต้องการแก้ไข' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'settings.companies', 'edit')) return { ok: false, error: t().ui.act.companyNoEdit };
+  if (!form.id) return { ok: false, error: t().ui.act.companyNotFound };
 
   const taxId = String(form.tax_id || '').replace(/\D/g, '');
   if (taxId && !isValidThaiTaxId(taxId)) {
-    return { ok: false, error: 'เลขประจำตัวผู้เสียภาษีไม่ถูกต้อง (ตรวจสอบหลักตรวจสอบไม่ผ่าน)' };
+    return { ok: false, error: t().ui.act.badTaxId };
   }
   const ppId = String(form.promptpay_id || '').replace(/[\s-]/g, '');
   if (ppId && !isValidPromptPayId(ppId)) {
-    return { ok: false, error: 'หมายเลขพร้อมเพย์ต้องเป็นเบอร์โทร 10 หลัก เลขผู้เสียภาษี 13 หลัก หรือ e-Wallet 15 หลัก' };
+    return { ok: false, error: t().ui.act.badPromptPay };
   }
 
   const supabase = createClient();
@@ -151,7 +151,7 @@ export async function updateCompanyProfile(form: Record<string, any>) {
       name_en: form.name_en || null,
       tax_id: taxId || null,
       branch_code: form.branch_code || '00000',
-      branch_name: form.branch_name || 'สำนักงานใหญ่',
+      branch_name: form.branch_name || t().ui.act.headOffice,
       address_th: form.address_th || null,
       phone: form.phone || null,
       email: form.email || null,
@@ -164,6 +164,11 @@ export async function updateCompanyProfile(form: Record<string, any>) {
       bank_account_no: form.bank_account_no || null,
       doc_footer_note: form.doc_footer_note || null,
       authorized_signer: form.authorized_signer || null,
+      // จับคู่สามทาง — ค่าที่ตั้งตรงนี้ถูกอ่านจริงใน app.three_way_check ตอนอนุมัติ
+      match_enforce: ['off', 'warn', 'block'].includes(form.match_enforce) ? form.match_enforce : 'warn',
+      match_qty_tolerance_pct: Math.max(0, Number(form.match_qty_tolerance_pct) || 0),
+      match_price_tolerance_pct: Math.max(0, Number(form.match_price_tolerance_pct) || 0),
+      budget_enforce: ['off', 'warn', 'block'].includes(form.budget_enforce) ? form.budget_enforce : 'warn',
     })
     .eq('id', form.id);
 
@@ -181,18 +186,18 @@ export async function saveDocSequence(form: {
   reset_cycle: string;
 }) {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'settings.numbering', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์ตั้งค่าเลขที่เอกสาร' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'settings.numbering', 'edit')) return { ok: false, error: t().ui.act.numberingNoEdit };
 
   const prefix = String(form.prefix || '').trim().toUpperCase();
   const pattern = String(form.pattern || '').trim();
-  if (!prefix) return { ok: false, error: 'กรุณาระบุอักษรนำหน้า' };
+  if (!prefix) return { ok: false, error: t().ui.act.prefixRequired };
   if (!pattern.includes('{SEQ')) {
-    return { ok: false, error: 'รูปแบบต้องมี {SEQ:4} หรือ {SEQ:5} เพื่อให้เลขไม่ซ้ำกัน' };
+    return { ok: false, error: t().ui.act.patternNeedsSeq };
   }
   const next = Math.max(1, Math.round(Number(form.next_number) || 1));
   if (!['never', 'yearly', 'monthly'].includes(form.reset_cycle)) {
-    return { ok: false, error: 'รอบการรีเซ็ตเลขไม่ถูกต้อง' };
+    return { ok: false, error: t().ui.act.badResetCycle };
   }
 
   const supabase = createClient();
@@ -230,13 +235,13 @@ export async function inviteSsoUser(form: {
   note?: string;
 }) {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'settings.users', 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์อนุญาตผู้ใช้' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'settings.users', 'create')) return { ok: false, error: t().ui.act.userNoGrant };
 
   const code = String(form.employee_code || '').trim();
   const email = String(form.email || '').trim().toLowerCase();
-  if (!code && !email) return { ok: false, error: 'ระบุรหัสพนักงานหรืออีเมลอย่างน้อยหนึ่งอย่าง' };
-  if (!form.role_id) return { ok: false, error: 'กรุณาเลือกบทบาท' };
+  if (!code && !email) return { ok: false, error: t().ui.act.needCodeOrEmail };
+  if (!form.role_id) return { ok: false, error: t().ui.act.roleRequired };
 
   const supabase = createClient();
   const { error } = await supabase.from('sso_invitations').insert({
@@ -256,8 +261,8 @@ export async function inviteSsoUser(form: {
 
 export async function cancelSsoInvitation(id: string) {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'settings.users', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์ยกเลิก' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'settings.users', 'edit')) return { ok: false, error: t().ui.act.noCancel };
 
   const supabase = createClient();
   const { error } = await supabase.from('sso_invitations').delete().eq('id', id);

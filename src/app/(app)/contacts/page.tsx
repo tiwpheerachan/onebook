@@ -18,6 +18,7 @@ export default async function ContactsPage({
 }) {
   const ctx = await requirePermission('contacts', 'view');
   const d = t();
+  const M = d.ui.misc;
   const supabase = createClient();
   const canEdit = can(ctx, 'contacts', 'edit');
 
@@ -43,6 +44,15 @@ export default async function ContactsPage({
   const page = Math.max(1, Number(searchParams.page) || 1);
 
   // count: exact เพื่อให้ตัวแบ่งหน้ารู้จำนวนจริงโดยไม่ต้องดึงข้อมูลทั้งหมด
+  const [{ data: repOpts }, { data: zoneOpts }] = await Promise.all([
+    supabase.from('sales_reps').select('id, code, name')
+      .eq('company_id', ctx.company.id).eq('is_active', true).order('code'),
+    supabase.from('sales_zones').select('id, code, name')
+      .eq('company_id', ctx.company.id).eq('is_active', true).order('code'),
+  ]);
+  const reps = (repOpts || []).map((r: any) => ({ id: r.id, label: `${r.code} · ${r.name}` }));
+  const zones = (zoneOpts || []).map((z: any) => ({ id: z.id, label: `${z.code} · ${z.name}` }));
+
   let q = supabase
     .from('contacts')
     .select('*', { count: 'exact' })
@@ -97,17 +107,21 @@ export default async function ContactsPage({
     create: d.common.create, edit: d.common.edit, save: d.common.save,
     cancel: d.common.cancel, required: d.common.required,
     creditLimit: d.ui.credit.limit, creditHint: d.ui.credit.zeroMeansUnlimited,
+    salesRep: d.ui.salesRep.onDoc, salesZone: d.ui.salesRep.zoneOnDoc,
+    unassigned: d.ui.salesRep.unassigned,
+    ...d.ui.master,
   };
 
   return (
     <>
       <PageHeader
         title={d.nav.contacts}
-        subtitle={`${ctx.company.name_th} · ${total.toLocaleString('th-TH')} ราย`}
+        subtitle={`${ctx.company.name_th} · ${M.nContacts.replace('{n}', total.toLocaleString('en-US'))}`}
         action={
           <>
             <SearchBox placeholder={d.common.search} defaultValue={searchParams.q} />
-            <ContactManager canCreate={can(ctx, 'contacts', 'create')} canEdit={canEdit} labels={labels} />
+            <ContactManager canCreate={can(ctx, 'contacts', 'create')} canEdit={canEdit}
+                            labels={labels} reps={reps} zones={zones} />
           </>
         }
       />
@@ -122,10 +136,10 @@ export default async function ContactsPage({
             exportButton={
               can(ctx, 'contacts', 'export') ? (
                 <ExportCsvButton
-                  label="ส่งออกหน้านี้เป็น CSV"
+                  label={M.exportPage}
                   filename="contacts.csv"
                   rows={[
-                    ['รหัส','ชื่อ','เลขภาษี','ประเภท','กลุ่ม','โทร','เครดิต(วัน)'],
+                    [M.productCode, M.productName, M.contactTaxId, M.productKind, M.contactGroup, M.contactPhone, M.contactCreditDays],
                     ...rows.map((r) => [
                       r.code, r.name, r.tax_id || '', r.kind,
                       r.groups.map((g) => g.name).join(' / '), r.phone || '', r.credit_days,
@@ -143,6 +157,8 @@ export default async function ContactsPage({
             canEdit={canEdit}
             canCreateDoc={can(ctx, 'documents', 'create')}
             labels={labels}
+            reps={reps}
+            zones={zones}
             page={page}
             perPage={perPage}
             total={total}

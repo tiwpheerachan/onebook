@@ -1,5 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
+import { useI18n } from '@/i18n/provider';
 import { useRouter } from 'next/navigation';
 import { UserPlus, Power } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
@@ -14,6 +15,8 @@ export function UserAccessManager({
   profiles: { id: string; label: string }[];
   membership?: { id: string; is_active: boolean };
 }) {
+  const { dict: d } = useI18n();
+  const L = d.ui.userAccess;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ user_id: '', role_id: '', can_view_subsidiaries: false });
@@ -31,7 +34,7 @@ export function UserAccessManager({
         })}
         className={membership.is_active ? 'btn-ghost text-xs text-rose-600' : 'btn-ghost text-xs text-emerald-600'}
       >
-        <Power className="h-3.5 w-3.5" /> {membership.is_active ? 'ระงับ' : 'เปิดใช้'}
+        <Power className="h-3.5 w-3.5" /> {membership.is_active ? L.suspend : L.enable}
       </button>
     );
   }
@@ -40,7 +43,7 @@ export function UserAccessManager({
 
   function submit() {
     setErr('');
-    if (!form.user_id || !form.role_id) { setErr('กรุณาเลือกผู้ใช้และบทบาท'); return; }
+    if (!form.user_id || !form.role_id) { setErr(L.needUserRole); return; }
     start(async () => {
       const res = await assignUser(form);
       if (!res.ok) { setErr(res.error || ''); return; }
@@ -50,10 +53,10 @@ export function UserAccessManager({
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="btn-primary"><UserPlus className="h-4 w-4" /> ให้สิทธิ์ผู้ใช้</button>
-      <SlidePanel open={open} onClose={() => setOpen(false)} title="ให้สิทธิ์ผู้ใช้ในบริษัทนี้"
+      <button onClick={() => setOpen(true)} className="btn-primary"><UserPlus className="h-4 w-4" /> {L.grant}</button>
+      <SlidePanel open={open} onClose={() => setOpen(false)} title={L.grantTitle}
         footer={<div className="flex justify-end gap-2">
-          <button className="btn-secondary" onClick={() => setOpen(false)}>ยกเลิก</button>
+          <button className="btn-secondary" onClick={() => setOpen(false)}>{d.common.cancel}</button>
           <button className="btn-primary" disabled={pending} onClick={submit}>
             {pending && <ShdSpinner size={16} />} บันทึก
           </button>
@@ -61,14 +64,14 @@ export function UserAccessManager({
       >
         {err && <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700 ring-1 ring-inset ring-rose-200">{err}</p>}
         <div className="space-y-4">
-          <div><label className="label">ผู้ใช้ *</label>
+          <div><label className="label">{L.user} *</label>
             <select className="input" value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })}>
-              <option value="">— เลือกผู้ใช้ —</option>
+              <option value="">{L.pickUser}</option>
               {profiles.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
             </select></div>
-          <div><label className="label">บทบาท *</label>
+          <div><label className="label">{L.role} *</label>
             <select className="input" value={form.role_id} onChange={(e) => setForm({ ...form, role_id: e.target.value })}>
-              <option value="">— เลือกบทบาท —</option>
+              <option value="">{L.pickRole}</option>
               {roles.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
             </select></div>
           <label className="flex items-center gap-2 text-sm text-ink-700">

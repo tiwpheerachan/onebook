@@ -1,5 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { t } from '@/i18n/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
 import type { BankLine } from '@/lib/bank-csv';
@@ -20,10 +21,10 @@ export async function importStatement(form: {
   auto_match?: boolean;
 }): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'finance.reconcile', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์กระทบยอดธนาคาร' };
-  if (!form.channel_id) return { ok: false, error: 'กรุณาเลือกช่องทางการเงิน' };
-  if (!form.lines?.length) return { ok: false, error: 'ไม่พบรายการในไฟล์' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'finance.reconcile', 'edit')) return { ok: false, error: t().ui.act.reconcileNoEdit };
+  if (!form.channel_id) return { ok: false, error: t().ui.act.channelRequired };
+  if (!form.lines?.length) return { ok: false, error: t().ui.act.statementEmpty };
 
   const supabase = createClient();
   const dates = form.lines.map((l) => l.txn_date).sort();
@@ -44,7 +45,7 @@ export async function importStatement(form: {
     .select('id')
     .maybeSingle();
 
-  if (e1 || !stmt) return { ok: false, error: e1?.message || 'บันทึก statement ไม่สำเร็จ' };
+  if (e1 || !stmt) return { ok: false, error: e1?.message || t().ui.act.statementSaveFailed };
 
   const rows = form.lines.map((l, i) => ({
     company_id: ctx.company.id,
@@ -78,8 +79,8 @@ export async function importStatement(form: {
 /** สั่งจับคู่อัตโนมัติอีกครั้ง (เช่น หลังบันทึกรายการรับ-จ่ายเพิ่ม) */
 export async function autoMatch(statementId: string, dayWindow = 5): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'finance.reconcile', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์กระทบยอดธนาคาร' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'finance.reconcile', 'edit')) return { ok: false, error: t().ui.act.reconcileNoEdit };
 
   const supabase = createClient();
   const { data, error } = await supabase.rpc('bank_auto_match', {
@@ -100,10 +101,10 @@ export async function setLineMatch(form: {
   note?: string | null;
 }): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'finance.reconcile', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์กระทบยอดธนาคาร' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'finance.reconcile', 'edit')) return { ok: false, error: t().ui.act.reconcileNoEdit };
   if (form.status === 'matched' && !form.payment_id) {
-    return { ok: false, error: 'กรุณาเลือกรายการรับ-จ่ายเงินที่ต้องการจับคู่' };
+    return { ok: false, error: t().ui.act.pickPaymentRow };
   }
 
   const supabase = createClient();
@@ -121,7 +122,7 @@ export async function setLineMatch(form: {
     .eq('company_id', ctx.company.id);
 
   if (error) {
-    if (error.code === '23505') return { ok: false, error: 'รายการรับ-จ่ายเงินนี้ถูกจับคู่กับรายการอื่นแล้ว' };
+    if (error.code === '23505') return { ok: false, error: t().ui.act.paymentAlreadyMatched };
     return { ok: false, error: error.message };
   }
 
@@ -136,8 +137,8 @@ export async function closeReconciliation(form: {
   note?: string | null;
 }): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'finance.reconcile', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์กระทบยอดธนาคาร' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'finance.reconcile', 'edit')) return { ok: false, error: t().ui.act.reconcileNoEdit };
 
   const supabase = createClient();
   const { data: sum, error: e1 } = await supabase.rpc('rpt_bank_reconcile', {

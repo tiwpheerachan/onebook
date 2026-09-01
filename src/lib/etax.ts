@@ -1,3 +1,4 @@
+import { t } from '@/i18n/server';
 /**
  * สร้าง XML ใบกำกับภาษีอิเล็กทรอนิกส์ตามมาตรฐาน ETDA (ขมธอ. 3-2560 / UN-CEFACT CII)
  *
@@ -76,22 +77,23 @@ const dt = (s: string) => String(s || '').replace(/-/g, '');
 
 /** ตรวจข้อมูลที่กรมสรรพากรบังคับ ก่อนสร้างไฟล์ */
 export function validateEtax(input: EtaxInput): string[] {
+  const L = t().ui.etaxErr;
   const errs: string[] = [];
-  if (!/^\d{13}$/.test(input.seller.tax_id || '')) errs.push('เลขประจำตัวผู้เสียภาษีของผู้ขายต้องมี 13 หลัก');
-  if (!input.seller.name) errs.push('ต้องระบุชื่อผู้ขาย');
-  if (!input.seller.address) errs.push('ต้องระบุที่อยู่ผู้ขาย');
-  if (!/^\d{5}$/.test(input.seller.branch_code || '')) errs.push('รหัสสาขาผู้ขายต้องมี 5 หลัก (สำนักงานใหญ่ = 00000)');
-  if (!input.doc_number) errs.push('ต้องระบุเลขที่เอกสาร');
-  if (!input.doc_date) errs.push('ต้องระบุวันที่เอกสาร');
-  if (!input.buyer.name) errs.push('ต้องระบุชื่อผู้ซื้อ');
-  if (input.buyer.tax_id && !/^\d{13}$/.test(input.buyer.tax_id)) errs.push('เลขประจำตัวผู้เสียภาษีของผู้ซื้อต้องมี 13 หลัก');
-  if (!input.lines?.length) errs.push('ต้องมีรายการสินค้า/บริการอย่างน้อย 1 รายการ');
+  if (!/^\d{13}$/.test(input.seller.tax_id || '')) errs.push(L.sellerTaxId);
+  if (!input.seller.name) errs.push(L.sellerName);
+  if (!input.seller.address) errs.push(L.sellerAddress);
+  if (!/^\d{5}$/.test(input.seller.branch_code || '')) errs.push(L.sellerBranch);
+  if (!input.doc_number) errs.push(L.docNumber);
+  if (!input.doc_date) errs.push(L.docDate);
+  if (!input.buyer.name) errs.push(L.buyerName);
+  if (input.buyer.tax_id && !/^\d{13}$/.test(input.buyer.tax_id)) errs.push(L.buyerTaxId);
+  if (!input.lines?.length) errs.push(L.noLines);
   if ((input.doc_type_code === '80' || input.doc_type_code === '81') && !input.reference_number) {
-    errs.push('ใบเพิ่มหนี้/ใบลดหนี้ต้องอ้างอิงเลขที่ใบกำกับภาษีเดิม');
+    errs.push(L.needRefDoc);
   }
   const sum = (input.lines || []).reduce((s, l) => s + Number(l.line_amount || 0), 0);
   if (Math.abs(sum - Number(input.subtotal || 0)) > 0.05) {
-    errs.push('ผลรวมรายการไม่ตรงกับยอดก่อนภาษี');
+    errs.push(L.sumMismatch);
   }
   return errs;
 }

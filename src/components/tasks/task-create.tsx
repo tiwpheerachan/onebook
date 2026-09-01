@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/i18n/provider';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from '@/components/forms/slide-panel';
 import { Avatar, type Member } from './task-bits';
@@ -17,6 +18,8 @@ export function TaskCreate({
   members: Member[];
   onClose: () => void;
 }) {
+  const { dict } = useI18n();
+  const L = dict.ui.task;
   const router = useRouter();
   const [form, setForm] = useState<any>({
     title: '',
@@ -34,7 +37,7 @@ export function TaskCreate({
 
   function submit() {
     setErr('');
-    if (!form.title.trim()) { setErr('กรุณาระบุชื่องาน'); return; }
+    if (!form.title.trim()) { setErr(dict.ui.act.taskTitleRequired); return; }
 
     const time = form.all_day ? '17:00' : form.due_time || '17:00';
     const due = form.due_date ? new Date(`${form.due_date}T${time}`).toISOString() : '';
@@ -62,12 +65,12 @@ export function TaskCreate({
     <SlidePanel
       open
       onClose={onClose}
-      title="สร้างงานใหม่"
+      title={L.createTitle}
       footer={
         <div className="flex justify-end gap-2">
-          <button className="btn-secondary" onClick={onClose}>ยกเลิก</button>
+          <button className="btn-secondary" onClick={onClose}>{dict.common.cancel}</button>
           <button className="btn-primary" disabled={pending} onClick={submit}>
-            {pending && <ShdSpinner size={16} />} สร้างงาน
+            {pending && <ShdSpinner size={16} />} {L.create}
           </button>
         </div>
       }
@@ -76,11 +79,11 @@ export function TaskCreate({
 
       <div className="space-y-4">
         <div>
-          <label className="label">ชื่องาน *</label>
+          <label className="label">{L.titleLabel} *</label>
           <input
             autoFocus
             className="input"
-            placeholder="เช่น ตามเก็บเงินลูกค้า / เตรียมเอกสารยื่นภาษี"
+            placeholder={L.titlePh}
             value={form.title}
             onChange={(e) => set('title', e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
@@ -88,7 +91,7 @@ export function TaskCreate({
         </div>
 
         <div>
-          <label className="label">ประเภทงาน</label>
+          <label className="label">{L.kindFilter}</label>
           <div className="flex flex-wrap gap-1.5">
             {TASK_KIND.map((k) => (
               <button
@@ -100,14 +103,14 @@ export function TaskCreate({
                 )}
               >
                 <span className={cn('h-2 w-2 rounded-full', k.bar)} />
-                {k.label}
+                {(dict.ui.taskKind as Record<string, string>)[k.key]}
               </button>
             ))}
           </div>
         </div>
 
         <div>
-          <label className="label">ความสำคัญ</label>
+          <label className="label">{L.priority}</label>
           <div className="flex flex-wrap gap-1.5">
             {TASK_PRIORITY.map((p) => (
               <button
@@ -118,7 +121,7 @@ export function TaskCreate({
                   form.priority === p.key ? p.chip + ' font-medium' : 'bg-white text-ink-500 ring-ink-200 hover:bg-ink-50'
                 )}
               >
-                {p.label}
+                {(dict.ui.taskPriority as Record<string, string>)[p.key]}
               </button>
             ))}
           </div>
@@ -126,11 +129,11 @@ export function TaskCreate({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="label">ครบกำหนด</label>
+            <label className="label">{L.dueDate}</label>
             <input type="date" className="input" value={form.due_date} onChange={(e) => set('due_date', e.target.value)} />
           </div>
           <div>
-            <label className="label">เวลา</label>
+            <label className="label">{L.time}</label>
             <input
               type="time"
               className="input"
@@ -148,11 +151,11 @@ export function TaskCreate({
             checked={form.all_day}
             onChange={(e) => set('all_day', e.target.checked)}
           />
-          ทั้งวัน (ไม่ระบุเวลา)
+          {L.allDayHint}
         </label>
 
         <div>
-          <label className="label">มอบหมายให้</label>
+          <label className="label">{L.assignTo}</label>
           <div className="flex flex-wrap gap-1.5">
             {members.map((m) => {
               const on = assignees.includes(m.id);
@@ -172,15 +175,15 @@ export function TaskCreate({
             })}
           </div>
           {members.length === 0 && (
-            <p className="text-xxs text-ink-400">ยังไม่มีผู้ใช้อื่นในบริษัทนี้ เพิ่มได้ที่ ตั้งค่า → ผู้ใช้งาน</p>
+            <p className="text-xxs text-ink-400">{L.noMembers}</p>
           )}
         </div>
 
         <div>
-          <label className="label">รายละเอียด</label>
+          <label className="label">{L.description}</label>
           <textarea
             className="input min-h-[4.5rem]"
-            placeholder="สิ่งที่ต้องทำ ข้อมูลที่ต้องใช้ หรือผลลัพธ์ที่คาดหวัง"
+            placeholder={L.descPh}
             value={form.description}
             onChange={(e) => set('description', e.target.value)}
           />

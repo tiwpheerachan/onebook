@@ -5,8 +5,8 @@ import { getDictionary } from '@/i18n';
 import { I18nProvider } from '@/i18n/provider';
 
 export const metadata: Metadata = {
-  title: 'ONEBOOK · ระบบบัญชีกลุ่มบริษัท',
-  description: 'ระบบบัญชีภายในองค์กรสำหรับกลุ่มบริษัท - ปลอดภัย ตรวจสอบได้ รองรับ 3 ภาษา',
+  title: 'ONEBOOK',
+  description: 'ONEBOOK',
   robots: { index: false, follow: false, nocache: true },
 };
 

@@ -1,4 +1,5 @@
 import { requirePermission, can } from '@/lib/session';
+import { t, currentLocale } from '@/i18n/server';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { MonthPicker } from '@/components/forms/month-picker';
@@ -13,6 +14,8 @@ export default async function CloseCheckPage({
   searchParams: { y?: string; m?: string };
 }) {
   const ctx = await requirePermission('report', 'view');
+  const d = t();
+  const L = d.ui.closeCheck;
   const now = new Date();
   const year = Number(searchParams.y) || now.getFullYear();
   const month = Number(searchParams.m) || now.getMonth() + 1;
@@ -29,22 +32,22 @@ export default async function CloseCheckPage({
   if (error) {
     return (
       <>
-        <PageHeader title="ตรวจก่อนปิดงบ" subtitle={ctx.company.name_th} />
-        <p className="card card-pad text-sm text-rose-700">ตรวจไม่สำเร็จ : {error.message}</p>
+        <PageHeader title={L.title} subtitle={ctx.company.name_th} />
+        <p className="card card-pad text-sm text-rose-700">{L.failed} : {error.message}</p>
       </>
     );
   }
 
   const check = data as CloseCheck;
   const findings = sortFindings(check.findings || []) as FindingView[];
-  const brief = await aiCloseBrief(check);
+  const brief = await aiCloseBrief(check, d, currentLocale());
 
   return (
     <>
       <PageHeader
-        title="ตรวจก่อนปิดงบ"
-        subtitle={`${ctx.company.name_th} · งวด ${month}/${year} · ตรวจ 15 ข้อที่นักบัญชีต้องไล่เช็กเองทุกเดือน`}
-        breadcrumb={[{ label: 'บัญชี' }, { label: 'ตรวจก่อนปิดงบ' }]}
+        title={L.title}
+        subtitle={`${ctx.company.name_th} · ${L.subtitle.replace('{period}', `${month}/${year}`)}`}
+        breadcrumb={[{ label: d.nav.accounting }, { label: L.title }]}
         action={<MonthPicker year={year} month={month} />}
       />
 

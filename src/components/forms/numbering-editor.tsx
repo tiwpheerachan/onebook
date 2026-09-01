@@ -5,12 +5,9 @@ import { Pencil } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { saveDocSequence } from '@/actions/settings';
+import { useI18n } from '@/i18n/provider';
 
-const CYCLES = [
-  { v: 'monthly', l: 'รีเซ็ตทุกเดือน' },
-  { v: 'yearly', l: 'รีเซ็ตทุกปี' },
-  { v: 'never', l: 'ไม่รีเซ็ต (นับต่อไปเรื่อย ๆ)' },
-];
+const CYCLES = ['monthly', 'yearly', 'never'] as const;
 
 const PATTERNS = [
   '{PREFIX}{YY}{MM}-{SEQ:4}',
@@ -39,6 +36,11 @@ export function NumberingEditor({
   kindLabel: string;
   canEdit: boolean;
 }) {
+  const { dict } = useI18n();
+  const L = dict.ui.numbering;
+  const cycleLabel: Record<string, string> = {
+    monthly: L.resetMonthly, yearly: L.resetYearly, never: L.resetNever,
+  };
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(row);
@@ -63,7 +65,7 @@ export function NumberingEditor({
   return (
     <>
       <button
-        title="แก้ไขรูปแบบเลขที่"
+        title={L.editTitle}
         onClick={() => { setForm(row); setErr(''); setOpen(true); }}
         className="rounded p-1 text-ink-400 hover:bg-brand-50 hover:text-brand-600"
       >
@@ -73,12 +75,12 @@ export function NumberingEditor({
       <SlidePanel
         open={open}
         onClose={() => setOpen(false)}
-        title={`เลขที่เอกสาร · ${kindLabel}`}
+        title={`${L.panelTitle} · ${kindLabel}`}
         footer={
           <div className="flex justify-end gap-2">
-            <button className="btn-secondary" onClick={() => setOpen(false)}>ยกเลิก</button>
+            <button className="btn-secondary" onClick={() => setOpen(false)}>{dict.common.cancel}</button>
             <button className="btn-primary" disabled={pending} onClick={submit}>
-              {pending && <ShdSpinner size={16} />} บันทึก
+              {pending && <ShdSpinner size={16} />} {dict.common.save}
             </button>
           </div>
         }
@@ -87,18 +89,18 @@ export function NumberingEditor({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="label">อักษรนำหน้า *</label>
+            <label className="label">{L.prefix} *</label>
             <input className="input font-mono uppercase" maxLength={8} value={form.prefix || ''}
               onChange={(e) => set('prefix', e.target.value.toUpperCase())} />
           </div>
           <div>
-            <label className="label">เลขลำดับถัดไป</label>
+            <label className="label">{L.nextSeq}</label>
             <input type="number" min={1} className="input num" value={form.next_number}
               onChange={(e) => set('next_number', e.target.value)} />
           </div>
 
           <div className="col-span-2">
-            <label className="label">รูปแบบ</label>
+            <label className="label">{L.pattern}</label>
             <input className="input font-mono" value={form.pattern || ''} onChange={(e) => set('pattern', e.target.value)} />
             <div className="mt-2 flex flex-wrap gap-1.5">
               {PATTERNS.map((p) => (
@@ -109,26 +111,24 @@ export function NumberingEditor({
               ))}
             </div>
             <p className="mt-2 text-xxs leading-relaxed text-ink-400">
-              ตัวแปรที่ใช้ได้ : <b>{'{PREFIX}'}</b> อักษรนำหน้า · <b>{'{YYYY}'}</b> ปี ค.ศ. 4 หลัก ·
-              <b> {'{YY}'}</b> ปี 2 หลัก · <b>{'{MM}'}</b> เดือน · <b>{'{SEQ:4}'}</b> เลขลำดับ 4 หลัก ·
-              <b> {'{SEQ:5}'}</b> เลขลำดับ 5 หลัก
+              {L.varsHint}
             </p>
           </div>
 
           <div className="col-span-2">
-            <label className="label">รอบการรีเซ็ตเลขลำดับ</label>
+            <label className="label">{L.resetCycle}</label>
             <select className="input" value={form.reset_cycle} onChange={(e) => set('reset_cycle', e.target.value)}>
-              {CYCLES.map((c) => <option key={c.v} value={c.v}>{c.l}</option>)}
+              {CYCLES.map((c) => <option key={c} value={c}>{cycleLabel[c]}</option>)}
             </select>
           </div>
         </div>
 
         <p className="mt-5 flex items-center justify-between rounded-lg bg-brand-50 px-3 py-2.5 text-sm text-brand-800">
-          <span>ตัวอย่างเลขที่ถัดไป</span>
+          <span>{L.previewLabel}</span>
           <b className="font-mono">{preview}</b>
         </p>
         <p className="mt-2 text-xxs leading-relaxed text-ink-400">
-          เลขที่เอกสารต้องไม่ซ้ำกันในบริษัทเดียวกัน หากย้อนเลขลำดับกลับไปทับของเดิม ระบบจะแจ้งเตือนตอนบันทึกเอกสาร
+          {L.uniqueWarn}
         </p>
       </SlidePanel>
     </>

@@ -1,5 +1,6 @@
 'use client';
 import { useRef, useState, useTransition } from 'react';
+import { useI18n } from '@/i18n/provider';
 import { useRouter } from 'next/navigation';
 import { Upload, CheckCircle2, AlertTriangle, FileDown } from 'lucide-react';
 import { ShdSpinner, ShdOverlay } from '@/components/ui/shd-loader';
@@ -14,6 +15,8 @@ const PREVIEW_ROWS = 8;
  * (Excel สั่ง "บันทึกเป็น CSV UTF-8" แล้วนำเข้าที่นี่ได้เลย)
  */
 export function DataImport({ allowed }: { allowed: Record<string, boolean> }) {
+  const { dict: d } = useI18n();
+  const L = d.ui.dataImport;
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [set, setSet] = useState<ImportSet>(IMPORT_SETS[0]);
@@ -38,7 +41,7 @@ export function DataImport({ allowed }: { allowed: Record<string, boolean> }) {
     const text = await file.text();
     // ตัด BOM ที่ Excel ใส่มา ไม่งั้นหัวคอลัมน์แรกจะจับคู่ไม่ตรง
     const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter((l) => l.trim() !== '');
-    if (lines.length < 2) { setErr('ไฟล์ต้องมีบรรทัดหัวตารางและข้อมูลอย่างน้อย 1 แถว'); return; }
+    if (lines.length < 2) { setErr(L.needHeaderRow); return; }
 
     const head = splitCsvLine(lines[0]);
     const body = lines.slice(1).map(splitCsvLine);
@@ -93,7 +96,7 @@ export function DataImport({ allowed }: { allowed: Record<string, boolean> }) {
   return (
     <div className="space-y-5">
       <div className="card card-pad">
-        <label className="label">ชุดข้อมูลที่ต้องการนำเข้า</label>
+        <label className="label">{L.pickSet}</label>
         <div className="grid gap-3 sm:grid-cols-3">
           {IMPORT_SETS.map((s) => (
             <button
@@ -120,8 +123,8 @@ export function DataImport({ allowed }: { allowed: Record<string, boolean> }) {
           <button className="btn-secondary" onClick={template}>
             <FileDown className="h-4 w-4 text-ink-400" strokeWidth={1.8} /> ดาวน์โหลดไฟล์ตัวอย่าง
           </button>
-          {fileName && <span className="text-xs text-ink-500">{fileName} · {rows.length} แถว</span>}
-          {fileName && <button className="btn-ghost text-xs" onClick={reset}>ล้าง</button>}
+          {fileName && <span className="text-xs text-ink-500">{fileName} · {L.nRows.replace('{n}', String(rows.length))}</span>}
+          {fileName && <button className="btn-ghost text-xs" onClick={reset}>{L.clear}</button>}
         </div>
 
         {!canImport && (
@@ -130,7 +133,7 @@ export function DataImport({ allowed }: { allowed: Record<string, boolean> }) {
           </p>
         )}
         <p className="mt-3 text-xxs leading-relaxed text-ink-400">
-          จาก Excel เลือก <b>บันทึกเป็น → CSV UTF-8 (คั่นด้วยเครื่องหมายจุลภาค)</b> เพื่อให้ภาษาไทยไม่เพี้ยน ·
+          {L.csvHint} ·
           รหัสที่มีอยู่แล้วจะถูกอัปเดตทับ ไม่สร้างซ้ำ
         </p>
       </div>
@@ -143,8 +146,8 @@ export function DataImport({ allowed }: { allowed: Record<string, boolean> }) {
         <>
           <div className="card">
             <div className="border-b border-ink-200 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-ink-900">จับคู่คอลัมน์</h2>
-              <p className="mt-0.5 text-xs text-ink-500">ระบบเดาให้จากหัวตารางแล้ว ตรวจและแก้ได้ตามต้องการ</p>
+              <h2 className="text-sm font-semibold text-ink-900">{L.mapTitle}</h2>
+              <p className="mt-0.5 text-xs text-ink-500">{L.mapHint}</p>
             </div>
             <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
               {set.fields.map((f) => (
@@ -165,8 +168,8 @@ export function DataImport({ allowed }: { allowed: Record<string, boolean> }) {
                       })
                     }
                   >
-                    <option value="">— ไม่ใช้ —</option>
-                    {headers.map((h, i) => <option key={i} value={i}>{h || `คอลัมน์ ${i + 1}`}</option>)}
+                    <option value="">{L.unused}</option>
+                    {headers.map((h, i) => <option key={i} value={i}>{h || L.columnN.replace('{n}', String(i + 1))}</option>)}
                   </select>
                   {f.hint && <p className="mt-1 text-xxs text-ink-400">{f.hint}</p>}
                 </div>
@@ -176,7 +179,7 @@ export function DataImport({ allowed }: { allowed: Record<string, boolean> }) {
 
           <div className="card overflow-x-auto">
             <div className="border-b border-ink-200 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-ink-900">ตัวอย่างข้อมูลที่จะนำเข้า</h2>
+              <h2 className="text-sm font-semibold text-ink-900">{L.previewTitle}</h2>
               <p className="mt-0.5 text-xs text-ink-500">
                 แสดง {Math.min(PREVIEW_ROWS, rows.length)} แถวแรกจากทั้งหมด {rows.length} แถว
               </p>
@@ -229,7 +232,7 @@ export function DataImport({ allowed }: { allowed: Record<string, boolean> }) {
               </p>
               <ul className="mt-1.5 max-h-56 space-y-1 overflow-auto text-xxs text-ink-600">
                 {result.failed.map((f, i) => (
-                  <li key={i}>แถวที่ {f.row} : {f.error}</li>
+                  <li key={i}>{L.rowError.replace('{row}', String(f.row)).replace('{error}', f.error)}</li>
                 ))}
               </ul>
             </>
@@ -237,7 +240,7 @@ export function DataImport({ allowed }: { allowed: Record<string, boolean> }) {
         </div>
       )}
 
-      <ShdOverlay open={pending} label="กำลังนำเข้าข้อมูล…" sublabel={`${rows.length} แถว`} />
+      <ShdOverlay open={pending} label={L.importing} sublabel={L.nRows.replace('{n}', String(rows.length))} />
     </div>
   );
 }

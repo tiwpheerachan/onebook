@@ -8,7 +8,7 @@ import { saveProduct } from '@/actions/master';
 
 const blank = {
   id: null as string | null, sku: '', name: '', name_en: '', name_zh: '', kind: 'good',
-  unit: 'ชิ้น', category: '', sale_price: 0, purchase_price: 0,
+  unit: '', category: '', sale_price: 0, purchase_price: 0,
   vat_treatment: 'exclusive', track_inventory: true, tracking: 'none',
   income_account_id: '', expense_account_id: '', is_active: true,
 };
@@ -64,33 +64,33 @@ export function ProductManager({
       >
         {err && <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700 ring-1 ring-inset ring-rose-200">{err}</p>}
         <div className="grid grid-cols-2 gap-4">
-          <F label="รหัสสินค้า *"><input className="input" value={form.sku} onChange={(e) => set('sku', e.target.value)} /></F>
-          <F label="ประเภท">
+          <F label={`${labels.sku} *`}><input className="input" value={form.sku} onChange={(e) => set('sku', e.target.value)} /></F>
+          <F label={labels.kind}>
             <select className="input" value={form.kind} onChange={(e) => set('kind', e.target.value)}>
-              <option value="good">สินค้า</option>
-              <option value="service">บริการ</option>
-              <option value="asset">สินทรัพย์</option>
+              <option value="good">{labels.kindGood}</option>
+              <option value="service">{labels.kindService}</option>
+              <option value="asset">{labels.kindAsset}</option>
             </select>
           </F>
-          <F label="ชื่อ (ไทย) *" span><input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} /></F>
-          <F label="ชื่อ (อังกฤษ)"><input className="input" value={form.name_en || ''} onChange={(e) => set('name_en', e.target.value)} /></F>
-          <F label="ชื่อ (จีน)"><input className="input" value={form.name_zh || ''} onChange={(e) => set('name_zh', e.target.value)} /></F>
-          <F label="หน่วย"><input className="input" value={form.unit} onChange={(e) => set('unit', e.target.value)} /></F>
-          <F label="หมวดหมู่"><input className="input" value={form.category || ''} onChange={(e) => set('category', e.target.value)} /></F>
-          <F label="ราคาขาย"><input type="number" step="0.01" className="input num" value={form.sale_price} onChange={(e) => set('sale_price', e.target.value)} /></F>
-          <F label="ราคาซื้อ"><input type="number" step="0.01" className="input num" value={form.purchase_price} onChange={(e) => set('purchase_price', e.target.value)} /></F>
-          <F label="ภาษีมูลค่าเพิ่ม">
+          <F label={`${labels.nameTh} *`} span><input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} /></F>
+          <F label={labels.nameEn}><input className="input" value={form.name_en || ''} onChange={(e) => set('name_en', e.target.value)} /></F>
+          <F label={labels.nameZh}><input className="input" value={form.name_zh || ''} onChange={(e) => set('name_zh', e.target.value)} /></F>
+          <F label={labels.unit}><input className="input" value={form.unit} onChange={(e) => set('unit', e.target.value)} /></F>
+          <F label={labels.category}><input className="input" value={form.category || ''} onChange={(e) => set('category', e.target.value)} /></F>
+          <F label={labels.salePrice}><input type="number" step="0.01" className="input num" value={form.sale_price} onChange={(e) => set('sale_price', e.target.value)} /></F>
+          <F label={labels.purchasePrice}><input type="number" step="0.01" className="input num" value={form.purchase_price} onChange={(e) => set('purchase_price', e.target.value)} /></F>
+          <F label={labels.vat}>
             <select className="input" value={form.vat_treatment} onChange={(e) => set('vat_treatment', e.target.value)}>
-              <option value="exclusive">แยกนอก 7%</option>
-              <option value="inclusive">รวมใน 7%</option>
-              <option value="zero_rated">อัตรา 0%</option>
-              <option value="exempt">ยกเว้น</option>
-              <option value="none">ไม่มีภาษี</option>
+              <option value="exclusive">{labels.vatExclusive}</option>
+              <option value="inclusive">{labels.vatInclusive}</option>
+              <option value="zero_rated">{labels.vatZero}</option>
+              <option value="exempt">{labels.vatExempt}</option>
+              <option value="none">{labels.vatNone}</option>
             </select>
           </F>
-          <F label="ตัดสต๊อก">
+          <F label={labels.trackStock}>
             <select className="input" value={form.track_inventory ? '1' : '0'} onChange={(e) => set('track_inventory', e.target.value === '1')}>
-              <option value="1">ใช่</option><option value="0">ไม่</option>
+              <option value="1">{labels.yes}</option><option value="0">{labels.no}</option>
             </select>
           </F>
           {/* ตามรอยรายล็อตหรือรายชิ้นได้เฉพาะสินค้าที่ตัดสต๊อก */}
@@ -104,15 +104,15 @@ export function ProductManager({
               </select>
             </F>
           )}
-          <F label="บัญชีรายได้" span>
+          <F label={labels.incomeAccount} span>
             <select className="input" value={form.income_account_id || ''} onChange={(e) => set('income_account_id', e.target.value)}>
-              <option value="">— อัตโนมัติ —</option>
+              <option value="">— {labels.auto} —</option>
               {accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
             </select>
           </F>
-          <F label="บัญชีต้นทุน/ค่าใช้จ่าย" span>
+          <F label={labels.expenseAccount} span>
             <select className="input" value={form.expense_account_id || ''} onChange={(e) => set('expense_account_id', e.target.value)}>
-              <option value="">— อัตโนมัติ —</option>
+              <option value="">— {labels.auto} —</option>
               {accounts.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
             </select>
           </F>

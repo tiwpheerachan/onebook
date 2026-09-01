@@ -1,4 +1,5 @@
 import 'server-only';
+import { t } from '@/i18n/server';
 
 /**
  * จุดเชื่อมต่อผู้ให้บริการ e-Tax Invoice
@@ -47,7 +48,7 @@ export async function signAndSubmit(xml: string, docNumber: string): Promise<Sig
     return {
       ok: false,
       not_configured: true,
-      error: 'ยังไม่ได้ตั้งค่าผู้ให้บริการ e-Tax Invoice (ETAX_API_URL / ETAX_API_KEY)',
+      error: t().ui.misc.etaxNotConfigured,
     };
   }
 
@@ -63,7 +64,7 @@ export async function signAndSubmit(xml: string, docNumber: string): Promise<Sig
     });
 
     if (!res.ok) {
-      return { ok: false, error: `ผู้ให้บริการตอบกลับ ${res.status}: ${(await res.text()).slice(0, 300)}` };
+      return { ok: false, error: t().ui.misc.etaxProviderStatus.replace('{status}', String(res.status)).replace('{detail}', (await res.text()).slice(0, 300)) };
     }
 
     const data = (await res.json()) as any;
@@ -73,6 +74,6 @@ export async function signAndSubmit(xml: string, docNumber: string): Promise<Sig
       provider_ref: data.reference || data.provider_ref || data.id,
     };
   } catch (e: any) {
-    return { ok: false, error: `เชื่อมต่อผู้ให้บริการไม่สำเร็จ: ${e?.message || e}` };
+    return { ok: false, error: t().ui.misc.etaxConnectFailed.replace('{detail}', String(e?.message || e)) };
   }
 }

@@ -37,14 +37,15 @@ export default async function RolesPage() {
       />
       <Card>
         <CardHeader
-          title="ตารางสิทธิ์"
-          description="ติ๊กเพื่อให้สิทธิ์ · การเปลี่ยนแปลงบันทึกทันทีและถูกบันทึกใน audit log · สิทธิ์บังคับใช้ทั้งบน UI และที่ระดับฐานข้อมูล (RLS)"
+          title={d.settings.permissions}
+          description={d.ui.resLabelHint}
         />
         <div className="p-5">
           <PermissionMatrix
             roles={(roles || []).map((r: any) => ({ id: r.id, code: r.code, name: r.name_th, isSystem: r.is_system }))}
             permissions={(perms || []) as any[]}
             canEdit={can(ctx, 'settings.roles', 'edit')}
+            d={d}
           />
         </div>
       </Card>

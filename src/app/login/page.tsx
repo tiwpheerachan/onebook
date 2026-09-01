@@ -5,7 +5,7 @@ import { LanguageSwitcher } from '@/components/layout/switchers';
 import { currentLocale, t } from '@/i18n/server';
 import { ShieldCheck, Building2, TrendingUp, KeyRound } from 'lucide-react';
 
-export const metadata = { title: 'เข้าสู่ระบบ · ONEBOOK' };
+export const metadata = { title: 'ONEBOOK' };
 
 export default function LoginPage() {
   const ssoEnabled = isGoodhrConfigured();
@@ -41,7 +41,7 @@ export default function LoginPage() {
             <div className="mb-7 flex flex-col gap-1.5">
               <h1 className="text-2xl font-semibold tracking-tight text-ink-900">{d.auth.title}</h1>
               <p className="text-sm text-ink-500">
-                {passwordEnabled ? d.auth.subtitle : 'ใช้บัญชีพนักงาน GoodHR ของคุณเข้าสู่ระบบ'}
+                {passwordEnabled ? d.auth.subtitle : d.ui.sso.subtitleSso}
               </p>
             </div>
 

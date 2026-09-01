@@ -9,11 +9,14 @@ import { ExportCsvButton } from '@/components/ui/export-csv';
 export const dynamic = 'force-dynamic';
 
 const ACTION_TONE: Record<string, any> = { insert: 'success', update: 'warn', delete: 'danger' };
-const ACTION_LABEL: Record<string, string> = { insert: 'สร้าง', update: 'แก้ไข', delete: 'ลบ', login: 'เข้าสู่ระบบ', export: 'ส่งออก' };
-
 export default async function AuditPage({ searchParams }: { searchParams: { resource?: string } }) {
   const ctx = await requirePermission('settings.audit', 'view');
   const d = t();
+  const M = d.ui.misc;
+  const ACTION_LABEL: Record<string, string> = {
+    insert: M.auditInsert, update: M.auditUpdate, delete: M.auditDelete,
+    login: M.auditLogin, export: M.auditExport,
+  };
   const locale = currentLocale();
   const supabase = createClient();
 
@@ -32,17 +35,17 @@ export default async function AuditPage({ searchParams }: { searchParams: { reso
     <>
       <PageHeader
         title={d.nav.audit}
-        subtitle={`${ctx.company.name_th} · บันทึกทุกการสร้าง แก้ไข และลบข้อมูล ไม่สามารถแก้ไขหรือลบได้`}
+        subtitle={`${ctx.company.name_th} · ${M.auditSubtitle}`}
         action={can(ctx, 'settings.audit', 'export') && (
           <ExportCsvButton label={d.common.export} filename="audit-log.csv"
-            rows={[['เวลา','ผู้ใช้','การกระทำ','ตาราง','รหัสรายการ'],
+            rows={[[M.auditTime, M.auditUser, M.auditAction, M.auditTable, M.auditRowId],
               ...rows.map((r) => [r.created_at, r.user_email || '', r.action, r.resource, r.record_id || ''])]} />
         )}
       />
       <Card>
         <Table>
           <THead>
-            <TR><TH>เวลา</TH><TH>ผู้ใช้</TH><TH>การกระทำ</TH><TH>ตาราง</TH><TH>รหัสรายการ</TH><TH>รายละเอียด</TH></TR>
+            <TR><TH>{M.auditTime}</TH><TH>{M.auditUser}</TH><TH>{M.auditAction}</TH><TH>{M.auditTable}</TH><TH>{M.auditRowId}</TH><TH>{M.auditDetail}</TH></TR>
           </THead>
           <TBody>
             {rows.length === 0 && <EmptyRow colSpan={6} label={d.common.noData} />}

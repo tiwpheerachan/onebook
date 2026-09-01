@@ -2,15 +2,16 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
+import { t } from '@/i18n/server';
 
 export interface TaskResult { ok: boolean; id?: string; error?: string; count?: number }
 
 function translate(msg: string): string {
-  if (msg.includes('TITLE_REQUIRED')) return 'กรุณาระบุชื่องาน';
-  if (msg.includes('FORBIDDEN')) return 'คุณไม่มีสิทธิ์จัดการงาน';
-  if (msg.includes('TASK_NOT_FOUND')) return 'ไม่พบงานที่ต้องการแก้ไข';
-  if (msg.includes('tasks_time_chk')) return 'วันครบกำหนดต้องไม่มาก่อนวันเริ่มงาน';
-  if (msg.includes('row-level security')) return 'สิทธิ์ไม่เพียงพอตามนโยบายความปลอดภัย';
+  if (msg.includes('TITLE_REQUIRED')) return t().ui.act.taskTitleRequired;
+  if (msg.includes('FORBIDDEN')) return t().ui.act.taskNoManage;
+  if (msg.includes('TASK_NOT_FOUND')) return t().ui.act.taskNotFound;
+  if (msg.includes('tasks_time_chk')) return t().ui.act.taskDueBeforeStart;
+  if (msg.includes('row-level security')) return t().ui.act.rls;
   return msg;
 }
 
@@ -22,9 +23,9 @@ const touch = () => {
 /** สร้างหรือแก้ไขงาน พร้อมกำหนดผู้รับผิดชอบในครั้งเดียว */
 export async function saveTask(form: any, assignees?: string[] | null): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
   if (!can(ctx, 'tasks', form?.id ? 'edit' : 'create')) {
-    return { ok: false, error: 'คุณไม่มีสิทธิ์จัดการงาน' };
+    return { ok: false, error: t().ui.act.taskNoManage };
   }
 
   const supabase = createClient();
@@ -41,8 +42,8 @@ export async function saveTask(form: any, assignees?: string[] | null): Promise<
 /** เปลี่ยนสถานะเร็ว ๆ จากการ์ดบนปฏิทินหรือรายการ */
 export async function setTaskStatus(id: string, status: string): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์แก้ไขงาน' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: t().ui.act.taskNoEdit };
 
   const supabase = createClient();
   const { error } = await supabase.from('tasks').update({ status }).eq('id', id);
@@ -54,8 +55,8 @@ export async function setTaskStatus(id: string, status: string): Promise<TaskRes
 
 export async function deleteTask(id: string): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tasks', 'delete')) return { ok: false, error: 'คุณไม่มีสิทธิ์ลบงาน' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tasks', 'delete')) return { ok: false, error: t().ui.act.taskNoDelete };
 
   const supabase = createClient();
   const { error } = await supabase.from('tasks').delete().eq('id', id);
@@ -69,10 +70,10 @@ export async function deleteTask(id: string): Promise<TaskResult> {
 
 export async function addComment(taskId: string, body: string): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์เขียนโน้ต' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: t().ui.act.noteNoWrite };
   const text = String(body || '').trim();
-  if (!text) return { ok: false, error: 'กรุณาพิมพ์ข้อความ' };
+  if (!text) return { ok: false, error: t().ui.act.textRequired };
 
   const supabase = createClient();
   const { data, error } = await supabase
@@ -88,15 +89,15 @@ export async function addComment(taskId: string, body: string): Promise<TaskResu
 
 export async function deleteComment(id: string): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์ลบโน้ต' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: t().ui.act.noteNoDelete };
 
   const supabase = createClient();
   // ลบได้เฉพาะโน้ตของตัวเอง เว้นแต่มีสิทธิ์ลบงาน
   const { data: row } = await supabase.from('task_comments').select('created_by').eq('id', id).maybeSingle();
-  if (!row) return { ok: false, error: 'ไม่พบโน้ต' };
+  if (!row) return { ok: false, error: t().ui.act.noteNotFound };
   if (row.created_by !== ctx.userId && !can(ctx, 'tasks', 'delete')) {
-    return { ok: false, error: 'ลบได้เฉพาะโน้ตที่คุณเขียนเอง' };
+    return { ok: false, error: t().ui.act.noteOwnOnly };
   }
 
   const { error } = await supabase.from('task_comments').delete().eq('id', id);
@@ -110,10 +111,10 @@ export async function deleteComment(id: string): Promise<TaskResult> {
 
 export async function addChecklistItem(taskId: string, title: string): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์แก้ไขงาน' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: t().ui.act.taskNoEdit };
   const text = String(title || '').trim();
-  if (!text) return { ok: false, error: 'กรุณาพิมพ์หัวข้อ' };
+  if (!text) return { ok: false, error: t().ui.act.headingRequired };
 
   const supabase = createClient();
   const { count } = await supabase
@@ -132,8 +133,8 @@ export async function addChecklistItem(taskId: string, title: string): Promise<T
 
 export async function toggleChecklistItem(id: string, isDone: boolean): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์แก้ไขงาน' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: t().ui.act.taskNoEdit };
 
   const supabase = createClient();
   const { error } = await supabase
@@ -152,8 +153,8 @@ export async function toggleChecklistItem(id: string, isDone: boolean): Promise<
 
 export async function deleteChecklistItem(id: string): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์แก้ไขงาน' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tasks', 'edit')) return { ok: false, error: t().ui.act.taskNoEdit };
 
   const supabase = createClient();
   const { error } = await supabase.from('task_checklist').delete().eq('id', id);
@@ -168,8 +169,8 @@ export async function deleteChecklistItem(id: string): Promise<TaskResult> {
 /** ดึงกำหนดยื่นภาษีของงวดที่เลือกเข้ามาเป็นงาน (เรียกซ้ำได้ ไม่สร้างซ้ำ) */
 export async function seedTaxDeadlines(year: number, month: number): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tasks', 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์สร้างงาน' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tasks', 'create')) return { ok: false, error: t().ui.act.taskNoCreate };
 
   const supabase = createClient();
   const { data, error } = await supabase.rpc('seed_tax_deadlines', {
@@ -200,9 +201,9 @@ export interface SuggestionInput {
  */
 export async function addSuggestedTasks(items: SuggestionInput[]): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tasks', 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์สร้างงาน' };
-  if (!items?.length) return { ok: false, error: 'ยังไม่ได้เลือกงานที่จะเพิ่ม' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tasks', 'create')) return { ok: false, error: t().ui.act.taskNoCreate };
+  if (!items?.length) return { ok: false, error: t().ui.act.taskNoneSelected };
 
   const supabase = createClient();
 
@@ -221,7 +222,7 @@ export async function addSuggestedTasks(items: SuggestionInput[]): Promise<TaskR
       company_id: ctx.company.id,
       code: `TSK-${String(seq++).padStart(5, '0')}`,
       title: s.title,
-      description: s.reason ? `ระบบเสนอให้ทำ : ${s.reason}` : null,
+      description: s.reason ? t().ui.taskSuggest.proposedBy.replace('{reason}', s.reason) : null,
       kind: s.kind,
       priority: s.priority,
       status: 'todo',
@@ -252,9 +253,9 @@ export async function addCloseCheckTasks(
   items: { key: string; title: string; period: string }[]
 ): Promise<TaskResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'tasks', 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์สร้างงาน' };
-  if (!items?.length) return { ok: false, error: 'ยังไม่ได้เลือกรายการ' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'tasks', 'create')) return { ok: false, error: t().ui.act.taskNoCreate };
+  if (!items?.length) return { ok: false, error: t().ui.act.nothingSelected };
 
   const supabase = createClient();
   const { count } = await supabase
@@ -271,8 +272,8 @@ export async function addCloseCheckTasks(
     const { error } = await supabase.from('tasks').insert({
       company_id: ctx.company.id,
       code: `TSK-${String(seq++).padStart(5, '0')}`,
-      title: `แก้ก่อนปิดงบ : ${it.title}`,
-      description: `พบจากการตรวจก่อนปิดงบงวด ${it.period}`,
+      title: t().ui.taskSuggest.closeFix.replace('{title}', it.title),
+      description: t().ui.taskSuggest.closeFixWhy.replace('{period}', it.period),
       kind: 'task',
       priority: 'high',
       status: 'todo',

@@ -3,14 +3,18 @@ import type { DocKind } from './constants';
 /**
  * สายงานเอกสารตามที่ใช้จริงในไทย — แปลงเอกสารต่อเนื่องโดยไม่ต้องคีย์ใหม่
  *
- * ฝั่งขาย  ใบเสนอราคา → ใบสั่งขาย → ใบแจ้งหนี้/ใบวางบิล → ใบกำกับภาษี → ใบเสร็จรับเงิน
+ * ฝั่งขาย  ใบเสนอราคา → ใบสั่งขาย → ใบส่งของ → ใบแจ้งหนี้/ใบวางบิล → ใบกำกับภาษี → ใบเสร็จรับเงิน
+ *
+ * ใบส่งของตัดสต๊อกและลงต้นทุนขายตามวันที่ส่งจริง ใบกำกับที่ตามมาจึงรับรู้แต่รายได้
+ * ข้ามใบส่งของได้ถ้าออกใบกำกับพร้อมส่งของ — ตอนนั้นใบกำกับจะตัดสต๊อกเองเหมือนเดิม
  * ฝั่งซื้อ  ใบขอซื้อ → ใบสั่งซื้อ → ใบรับสินค้า → ซื้อสินค้า/บริการ
  *
  * เอกสารปลายทางจะอ้างถึงเอกสารต้นทางไว้เสมอ (ref_document_id) เพื่อให้ตรวจสอบย้อนกลับได้
  */
 export const DOC_FLOW: Partial<Record<DocKind, DocKind[]>> = {
   quotation: ['sales_order', 'invoice', 'billing_note', 'tax_invoice'],
-  sales_order: ['invoice', 'tax_invoice', 'billing_note'],
+  sales_order: ['delivery_order', 'invoice', 'tax_invoice', 'billing_note'],
+  delivery_order: ['invoice', 'tax_invoice'],
   billing_note: ['invoice', 'tax_invoice', 'receipt'],
   invoice: ['tax_invoice', 'billing_note', 'receipt'],
   tax_invoice: ['receipt', 'credit_note', 'debit_note'],

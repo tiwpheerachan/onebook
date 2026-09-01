@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function ProductsPage({ searchParams }: { searchParams: { q?: string } }) {
   const ctx = await requirePermission('products', 'view');
   const d = t();
+  const M = d.ui.misc;
   const supabase = createClient();
 
   // อ่านผ่าน view ที่ปิดคอลัมน์ตามสิทธิ์ ไม่ใช่ตารางตรง
@@ -33,6 +34,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
     cancel: d.common.cancel, required: d.common.required,
     tracking: d.ui.lot.tracking, trackNone: d.ui.lot.trackNone,
     trackLot: d.ui.lot.trackLot, trackSerial: d.ui.lot.trackSerial,
+    ...d.ui.master,
   };
 
   return (
@@ -45,7 +47,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
             <SearchBox placeholder={d.common.search} defaultValue={searchParams.q} />
             {can(ctx, 'products', 'export') && (
               <ExportCsvButton label={d.common.export} filename="products.csv"
-                rows={[['รหัส','ชื่อ','ประเภท','หน่วย','ราคาขาย'], ...rows.map((r) => [r.sku, r.name, r.kind, r.unit, r.sale_price])]} />
+                rows={[[M.productCode, M.productName, M.productKind, M.unit, M.salePrice], ...rows.map((r) => [r.sku, r.name, r.kind, r.unit, r.sale_price])]} />
             )}
             <ProductManager canCreate={can(ctx, 'products', 'create')} canEdit={can(ctx, 'products', 'edit')} accounts={accOptions} labels={labels} />
           </>
@@ -55,8 +57,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
         <Table>
           <THead>
             <TR>
-              <TH>รหัส</TH><TH>ชื่อ</TH><TH>ประเภท</TH><TH>หน่วย</TH>
-              <TH align="right">ราคาขาย</TH>{showCost && <TH align="right">ราคาซื้อ</TH>}<TH>ภาษี</TH><TH />
+              <TH>{M.productCode}</TH><TH>{M.productName}</TH><TH>{M.productKind}</TH><TH>{M.unit}</TH>
+              <TH align="right">{M.salePrice}</TH>{showCost && <TH align="right">{M.purchasePrice}</TH>}<TH>{M.tax}</TH><TH />
             </TR>
           </THead>
           <TBody>
@@ -65,7 +67,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { q
               <TR key={r.id}>
                 <TD><span className="font-mono text-xs">{r.sku}</span></TD>
                 <TD className="font-medium text-ink-900"><span className="block truncate max-w-[22rem]">{r.name}</span></TD>
-                <TD><Badge tone={r.kind === 'service' ? 'brand' : 'neutral'}>{r.kind === 'good' ? 'สินค้า' : r.kind === 'service' ? 'บริการ' : 'สินทรัพย์'}</Badge></TD>
+                <TD><Badge tone={r.kind === 'service' ? 'brand' : 'neutral'}>{r.kind === 'good' ? M.kindGood : r.kind === 'service' ? M.kindService : M.kindAsset}</Badge></TD>
                 <TD>{r.unit}</TD>
                 <TD align="right">{money(r.sale_price)}</TD>
                 {showCost && <TD align="right">{money(r.purchase_price)}</TD>}

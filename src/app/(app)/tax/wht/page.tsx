@@ -8,12 +8,14 @@ import { MonthPicker } from '@/components/forms/month-picker';
 import { ExportCsvButton } from '@/components/ui/export-csv';
 import { IssueWhtButton, WhtCertActions } from '@/components/forms/wht-cert-actions';
 import { localeDate, money } from '@/lib/format';
+import { PND_ATTACHMENT_HEADERS } from '@/lib/wht-form';
 
 export const dynamic = 'force-dynamic';
 
 export default async function WhtPage({ searchParams }: { searchParams: { y?: string; m?: string } }) {
   const ctx = await requirePermission('tax', 'view');
   const d = t();
+  const L = d.ui.wht;
   const locale = currentLocale();
   const now = new Date();
   const year = Number(searchParams.y) || now.getFullYear();
@@ -50,17 +52,15 @@ export default async function WhtPage({ searchParams }: { searchParams: { y?: st
     <>
       <PageHeader
         title={d.nav.wht}
-        subtitle={`${ctx.company.name_th} · เดือน ${month}/${year}`}
+        subtitle={`${ctx.company.name_th} · ${L.monthOf.replace('{m}', String(month)).replace('{y}', String(year))}`}
         action={<>
           <MonthPicker year={year} month={month} />
           {can(ctx, 'tax', 'export') && certs.length > 0 && (
             <ExportCsvButton
-              label="ใบแนบ ภ.ง.ด."
+              label={L.pndAttachment}
               filename={`pnd-attachment-${year}${String(month).padStart(2, '0')}.csv`}
               rows={[
-                ['ลำดับที่', 'เลขประจำตัวผู้เสียภาษี', 'ชื่อผู้ถูกหักภาษี', 'ที่อยู่',
-                 'วันเดือนปีที่จ่าย', 'ประเภทเงินได้', 'อัตราภาษี (%)',
-                 'จำนวนเงินที่จ่าย', 'ภาษีที่หัก', 'เงื่อนไขการหักภาษี', 'แบบยื่น', 'เลขที่หนังสือรับรอง'],
+                PND_ATTACHMENT_HEADERS,
                 ...certs
                   .filter((c) => c.status === 'issued')
                   .map((c, i) => {
@@ -77,7 +77,7 @@ export default async function WhtPage({ searchParams }: { searchParams: { y?: st
           )}
           {can(ctx, 'tax', 'export') && (
             <ExportCsvButton label={d.common.export} filename={`wht-${year}${String(month).padStart(2,'0')}.csv`}
-              rows={[['วันที่','เลขที่','ผู้รับเงิน','เลขภาษี','แบบยื่น','ภาษีหัก ณ ที่จ่าย'],
+              rows={[[L.date, L.certNo, L.payee, L.taxId, L.form, L.whtAmount],
                 ...rows.map((r) => [r.doc_date, r.doc_number, r.contacts?.name, r.contacts?.tax_id,
                   r.contacts?.is_juristic ? 'ภ.ง.ด.53' : 'ภ.ง.ด.3', r.wht_amount])]} />
           )}
@@ -85,12 +85,12 @@ export default async function WhtPage({ searchParams }: { searchParams: { y?: st
       />
 
       <Card className="mb-6">
-        <CardHeader title="รายการภาษีหัก ณ ที่จ่ายในเดือน" description="สำหรับจัดทำหนังสือรับรองและยื่นแบบ ภ.ง.ด." />
+        <CardHeader title={L.listTitle} description={L.listHint} />
         <Table>
           <THead>
-            <TR><TH>วันที่</TH><TH>เลขที่เอกสาร</TH><TH>ผู้รับเงิน</TH><TH>เลขประจำตัวผู้เสียภาษี</TH>
-              <TH>แบบยื่น</TH><TH align="right">ยอดเอกสาร</TH><TH align="right">ภาษีหัก ณ ที่จ่าย</TH>
-              <TH align="right">หนังสือรับรอง</TH></TR>
+            <TR><TH>{L.date}</TH><TH>{L.docNumber}</TH><TH>{L.payee}</TH><TH>{L.taxId}</TH>
+              <TH>{L.form}</TH><TH align="right">{L.docTotal}</TH><TH align="right">{L.whtAmount}</TH>
+              <TH align="right">{L.certificate}</TH></TR>
           </THead>
           <TBody>
             {rows.length === 0 && <EmptyRow colSpan={8} label={d.common.noData} />}
@@ -126,17 +126,17 @@ export default async function WhtPage({ searchParams }: { searchParams: { y?: st
 
       <Card className="mb-6">
         <CardHeader
-          title="หนังสือรับรองที่ออกแล้วในเดือนนี้"
-          description="พิมพ์ให้ผู้รับเงินเก็บไว้ และใช้ยอดรวมนี้กรอกใบแนบตอนยื่นแบบ ภ.ง.ด."
+          title={L.certTitle}
+          description={L.certHint}
         />
         <Table>
           <THead>
-            <TR><TH>เลขที่</TH><TH>วันที่</TH><TH>ผู้ถูกหักภาษี</TH><TH>แบบยื่น</TH>
-              <TH align="right">ยอดจ่าย</TH><TH align="right">ภาษีที่หัก</TH><TH>สถานะ</TH>
+            <TR><TH>{L.certNo}</TH><TH>{L.date}</TH><TH>{L.payeeName}</TH><TH>{L.form}</TH>
+              <TH align="right">{L.paidAmount}</TH><TH align="right">{L.taxWithheld}</TH><TH>{d.common.status}</TH>
               <TH align="right">{d.common.actions}</TH></TR>
           </THead>
           <TBody>
-            {certs.length === 0 && <EmptyRow colSpan={8} label="ยังไม่ได้ออกหนังสือรับรองในเดือนนี้" />}
+            {certs.length === 0 && <EmptyRow colSpan={8} label={L.noCerts} />}
             {certs.map((c) => (
               <TR key={c.id}>
                 <TD className="font-mono text-xs">{c.cert_number}</TD>
@@ -147,8 +147,8 @@ export default async function WhtPage({ searchParams }: { searchParams: { y?: st
                 <TD align="right" className="font-medium">{money(c.wht_total)}</TD>
                 <TD>
                   {c.status === 'issued'
-                    ? <Badge tone="success">ออกแล้ว</Badge>
-                    : <Badge tone="danger">ยกเลิก</Badge>}
+                    ? <Badge tone="success">{L.issued}</Badge>
+                    : <Badge tone="danger">{L.cancelled}</Badge>}
                 </TD>
                 <TD align="right">
                   <WhtCertActions certId={c.id} status={c.status} canEdit={canEditTax} />
@@ -160,10 +160,10 @@ export default async function WhtPage({ searchParams }: { searchParams: { y?: st
       </Card>
 
       <Card>
-        <CardHeader title="อัตราภาษีหัก ณ ที่จ่ายตามประมวลรัษฎากร" />
+        <CardHeader title={L.ratesTitle} />
         <Table>
           <THead>
-            <TR><TH>รหัส</TH><TH>ประเภทเงินได้</TH><TH>แบบยื่น</TH><TH align="right">อัตรา</TH><TH>ใช้กับ</TH></TR>
+            <TR><TH>{L.code}</TH><TH>{L.incomeType}</TH><TH>{L.form}</TH><TH align="right">{L.rate}</TH><TH>{L.appliesTo}</TH></TR>
           </THead>
           <TBody>
             {(types || []).map((w: any) => (
@@ -173,7 +173,7 @@ export default async function WhtPage({ searchParams }: { searchParams: { y?: st
                 <TD>{w.pnd_form}</TD>
                 <TD align="right">{Number(w.default_rate).toFixed(2)}%</TD>
                 <TD className="text-xs text-ink-500">
-                  {w.applies_to === 'both' ? 'ทั้งสอง' : w.applies_to === 'juristic' ? 'นิติบุคคล' : 'บุคคลธรรมดา'}
+                  {w.applies_to === 'both' ? L.both : w.applies_to === 'juristic' ? L.juristic : L.individual}
                 </TD>
               </TR>
             ))}

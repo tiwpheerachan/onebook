@@ -75,6 +75,7 @@ function FlowNode({ d, dict, current }: { d: any; dict: Dictionary; current?: bo
 }
 
 export function DocumentTrace({ trace, dict }: { trace: Trace; dict: Dictionary }) {
+  const L = dict.ui.trace;
   const doc = trace.document;
   const chain = [...(trace.upstream || []), doc, ...(trace.downstream || [])];
 
@@ -83,12 +84,12 @@ export function DocumentTrace({ trace, dict }: { trace: Trace; dict: Dictionary 
       {trace.frozen && (
         <p className="flex items-center gap-2 rounded-xl bg-ink-800 px-4 py-2.5 text-sm text-white">
           <Lock className="h-4 w-4 shrink-0" strokeWidth={2} />
-          เอกสารใบนี้อยู่ในงวดที่ปิดแล้ว แก้ไขไม่ได้ — ตัวเลขถูกล็อกไว้เป็นหลักฐาน
+          {L.frozenNote}
         </p>
       )}
 
       {/* ─────────── สายธารเอกสาร ─────────── */}
-      <Section icon={<GitBranch className="h-4 w-4" strokeWidth={1.8} />} title="สายธารเอกสาร" count={chain.length}>
+      <Section icon={<GitBranch className="h-4 w-4" strokeWidth={1.8} />} title={L.flow} count={chain.length}>
         <div className="overflow-x-auto px-4 py-4">
           <div className="flex items-center gap-2">
             {chain.map((d, i) => (
@@ -99,23 +100,22 @@ export function DocumentTrace({ trace, dict }: { trace: Trace; dict: Dictionary 
             ))}
           </div>
           <p className="mt-3 text-xxs leading-relaxed text-ink-400">
-            ไล่จากเอกสารต้นทางไปจนถึงเอกสารสุดท้าย ทุกใบเชื่อมกันด้วยการอ้างอิงที่ระบบบันทึกไว้ตอนแปลงเอกสาร
-            ไม่ใช่การเดาจากเลขที่หรือยอดเงิน
+            {L.flowHint}
           </p>
         </div>
       </Section>
 
       {/* ─────────── รายการในเอกสาร ─────────── */}
-      <Section icon={<CircleDot className="h-4 w-4" strokeWidth={1.8} />} title="รายการในเอกสาร" count={trace.lines.length}>
+      <Section icon={<CircleDot className="h-4 w-4" strokeWidth={1.8} />} title={L.lines} count={trace.lines.length}>
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-ink-50">
               <th className="th-cell w-10">#</th>
-              <th className="th-cell">รายการ</th>
-              <th className="th-cell text-right">จำนวน</th>
-              <th className="th-cell text-right">ราคา/หน่วย</th>
-              <th className="th-cell text-right">จำนวนเงิน</th>
-              <th className="th-cell">ลงบัญชี</th>
+              <th className="th-cell">{L.item}</th>
+              <th className="th-cell text-right">{L.qty}</th>
+              <th className="th-cell text-right">{L.unitPrice}</th>
+              <th className="th-cell text-right">{L.amount}</th>
+              <th className="th-cell">{L.account}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-100">
@@ -141,9 +141,9 @@ export function DocumentTrace({ trace, dict }: { trace: Trace; dict: Dictionary 
       </Section>
 
       {/* ─────────── สมุดรายวัน ─────────── */}
-      <Section icon={<BookOpen className="h-4 w-4" strokeWidth={1.8} />} title="ลงบัญชีเป็นอะไรบ้าง" count={trace.journal.length}>
+      <Section icon={<BookOpen className="h-4 w-4" strokeWidth={1.8} />} title={L.posting} count={trace.journal.length}>
         {trace.journal.length === 0 ? (
-          <p className="px-4 py-4 text-sm text-ink-400">ยังไม่ได้ลงบัญชี — เอกสารจะลงบัญชีเมื่อถูกอนุมัติ</p>
+          <p className="px-4 py-4 text-sm text-ink-400">{L.notPosted}</p>
         ) : (
           trace.journal.map((je) => (
             <div key={je.id} className="border-b border-ink-100 last:border-b-0">
@@ -152,9 +152,9 @@ export function DocumentTrace({ trace, dict }: { trace: Trace; dict: Dictionary 
                   {je.entry_number}
                 </a>
                 <span className="text-xxs text-ink-500">{thaiDate(je.entry_date)}</span>
-                <span className="chip bg-white text-ink-600 ring-ink-200">สมุด {je.book}</span>
+                <span className="chip bg-white text-ink-600 ring-ink-200">{L.book} {je.book}</span>
                 <span className="ml-auto text-xxs tabular-nums text-ink-600">
-                  ดร. {money(je.total_debit)} / คร. {money(je.total_credit)}
+                  {L.dr} {money(je.total_debit)} / {L.cr} {money(je.total_credit)}
                 </span>
               </div>
               <table className="w-full text-sm">
@@ -181,13 +181,13 @@ export function DocumentTrace({ trace, dict }: { trace: Trace; dict: Dictionary 
 
       {/* ─────────── เงินเข้า-ออก ─────────── */}
       {trace.payments.length > 0 && (
-        <Section icon={<Wallet className="h-4 w-4" strokeWidth={1.8} />} title="การรับ-จ่ายเงินที่ตัดกับเอกสารนี้" count={trace.payments.length}>
+        <Section icon={<Wallet className="h-4 w-4" strokeWidth={1.8} />} title={L.payments} count={trace.payments.length}>
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-ink-50">
-                <th className="th-cell">เลขที่</th><th className="th-cell">วันที่</th>
-                <th className="th-cell">ช่องทาง</th><th className="th-cell text-right">ตัดกับใบนี้</th>
-                <th className="th-cell text-right">ยอดทั้งใบ</th>
+                <th className="th-cell">{L.no}</th><th className="th-cell">{L.date}</th>
+                <th className="th-cell">{L.channel}</th><th className="th-cell text-right">{L.appliedHere}</th>
+                <th className="th-cell text-right">{L.total}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-100">
@@ -207,13 +207,13 @@ export function DocumentTrace({ trace, dict }: { trace: Trace; dict: Dictionary 
 
       {/* ─────────── สต๊อก ─────────── */}
       {trace.inventory.length > 0 && (
-        <Section icon={<Package className="h-4 w-4" strokeWidth={1.8} />} title="ผลกระทบต่อสินค้าคงคลัง" count={trace.inventory.length}>
+        <Section icon={<Package className="h-4 w-4" strokeWidth={1.8} />} title={L.stock} count={trace.inventory.length}>
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-ink-50">
-                <th className="th-cell">วันที่</th><th className="th-cell">สินค้า</th>
-                <th className="th-cell text-right">รับเข้า</th><th className="th-cell text-right">ตัดออก</th>
-                <th className="th-cell text-right">ต้นทุน/หน่วย</th><th className="th-cell text-right">มูลค่า</th>
+                <th className="th-cell">{L.date}</th><th className="th-cell">{L.product}</th>
+                <th className="th-cell text-right">{L.stockIn}</th><th className="th-cell text-right">{L.stockOut}</th>
+                <th className="th-cell text-right">{L.unitCost}</th><th className="th-cell text-right">{L.value}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-100">
@@ -234,7 +234,7 @@ export function DocumentTrace({ trace, dict }: { trace: Trace; dict: Dictionary 
 
       {/* ─────────── หลักฐานและประวัติ ─────────── */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Section icon={<Paperclip className="h-4 w-4" strokeWidth={1.8} />} title="หลักฐานประกอบ"
+        <Section icon={<Paperclip className="h-4 w-4" strokeWidth={1.8} />} title={L.attachments}
                  count={trace.attachments.length + trace.tax_docs.length} defaultOpen={false}>
           <ul className="divide-y divide-ink-100">
             {trace.tax_docs.map((t, i) => (
@@ -255,27 +255,27 @@ export function DocumentTrace({ trace, dict }: { trace: Trace; dict: Dictionary 
               <li key={`p${i}`} className="flex items-center gap-2 px-4 py-2 text-sm">
                 <Printer className="h-3.5 w-3.5 shrink-0 text-ink-400" strokeWidth={1.8} />
                 <span className="text-ink-700">
-                  {p.copy_no <= 1 ? 'พิมพ์ต้นฉบับ' : `พิมพ์สำเนาครั้งที่ ${p.copy_no - 1}`}
+                  {p.copy_no <= 1 ? L.printOriginal : L.printCopy.replace('{n}', String(p.copy_no - 1))}
                 </span>
                 <span className="ml-auto text-xxs text-ink-400">{p.by}</span>
               </li>
             ))}
             {trace.attachments.length + trace.tax_docs.length + trace.prints.length === 0 && (
-              <li className="px-4 py-3 text-sm text-ink-400">ยังไม่มีหลักฐานประกอบ</li>
+              <li className="px-4 py-3 text-sm text-ink-400">{L.noAttachments}</li>
             )}
           </ul>
         </Section>
 
-        <Section icon={<History className="h-4 w-4" strokeWidth={1.8} />} title="ประวัติการแก้ไข"
+        <Section icon={<History className="h-4 w-4" strokeWidth={1.8} />} title={L.history}
                  count={trace.audit.length} defaultOpen={false}>
           {trace.audit.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-ink-400">ยังไม่มีประวัติการแก้ไขที่บันทึกไว้</p>
+            <p className="px-4 py-3 text-sm text-ink-400">{L.noHistory}</p>
           ) : (
             <ul className="divide-y divide-ink-100">
               {trace.audit.map((a, i) => (
                 <li key={i} className="flex items-center gap-2 px-4 py-2 text-sm">
                   <span className="chip bg-ink-100 text-ink-600 ring-ink-200">{a.action}</span>
-                  <span className="truncate text-ink-600">{a.user_email || 'ระบบ'}</span>
+                  <span className="truncate text-ink-600">{a.user_email || L.system}</span>
                   <span className="ml-auto shrink-0 text-xxs text-ink-400">
                     {new Date(a.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })}
                   </span>

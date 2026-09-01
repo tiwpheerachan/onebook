@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
     const ip = clientIpFromHeaders(request.headers);
     if (!isIpAllowed(ip, allowlist)) {
       return withFramePolicy(new NextResponse(
-        JSON.stringify({ error: 'ACCESS_DENIED', message: 'ไม่อนุญาตให้เข้าใช้งานจากเครือข่ายนี้' }),
+        JSON.stringify({ error: 'ACCESS_DENIED', message: 'This network is not allowed' }),
         { status: 403, headers: { 'content-type': 'application/json; charset=utf-8' } }
       ));
     }

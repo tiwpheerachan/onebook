@@ -33,8 +33,22 @@ export interface DocPayload {
   discount_amount?: number;
   /** แผนก — ระบุที่หัวเอกสาร ทริกเกอร์ใน 0046 ส่งต่อลงบรรทัดให้เอง */
   dimension_id?: string | null;
+  /** คำอธิบายรายการบันทึกบัญชี — ไปเป็นคำอธิบายในสมุดรายวัน */
+  description?: string | null;
   /** เอกสารต้นทางที่แปลงมา ใช้ตรวจสอบย้อนกลับ */
   ref_document_id?: string | null;
+  /**
+   * ยอดเงินตราต่างประเทศ (ฝั่งซื้อ)
+   * ยอดในคอลัมน์ปกติยังเป็นบาทเสมอ ตรงนี้เก็บไว้กำกับกับใบของผู้ขาย
+   */
+  fx?: {
+    currency: string;
+    rate: number;
+    rate_date: string;
+    source?: string;
+    subtotal: number;
+    grand_total: number;
+  } | null;
   lines: LinePayload[];
 }
 
@@ -42,15 +56,15 @@ export interface ActionResult { ok: boolean; id?: string; doc_number?: string; e
 
 export async function saveDocument(payload: DocPayload): Promise<ActionResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
   const action = payload.id ? 'edit' : 'create';
-  if (!can(ctx, 'documents', action)) return { ok: false, error: 'คุณไม่มีสิทธิ์ดำเนินการนี้' };
+  if (!can(ctx, 'documents', action)) return { ok: false, error: t().ui.act.noPermission };
 
   if (ctx.lockedThrough && payload.doc_date <= ctx.lockedThrough) {
-    return { ok: false, error: `งวดบัญชีถูกปิด (freeze) ถึงวันที่ ${ctx.lockedThrough}` };
+    return { ok: false, error: t().ui.misc.periodFrozen.replace('{date}', String(ctx.lockedThrough)) };
   }
   if (!payload.lines || payload.lines.length === 0) {
-    return { ok: false, error: 'ต้องมีรายการอย่างน้อย 1 บรรทัด' };
+    return { ok: false, error: t().ui.act.docNeedOneLine };
   }
 
   const supabase = createClient();
@@ -87,6 +101,7 @@ export async function saveDocument(payload: DocPayload): Promise<ActionResult> {
     ref_document_id: payload.ref_document_id || null,
     notes: payload.notes || null,
     dimension_id: payload.dimension_id || null,
+    description: (payload.description || '').trim() || null,
     subtotal: totals.subtotal,
     discount_amount: totals.discount_amount,
     vat_base: totals.vat_base,
@@ -94,6 +109,13 @@ export async function saveDocument(payload: DocPayload): Promise<ActionResult> {
     wht_amount: totals.wht_amount,
     grand_total: totals.grand_total,
     net_payable: totals.net_payable,
+    // ทริกเกอร์ใน 0069 จะล้างช่องที่เหลือให้เองเมื่อ fx_currency เป็น null
+    fx_currency: payload.fx?.currency || null,
+    fx_rate: payload.fx?.rate ?? null,
+    fx_rate_date: payload.fx?.rate_date || null,
+    fx_rate_source: payload.fx?.source || null,
+    fx_subtotal: payload.fx?.subtotal ?? null,
+    fx_grand_total: payload.fx?.grand_total ?? null,
   };
 
   let docId = payload.id || '';
@@ -188,8 +210,8 @@ function translate(msg: string): string {
  */
 export async function convertDocument(sourceId: string, targetKind: DocKind): Promise<ActionResult> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'documents', 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์สร้างเอกสาร' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'documents', 'create')) return { ok: false, error: t().ui.act.docNoCreate };
 
   const supabase = createClient();
   const { data: src } = await supabase
@@ -197,11 +219,11 @@ export async function convertDocument(sourceId: string, targetKind: DocKind): Pr
     .select('id, kind, doc_number, doc_date, contact_id, reference, notes, discount_amount, status')
     .eq('id', sourceId)
     .maybeSingle();
-  if (!src) return { ok: false, error: 'ไม่พบเอกสารต้นทาง' };
+  if (!src) return { ok: false, error: t().ui.act.srcDocNotFound };
 
-  if (src.status === 'void') return { ok: false, error: 'เอกสารที่ยกเลิกแล้วนำไปแปลงต่อไม่ได้' };
+  if (src.status === 'void') return { ok: false, error: t().ui.act.srcDocVoid };
   if (!canConvert(src.kind as DocKind, targetKind)) {
-    return { ok: false, error: 'ไม่รองรับการแปลงเอกสารคู่นี้' };
+    return { ok: false, error: t().ui.act.convertNotSupported };
   }
 
   const { data: srcLines } = await supabase
@@ -209,7 +231,7 @@ export async function convertDocument(sourceId: string, targetKind: DocKind): Pr
     .select('product_id, description, quantity, unit, unit_price, discount_pct, vat_treatment, vat_rate, wht_code, wht_rate, account_id')
     .eq('document_id', sourceId)
     .order('line_no');
-  if (!srcLines || srcLines.length === 0) return { ok: false, error: 'เอกสารต้นทางไม่มีรายการ' };
+  if (!srcLines || srcLines.length === 0) return { ok: false, error: t().ui.act.srcDocNoLines };
 
   const today = new Date().toISOString().slice(0, 10);
 

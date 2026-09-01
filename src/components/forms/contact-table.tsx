@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useI18n } from '@/i18n/provider';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -60,6 +61,7 @@ function SortHead({
  */
 export function ContactTable({
   rows, groups, currentGroup, groupName, canEdit, canCreateDoc, labels, page, perPage, total,
+  reps = [], zones = [],
 }: {
   rows: ContactRow[];
   groups: GroupRow[];
@@ -68,10 +70,14 @@ export function ContactTable({
   canEdit: boolean;
   canCreateDoc: boolean;
   labels: Record<string, string>;
+  reps?: { id: string; label: string }[];
+  zones?: { id: string; label: string }[];
   page: number;
   perPage: number;
   total: number;
 }) {
+  const { dict: d } = useI18n();
+  const L = d.ui.contactTable;
   const router = useRouter();
   const params = useSearchParams();
   const [sel, setSel] = useState<string[]>([]);
@@ -99,9 +105,9 @@ export function ContactTable({
         {/* หัวตาราง : บอกว่ากำลังดูกลุ่มไหน */}
         <div className="flex flex-wrap items-center gap-3 border-b border-ink-200 px-5 py-3">
           <h2 className="text-sm font-medium text-ink-800">
-            {groupName ? <>กลุ่ม <b className="font-semibold text-ink-900">{groupName}</b> :</> : 'ผู้ติดต่อทั้งหมด :'}
+            {groupName ? <>{L.groupPrefix} <b className="font-semibold text-ink-900">{groupName}</b> :</> : L.allContacts}
           </h2>
-          <span className="text-xs text-ink-400">{total.toLocaleString('th-TH')} ราย</span>
+          <span className="text-xs text-ink-400">{L.nPeople.replace('{n}', total.toLocaleString('en-US'))}</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -119,14 +125,14 @@ export function ContactTable({
                   </th>
                 )}
                 <th className="th-cell w-12 text-center">#</th>
-                <SortHead field="code" label="เลขที่" />
-                <SortHead field="name" label="ชื่อ" />
-                <th className="th-cell">กลุ่ม</th>
-                <th className="th-cell">เลขประจำตัวผู้เสียภาษี</th>
-                <th className="th-cell">ประเภท</th>
-                <th className="th-cell">โทรศัพท์</th>
-                <SortHead field="credit_days" label="เครดิต" align="right" />
-                <th className="th-cell text-right">คำสั่ง</th>
+                <SortHead field="code" label={L.code} />
+                <SortHead field="name" label={L.name} />
+                <th className="th-cell">{L.group}</th>
+                <th className="th-cell">{L.taxId}</th>
+                <th className="th-cell">{L.kind}</th>
+                <th className="th-cell">{L.phone}</th>
+                <SortHead field="credit_days" label={L.credit} align="right" />
+                <th className="th-cell text-right">{d.common.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-100">
@@ -159,7 +165,7 @@ export function ContactTable({
                     <span className="flex items-center gap-1.5">
                       {/* ป้ายสถานะต้องไม่ถูกตัดทิ้งพร้อมชื่อยาว จึงอยู่นอกกล่องที่บีบ */}
                       <span className="block max-w-[20rem] truncate">{r.name}</span>
-                      {!r.is_active && <Badge>ปิดใช้งาน</Badge>}
+                      {!r.is_active && <Badge>{L.inactive}</Badge>}
                     </span>
                   </td>
                   <td className="td-cell">
@@ -176,15 +182,16 @@ export function ContactTable({
                   <td className="td-cell"><span className="font-mono text-xs text-ink-500">{r.tax_id || '–'}</span></td>
                   <td className="td-cell">
                     <Badge tone={r.kind === 'vendor' ? 'warn' : r.kind === 'both' ? 'brand' : 'neutral'}>
-                      {r.kind === 'customer' ? 'ลูกค้า' : r.kind === 'vendor' ? 'ผู้ขาย' : 'ทั้งสอง'}
+                      {(d.ui.contactKind as Record<string, string>)[r.kind] || r.kind}
                     </Badge>
                   </td>
                   <td className="td-cell">{r.phone || '–'}</td>
-                  <td className="td-cell num">{r.credit_days} วัน</td>
+                  <td className="td-cell num">{L.nDays.replace('{n}', String(r.credit_days))}</td>
                   <td className="td-cell">
                     <span className="flex items-center justify-end gap-1">
-                      {canCreateDoc && <ContactRowActions actions={buildRowActions(r.id, r.kind)} />}
-                      <ContactManager canCreate={false} canEdit={canEdit} editRow={r} labels={labels} />
+                      {canCreateDoc && <ContactRowActions actions={buildRowActions(r.id, r.kind, d)} />}
+                      <ContactManager canCreate={false} canEdit={canEdit} editRow={r}
+                                      labels={labels} reps={reps} zones={zones} />
                     </span>
                   </td>
                 </tr>
@@ -215,7 +222,7 @@ export function ContactTable({
             >
               <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
             </button>
-            <span className="px-1">หน้า</span>
+            <span className="px-1">{L.page}</span>
             <select
               className="input w-auto py-1 text-xs"
               value={page}

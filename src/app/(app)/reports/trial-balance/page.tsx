@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function TrialBalancePage({ searchParams }: { searchParams: { from?: string; to?: string } }) {
   const ctx = await requirePermission('report', 'view');
   const d = t();
+  const L = d.ui.tb;
   const locale = currentLocale();
   const from = searchParams.from || firstDayOfYear();
   const to = searchParams.to || lastDayOfMonth();
@@ -34,7 +35,7 @@ export default async function TrialBalancePage({ searchParams }: { searchParams:
           <DateRangeFilter from={from} to={to} labels={{ from: d.common.from, to: d.common.to, apply: d.common.filter }} />
           {can(ctx, 'report', 'export') && (
             <ExportCsvButton label={d.common.export} filename="trial-balance.csv"
-              rows={[['รหัส','ชื่อบัญชี','ยกมา Dr','ยกมา Cr','งวด Dr','งวด Cr','ยกไป Dr','ยกไป Cr'],
+              rows={[[L.code, L.accountName, L.openDr, L.openCr, L.periodDr, L.periodCr, L.closeDr, L.closeCr],
                 ...rows.map((r) => [r.account_code, r.account_name, r.opening_debit, r.opening_credit,
                   r.period_debit, r.period_credit, r.closing_debit, r.closing_credit])]} />
           )}
@@ -45,10 +46,10 @@ export default async function TrialBalancePage({ searchParams }: { searchParams:
         <Table>
           <THead>
             <TR>
-              <TH>รหัส</TH><TH>ชื่อบัญชี</TH>
-              <TH align="right">ยกมา Dr</TH><TH align="right">ยกมา Cr</TH>
-              <TH align="right">งวด Dr</TH><TH align="right">งวด Cr</TH>
-              <TH align="right">ยกไป Dr</TH><TH align="right">ยกไป Cr</TH>
+              <TH>{L.code}</TH><TH>{L.accountName}</TH>
+              <TH align="right">{L.openDr}</TH><TH align="right">{L.openCr}</TH>
+              <TH align="right">{L.periodDr}</TH><TH align="right">{L.periodCr}</TH>
+              <TH align="right">{L.closeDr}</TH><TH align="right">{L.closeCr}</TH>
             </TR>
           </THead>
           <TBody>

@@ -1,5 +1,7 @@
 import 'server-only';
 import { askJson, isAiConfigured as aiReady } from './ai-client';
+import type { Dictionary } from '@/i18n';
+import { taskBriefPrompt } from './ai-prompts';
 
 /**
  * สรุปงานประจำวัน
@@ -36,49 +38,52 @@ export function isAiConfigured(): boolean {
   return aiReady();
 }
 
-const nf = (n: number) => n.toLocaleString('th-TH');
-
 /** สรุปด้วยกฎ — ใช้งานได้ทันทีโดยไม่ต้องตั้งค่าอะไร และเป็นตัวสำรองเมื่อ AI ล่ม */
-export function ruleBrief(s: TaskSummary): Brief {
+export function ruleBrief(s: TaskSummary, d: Dictionary): Brief {
+  const L = d.ui.taskBrief;
+  const nf = (n: number) => n.toLocaleString('en-US');
+  const fill = (tpl: string, vars: Record<string, string | number>) =>
+    Object.entries(vars).reduce((acc, [k, v]) => acc.replaceAll(`{${k}}`, String(v)), tpl);
+
   const lines: string[] = [];
   const actions: string[] = [];
 
   const open = s.counts.todo + s.counts.in_progress + s.counts.blocked + s.counts.review;
 
   if (open === 0 && s.counts.total > 0) {
-    lines.push('งานทั้งหมดปิดครบแล้ว ไม่มีงานค้างในระบบ');
+    lines.push(L.allClosed);
   } else if (s.counts.total === 0) {
-    lines.push('ยังไม่มีงานในระบบ เริ่มจากสร้างงานแรกหรือดึงปฏิทินภาษีของเดือนนี้เข้ามา');
+    lines.push(L.noTasks);
   } else {
-    lines.push(
-      `มีงานค้างอยู่ ${nf(open)} รายการ — กำลังทำ ${nf(s.counts.in_progress)} · ` +
-      `รอตรวจ ${nf(s.counts.review)} · ยังไม่เริ่ม ${nf(s.counts.todo)}`
-    );
+    lines.push(fill(L.openSummary, {
+      open: nf(open), doing: nf(s.counts.in_progress),
+      review: nf(s.counts.review), todo: nf(s.counts.todo),
+    }));
   }
 
   if (s.overdue_count > 0) {
     const worst = s.overdue[0];
     lines.push(
-      `⚠ เลยกำหนดแล้ว ${nf(s.overdue_count)} รายการ` +
-      (worst ? ` งานที่ค้างนานที่สุดคือ “${worst.title}” เลยมา ${nf(worst.days_late)} วัน` : '')
+      fill(L.overdueLine, { n: nf(s.overdue_count) }) +
+      (worst ? fill(L.worstSuffix, { title: worst.title, days: nf(worst.days_late) }) : '')
     );
-    actions.push(`สะสางงานที่เลยกำหนด ${nf(s.overdue_count)} รายการก่อนเป็นอันดับแรก`);
+    actions.push(fill(L.catchUpAction, { n: nf(s.overdue_count) }));
   } else if (open > 0) {
-    lines.push('ยังไม่มีงานเลยกำหนด รักษาจังหวะนี้ไว้');
+    lines.push(L.onTrack);
   }
 
   if (s.due_today > 0) {
-    lines.push(`ครบกำหนดวันนี้ ${nf(s.due_today)} รายการ และภายใน 7 วันอีก ${nf(s.due_week)} รายการ`);
-    actions.push(`ปิดงานที่ครบกำหนดวันนี้ให้ได้ ${nf(s.due_today)} รายการ`);
+    lines.push(fill(L.dueTodayLine, { today: nf(s.due_today), week: nf(s.due_week) }));
+    actions.push(fill(L.dueTodayAction, { n: nf(s.due_today) }));
   } else if (s.due_week > 0) {
-    lines.push(`ภายใน 7 วันข้างหน้ามีงานครบกำหนด ${nf(s.due_week)} รายการ`);
+    lines.push(fill(L.dueWeekLine, { n: nf(s.due_week) }));
   }
 
   if (s.counts.blocked > 0) {
-    actions.push(`ตามเคลียร์งานที่ติดปัญหา ${nf(s.counts.blocked)} รายการ เพราะจะฉุดงานอื่นตามไปด้วย`);
+    actions.push(fill(L.blockedAction, { n: nf(s.counts.blocked) }));
   }
   if (s.unassigned > 0) {
-    actions.push(`มอบหมายผู้รับผิดชอบให้งานที่ยังไม่มีเจ้าภาพ ${nf(s.unassigned)} รายการ`);
+    actions.push(fill(L.unassignedAction, { n: nf(s.unassigned) }));
   }
 
   // เตือนเรื่องภาระงานกระจุกตัว
@@ -86,48 +91,41 @@ export function ruleBrief(s: TaskSummary): Brief {
   if (busiest && s.workload.length > 1 && busiest.open_tasks >= 5) {
     const rest = s.workload.slice(1).reduce((a, w) => a + w.open_tasks, 0);
     if (busiest.open_tasks > rest) {
-      actions.push(`งานกระจุกที่ ${busiest.name} (${nf(busiest.open_tasks)} รายการ) ควรกระจายให้คนอื่นช่วย`);
+      actions.push(fill(L.concentrated, { name: busiest.name, n: nf(busiest.open_tasks) }));
     }
   }
   if (busiest && busiest.overdue_tasks >= 3) {
-    actions.push(`${busiest.name} มีงานเลยกำหนด ${nf(busiest.overdue_tasks)} รายการ ควรเข้าไปช่วยดู`);
+    actions.push(fill(L.personOverdue, { name: busiest.name, n: nf(busiest.overdue_tasks) }));
   }
 
   if (s.done_last_7_days > 0) {
-    lines.push(`ปิดงานไปแล้ว ${nf(s.done_last_7_days)} รายการใน 7 วันที่ผ่านมา`);
+    lines.push(fill(L.done7, { n: nf(s.done_last_7_days) }));
   }
 
   if (actions.length === 0 && open > 0) {
-    actions.push('ไม่มีงานเร่งด่วนค้าง เดินตามแผนเดิมได้เลย');
+    actions.push(L.nothingUrgent);
   }
 
   return { lines, actions, byAi: false };
 }
 
-const SYSTEM_PROMPT = `คุณเป็นผู้ช่วยหัวหน้าทีมบัญชีในประเทศไทย
-สรุปสถานะงานให้หัวหน้าทีมอ่านตอนเช้า โดยใช้ "เฉพาะตัวเลขที่ให้มา" ห้ามคิดตัวเลขขึ้นเอง
-ตอบเป็น JSON เท่านั้น รูปแบบ {"lines":["..."],"actions":["..."]}
-- lines : 3-4 บรรทัด สรุปภาพรวมเป็นภาษาไทยแบบกระชับ เป็นกันเองแต่ไม่เล่น
-- actions : 2-4 ข้อ สิ่งที่ควรลงมือทำวันนี้ เรียงตามความสำคัญ
-ถ้ามีงานเลยกำหนดให้พูดถึงก่อนเสมอ`;
-
 /** ให้ AI เรียบเรียงจากตัวเลขชุดเดียวกัน — ถ้าล้มเหลวจะคืนสรุปแบบกฎแทน */
-export async function aiBrief(s: TaskSummary): Promise<Brief> {
-  const fallback = ruleBrief(s);
+export async function aiBrief(s: TaskSummary, d: Dictionary, locale: string): Promise<Brief> {
+  const fallback = ruleBrief(s, d);
 
   const res = await askJson(
-    SYSTEM_PROMPT,
+    taskBriefPrompt(locale),
     JSON.stringify({
-      งานค้าง: s.counts,
-      เลยกำหนด: s.overdue_count,
-      งานเลยกำหนด5รายการแรก: s.overdue.slice(0, 5).map((o) => ({
-        ชื่องาน: o.title, เลยมากี่วัน: o.days_late, ความสำคัญ: o.priority,
+      open_counts: s.counts,
+      overdue_count: s.overdue_count,
+      overdue_top5: s.overdue.slice(0, 5).map((o) => ({
+        title: o.title, days_late: o.days_late, priority: o.priority,
       })),
-      ครบกำหนดวันนี้: s.due_today,
-      ครบกำหนดใน7วัน: s.due_week,
-      ยังไม่มอบหมาย: s.unassigned,
-      ปิดไปใน7วัน: s.done_last_7_days,
-      ภาระงานรายคน: s.workload.slice(0, 6),
+      due_today: s.due_today,
+      due_within_7_days: s.due_week,
+      unassigned: s.unassigned,
+      done_last_7_days: s.done_last_7_days,
+      workload_by_person: s.workload.slice(0, 6),
     })
   );
 
@@ -135,7 +133,7 @@ export async function aiBrief(s: TaskSummary): Promise<Brief> {
 
   const lines = Array.isArray(res.data?.lines) ? res.data.lines.filter((x: any) => typeof x === 'string') : [];
   const actions = Array.isArray(res.data?.actions) ? res.data.actions.filter((x: any) => typeof x === 'string') : [];
-  if (!lines.length) return { ...fallback, note: 'AI ตอบไม่ครบ จึงใช้สรุปอัตโนมัติแทน' };
+  if (!lines.length) return { ...fallback, note: d.ui.taskBrief.aiIncomplete };
 
   return { lines, actions, byAi: true };
 }

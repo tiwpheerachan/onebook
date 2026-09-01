@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "bot:check": "node scripts/bot-check.mjs",
+    "build:check": "NEXT_DIST_DIR=.next-check next build",
     "start": "node .next/standalone/server.js",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "check:goodhr": "node scripts/check_goodhr.mjs",
-    "postbuild": "rm -rf .next/standalone/.next/static .next/standalone/public && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public"
+    "postbuild": "D=${NEXT_DIST_DIR:-.next}; rm -rf $D/standalone/$D/static $D/standalone/public && cp -r $D/static $D/standalone/$D/static && cp -r public $D/standalone/public"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

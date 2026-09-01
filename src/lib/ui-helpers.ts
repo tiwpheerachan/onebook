@@ -1,5 +1,5 @@
 export { money, thaiDate, localeDate, round2 } from './format';
-import { bahtText } from './tax';
+import { bahtText } from './baht-text';
 
 export function bahtTextSafe(n: number): string {
   try {

@@ -1,5 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { t } from '@/i18n/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
 
@@ -14,11 +15,11 @@ const num = (v: any, def = 0) => (v === '' || v == null || Number.isNaN(Number(v
 /** เพิ่ม / แก้ไขร้านค้าบนแพลตฟอร์ม */
 export async function saveMarketplaceAccount(form: any): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
   if (!can(ctx, 'settings.marketplace', form.id ? 'edit' : 'create')) {
-    return { ok: false, error: 'คุณไม่มีสิทธิ์ตั้งค่าช่องทางขายออนไลน์' };
+    return { ok: false, error: t().ui.act.marketNoSetup };
   }
-  if (!form.shop_name) return { ok: false, error: 'กรุณาระบุชื่อร้าน' };
+  if (!form.shop_name) return { ok: false, error: t().ui.act.shopNameRequired };
 
   const supabase = createClient();
   const row = {
@@ -38,7 +39,7 @@ export async function saveMarketplaceAccount(form: any): Promise<Res> {
 
   const { data, error } = await q;
   if (error) {
-    if (error.code === '23505') return { ok: false, error: 'ร้านนี้ถูกเพิ่มไว้แล้ว' };
+    if (error.code === '23505') return { ok: false, error: t().ui.act.shopDuplicate };
     return { ok: false, error: error.message };
   }
 
@@ -53,9 +54,9 @@ export async function saveMarketplaceAccount(form: any): Promise<Res> {
  */
 export async function saveSettlement(form: any): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'documents', 'create')) return { ok: false, error: 'คุณไม่มีสิทธิ์บันทึกรอบโอนเงิน' };
-  if (!form.account_id) return { ok: false, error: 'กรุณาเลือกร้าน' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'documents', 'create')) return { ok: false, error: t().ui.act.payoutNoCreate };
+  if (!form.account_id) return { ok: false, error: t().ui.act.shopRequired };
 
   const gross = num(form.gross_amount);
   const fee = num(form.fee_amount);
@@ -95,8 +96,8 @@ export async function saveSettlement(form: any): Promise<Res> {
 /** ลงบัญชีรอบโอนเงิน : เดบิตเงินฝาก + ค่าธรรมเนียม / เครดิตรายได้ */
 export async function postSettlement(settlementId: string): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'documents', 'approve')) return { ok: false, error: 'คุณไม่มีสิทธิ์ลงบัญชี' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'documents', 'approve')) return { ok: false, error: t().ui.act.postNoPerm };
 
   const supabase = createClient();
   const { data, error } = await supabase.rpc('post_marketplace_settlement', { p_settlement: settlementId });

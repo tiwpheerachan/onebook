@@ -1,4 +1,5 @@
 import 'server-only';
+import { t } from '@/i18n/server';
 
 /**
  * จุดเชื่อมต่อบริการ AICOM (OCR + AI ดึงข้อมูลจากเอกสารบัญชี)
@@ -34,7 +35,7 @@ export function isAicomConfigured(): boolean {
 export async function extractDocument(file: File): Promise<ExtractResult> {
   const c = aicomConfig();
   if (!isAicomConfigured()) {
-    return { ok: false, not_configured: true, error: 'ยังไม่ได้ตั้งค่า AICOM_API_URL' };
+    return { ok: false, not_configured: true, error: t().ui.misc.aicomNotSet };
   }
 
   try {
@@ -49,7 +50,7 @@ export async function extractDocument(file: File): Promise<ExtractResult> {
     });
 
     if (!res.ok) {
-      return { ok: false, error: `AICOM ตอบกลับ ${res.status}: ${(await res.text()).slice(0, 300)}` };
+      return { ok: false, error: t().ui.misc.aicomStatus.replace('{status}', String(res.status)).replace('{detail}', (await res.text()).slice(0, 300)) };
     }
 
     const data = (await res.json()) as any;
@@ -62,7 +63,7 @@ export async function extractDocument(file: File): Promise<ExtractResult> {
       extracted: first,
     };
   } catch (e: any) {
-    return { ok: false, error: `เชื่อมต่อ AICOM ไม่สำเร็จ: ${e?.message || e}` };
+    return { ok: false, error: t().ui.misc.aicomFailed.replace('{detail}', String(e?.message || e)) };
   }
 }
 
@@ -108,7 +109,7 @@ export function mapToDocument(extracted: any): {
       }))
     : [
         {
-          description: String(pick('description', 'note', 'detail', 'merchant', 'vendor') || 'รายการจากเอกสาร').slice(0, 300),
+          description: String(pick('description', 'note', 'detail', 'merchant', 'vendor') || t().ui.misc.docLineFallback).slice(0, 300),
           quantity: 1,
           unit_price: sub,
           line_amount: sub,

@@ -1,13 +1,13 @@
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'ONEBOOK';
 
 export type DocKind =
-  | 'quotation' | 'sales_order' | 'billing_note' | 'invoice' | 'tax_invoice' | 'receipt'
+  | 'quotation' | 'sales_order' | 'delivery_order' | 'billing_note' | 'invoice' | 'tax_invoice' | 'receipt'
   | 'credit_note' | 'debit_note' | 'deposit_receipt'
   | 'purchase_request' | 'purchase_order' | 'goods_receipt' | 'bill' | 'expense'
   | 'purchase_credit_note' | 'purchase_debit_note' | 'deposit_payment';
 
 export const SALES_KINDS: DocKind[] = [
-  'quotation', 'sales_order', 'billing_note', 'invoice', 'tax_invoice', 'receipt',
+  'quotation', 'sales_order', 'delivery_order', 'billing_note', 'invoice', 'tax_invoice', 'receipt',
   'credit_note', 'debit_note', 'deposit_receipt',
 ];
 export const PURCHASE_KINDS: DocKind[] = [
@@ -18,6 +18,7 @@ export const PURCHASE_KINDS: DocKind[] = [
 export const KIND_SLUG: Record<string, DocKind> = {
   quotations: 'quotation',
   'sales-orders': 'sales_order',
+  'delivery-orders': 'delivery_order',
   'billing-notes': 'billing_note',
   invoices: 'invoice',
   'tax-invoices': 'tax_invoice',
@@ -52,31 +53,33 @@ export const STATUS_STYLE: Record<string, string> = {
   closed: 'bg-ink-100 text-ink-600 ring-ink-200',
 };
 
+/** group เป็นคีย์ของพจนานุกรม ui.resGroup ไม่ใช่ข้อความที่แสดงตรง ๆ */
 export const RESOURCES = [
-  { key: 'documents', group: 'เอกสาร' },
-  { key: 'tasks', group: 'เอกสาร' },
-  { key: 'documents.ai_import', group: 'เอกสาร' },
-  { key: 'contacts', group: 'ข้อมูลหลัก' },
-  { key: 'products', group: 'ข้อมูลหลัก' },
-  { key: 'products.inventory', group: 'ข้อมูลหลัก' },
-  { key: 'finance.channels', group: 'การเงิน' },
-  { key: 'finance.payments', group: 'การเงิน' },
-  { key: 'finance.reconcile', group: 'การเงิน' },
-  { key: 'journal', group: 'บัญชี' },
-  { key: 'accounting.coa', group: 'บัญชี' },
-  { key: 'accounting.assets', group: 'บัญชี' },
-  { key: 'tax', group: 'ภาษี' },
-  { key: 'tax.etax', group: 'ภาษี' },
-  { key: 'report', group: 'รายงาน' },
-  { key: 'period', group: 'ควบคุม' },
-  { key: 'settings.companies', group: 'ตั้งค่า' },
-  { key: 'settings.users', group: 'ตั้งค่า' },
-  { key: 'settings.roles', group: 'ตั้งค่า' },
-  { key: 'settings.numbering', group: 'ตั้งค่า' },
-  { key: 'settings.dimensions', group: 'ตั้งค่า' },
-  { key: 'settings.security', group: 'ตั้งค่า' },
-  { key: 'settings.marketplace', group: 'ตั้งค่า' },
-  { key: 'settings.audit', group: 'ตั้งค่า' },
+  { key: 'documents', group: 'doc' },
+  { key: 'tasks', group: 'doc' },
+  { key: 'documents.ai_import', group: 'doc' },
+  { key: 'contacts', group: 'master' },
+  { key: 'products', group: 'master' },
+  { key: 'products.inventory', group: 'master' },
+  { key: 'finance.channels', group: 'finance' },
+  { key: 'finance.payments', group: 'finance' },
+  { key: 'finance.reconcile', group: 'finance' },
+  { key: 'journal', group: 'accounting' },
+  { key: 'accounting.coa', group: 'accounting' },
+  { key: 'accounting.assets', group: 'accounting' },
+  { key: 'accounting.budget', group: 'accounting' },
+  { key: 'tax', group: 'tax' },
+  { key: 'tax.etax', group: 'tax' },
+  { key: 'report', group: 'report' },
+  { key: 'period', group: 'control' },
+  { key: 'settings.companies', group: 'settings' },
+  { key: 'settings.users', group: 'settings' },
+  { key: 'settings.roles', group: 'settings' },
+  { key: 'settings.numbering', group: 'settings' },
+  { key: 'settings.dimensions', group: 'settings' },
+  { key: 'settings.security', group: 'settings' },
+  { key: 'settings.marketplace', group: 'settings' },
+  { key: 'settings.audit', group: 'settings' },
 ];
 
 export const ACTIONS = ['view','create','edit','delete','approve','post','void','export','unlock','override'] as const;

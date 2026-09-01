@@ -1,6 +1,6 @@
 import { requirePermission, can } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
-import { t } from '@/i18n/server';
+import { t, currentLocale } from '@/i18n/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { TaskWorkspace, type TaskRow } from '@/components/tasks/task-workspace';
 import { TaskAiPanel } from '@/components/tasks/task-ai-panel';
@@ -65,7 +65,7 @@ export default async function TasksPage({
   const members = (memberRows || [])
     .map((r: any) => ({
       id: r.profiles?.id || r.user_id,
-      name: r.profiles?.full_name || r.profiles?.email || 'ไม่ทราบชื่อ',
+      name: r.profiles?.full_name || r.profiles?.email || d.ui.task.unknownName,
       email: r.profiles?.email,
     }))
     .filter((m: any) => m.id);
@@ -88,7 +88,7 @@ export default async function TasksPage({
   const assigneesOf = new Map<string, { id: string; name: string }[]>();
   for (const a of assigneeRows || []) {
     const list = assigneesOf.get(a.task_id) || [];
-    list.push({ id: a.user_id, name: nameOf.get(a.user_id) || 'ไม่ทราบชื่อ' });
+    list.push({ id: a.user_id, name: nameOf.get(a.user_id) || d.ui.task.unknownName });
     assigneesOf.set(a.task_id, list);
   }
   const countIn = (rows: any[] | null, key = 'task_id') => {
@@ -146,9 +146,9 @@ export default async function TasksPage({
 
       detail = {
         ...(task as any),
-        assignees: (asg || []).map((a: any) => ({ id: a.user_id, name: nameOf.get(a.user_id) || 'ไม่ทราบชื่อ' })),
+        assignees: (asg || []).map((a: any) => ({ id: a.user_id, name: nameOf.get(a.user_id) || d.ui.task.unknownName })),
         comments: (cm || []).map((c: any) => ({
-          ...c, author: nameOf.get(c.created_by) || 'ไม่ทราบชื่อ',
+          ...c, author: nameOf.get(c.created_by) || d.ui.task.unknownName,
         })),
         checklist: cl || [],
         attachments: at || [],
@@ -183,7 +183,7 @@ export default async function TasksPage({
       return {
         id: r.id,
         doc_number: r.doc_number,
-        contact_name: r.contacts?.name || (r.contact_snapshot || {}).name || 'ไม่ระบุลูกค้า',
+        contact_name: r.contacts?.name || (r.contact_snapshot || {}).name || d.ui.task.unknownCustomer,
         contact_id: r.contact_id,
         days_late: Math.max(1, Math.floor((Date.now() - new Date(r.due_date).getTime()) / 86400000)),
         outstanding: owed,
@@ -206,7 +206,7 @@ export default async function TasksPage({
     unassigned: 0, done_last_7_days: 0, workload: [], upcoming: [],
   }) as TaskSummary;
 
-  const brief = await aiBrief(summary);
+  const brief = await aiBrief(summary, d, currentLocale());
 
   const suggestions = buildSuggestions({
     overdueDocs,
@@ -217,13 +217,13 @@ export default async function TasksPage({
     taxPeriod,
     taxPeriodLabel: `${String(taxMonth.getMonth() + 1).padStart(2, '0')}/${taxMonth.getFullYear()}`,
     hasTaxTasks: existingKeys.some((k) => k.endsWith(taxPeriod)),
-  });
+  }, d, ctx.company.base_currency, currentLocale());
 
   return (
     <>
       <PageHeader
         title={d.nav.tasks}
-        subtitle={`${ctx.company.name_th} · มอบหมายงาน ตามงานที่ตกหล่น และดูภาระงานของทีมได้จากที่เดียว`}
+        subtitle={`${ctx.company.name_th} · ${d.ui.task.pageSubtitle}`}
       />
 
       <TaskWorkspace

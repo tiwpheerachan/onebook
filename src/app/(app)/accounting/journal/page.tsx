@@ -1,11 +1,12 @@
 import Link from 'next/link';
-import { requirePermission } from '@/lib/session';
+import { requirePermission, can } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { t, currentLocale } from '@/i18n/server';
 import { PageHeader, Card } from '@/components/ui/page-header';
 import { Table, THead, TBody, TR, TH, TD, EmptyRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DateRangeFilter } from '@/components/forms/date-range-filter';
+import { JournalEntryForm, ReverseEntryButton } from '@/components/forms/journal-entry-form';
 import { firstDayOfMonth, lastDayOfMonth, localeDate, money } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -29,25 +30,44 @@ export default async function JournalPage({ searchParams }: { searchParams: { fr
   if (q) query = query.ilike('entry_number', `%${q}%`);
   else query = query.gte('entry_date', from).lte('entry_date', to);
 
-  const { data } = await query
-    .order('entry_date', { ascending: false }).limit(500);
+  const [{ data }, { data: accounts }, { data: dims }] = await Promise.all([
+    query.order('entry_date', { ascending: false }).limit(500),
+    supabase.from('accounts').select('id, code, name_th')
+      .eq('company_id', ctx.company.id).eq('is_active', true).eq('is_header', false).order('code').limit(1000),
+    supabase.from('dimensions').select('id, code, name')
+      .eq('company_id', ctx.company.id).eq('is_active', true).order('code').limit(500),
+  ]);
   const rows = (data || []) as any[];
+  const accOpts = (accounts || []).map((a: any) => ({ id: a.id, label: `${a.code} ${a.name_th}` }));
+  const dimOpts = (dims || []).map((x: any) => ({ id: x.id, label: `${x.code} · ${x.name}` }));
+  const canCreate = can(ctx, 'journal', 'create');
+  const canPost = can(ctx, 'journal', 'post');
+  const canVoid = can(ctx, 'journal', 'void');
 
   return (
     <>
       <PageHeader
         title={d.nav.journal}
         subtitle={`${ctx.company.name_th} · ${localeDate(from, locale)} – ${localeDate(to, locale)}`}
-        action={<DateRangeFilter from={from} to={to} labels={{ from: d.common.from, to: d.common.to, apply: d.common.filter }} />}
+        action={
+          <>
+            <DateRangeFilter from={from} to={to} labels={{ from: d.common.from, to: d.common.to, apply: d.common.filter }} />
+            <JournalEntryForm accounts={accOpts} dimensions={dimOpts} d={d}
+                              canCreate={canCreate} canPost={canPost} />
+          </>
+        }
       />
       <Card>
         <Table>
           <THead>
-            <TR><TH>เลขที่</TH><TH>วันที่</TH><TH>สมุด</TH><TH>คำอธิบาย</TH>
-              <TH align="right">เดบิต</TH><TH align="right">เครดิต</TH><TH>สถานะ</TH></TR>
+            <TR><TH>{d.doc.number}</TH><TH>{d.common.date}</TH><TH>{d.ui.journalEntry.book}</TH>
+              <TH>{d.ui.journalEntry.description}</TH>
+              <TH align="right">{d.ui.journalEntry.debit}</TH>
+              <TH align="right">{d.ui.journalEntry.credit}</TH>
+              <TH>{d.common.status}</TH><TH align="right">{d.common.actions}</TH></TR>
           </THead>
           <TBody>
-            {rows.length === 0 && <EmptyRow colSpan={7} label={d.common.noData} />}
+            {rows.length === 0 && <EmptyRow colSpan={8} label={d.common.noData} />}
             {rows.map((r) => (
               <TR key={r.id}>
                 <TD>
@@ -62,8 +82,15 @@ export default async function JournalPage({ searchParams }: { searchParams: { fr
                 <TD align="right">{money(r.total_credit)}</TD>
                 <TD>
                   <Badge tone={r.status === 'posted' ? 'success' : r.status === 'reversed' ? 'danger' : 'neutral'}>
-                    {r.status === 'posted' ? 'ผ่านรายการ' : r.status === 'reversed' ? 'กลับรายการ' : 'ร่าง'}
+                    {r.status === 'posted' ? d.ui.journalEntry.post
+                      : r.status === 'reversed' ? d.ui.journalEntry.reverse
+                      : d.status.draft}
                   </Badge>
+                </TD>
+                <TD align="right">
+                  {r.status === 'posted' && (
+                    <ReverseEntryButton entryId={r.id} d={d} canVoid={canVoid} reversed={!!r.reversed_by} />
+                  )}
                 </TD>
               </TR>
             ))}

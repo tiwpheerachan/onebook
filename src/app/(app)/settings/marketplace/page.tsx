@@ -15,7 +15,7 @@ const KIND_LABEL: Record<string, string> = {
   tiktok: 'TikTok Shop',
   line_myshop: 'LINE MyShop',
   woocommerce: 'WooCommerce',
-  other: 'อื่น ๆ',
+  other: 'Other',
 };
 
 export default async function MarketplacePage() {

@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 export default async function GroupPage({ searchParams }: { searchParams: { from?: string; to?: string } }) {
   await requirePermission('report', 'view');
   const d = t();
+  const L = d.ui.groupPage;
   const locale = currentLocale();
   const supabase = createClient();
 
@@ -28,7 +29,7 @@ export default async function GroupPage({ searchParams }: { searchParams: { from
     <>
       <PageHeader
         title={d.nav.group}
-        subtitle={`${localeDate(from, locale)} – ${localeDate(to, locale)} · ${rows.length} บริษัท`}
+        subtitle={`${localeDate(from, locale)} – ${localeDate(to, locale)} · ${L.nCompanies.replace('{n}', String(rows.length))}`}
         action={<DateRangeFilter from={from} to={to} labels={{ from: d.common.from, to: d.common.to, apply: d.common.filter }} />}
       />
 
@@ -40,12 +41,12 @@ export default async function GroupPage({ searchParams }: { searchParams: { from
       </div>
 
       <Card className="mt-6">
-        <CardHeader title={d.nav.companies} description="งบรวมกลุ่มบริษัท (ยังไม่ตัดรายการระหว่างกัน)" />
+        <CardHeader title={d.nav.companies} description={L.consolidated} />
         <Table>
           <THead>
             <TR>
-              <TH>รหัส</TH>
-              <TH>บริษัท</TH>
+              <TH>{L.code}</TH>
+              <TH>{L.company}</TH>
               <TH align="right">{d.dash.revenue}</TH>
               <TH align="right">{d.dash.expense}</TH>
               <TH align="right">{d.dash.profit}</TH>
@@ -64,7 +65,7 @@ export default async function GroupPage({ searchParams }: { searchParams: { from
                   <span className={r.is_parent ? 'font-semibold text-ink-900' : 'pl-4 text-ink-700'}>
                     {r.company_name}
                   </span>
-                  {r.is_parent && <Badge tone="brand">บริษัทแม่</Badge>}
+                  {r.is_parent && <Badge tone="brand">{L.parent}</Badge>}
                 </TD>
                 <TD align="right">{money(r.revenue)}</TD>
                 <TD align="right">{money(r.expense)}</TD>

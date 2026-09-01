@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionContext, can } from '@/lib/session';
+import { t } from '@/i18n/server';
 
 export interface Res {
   ok: boolean;
@@ -15,19 +16,19 @@ const num = (v: any, def = 0) => (v === '' || v == null || Number.isNaN(Number(v
 /** เพิ่ม / แก้ไขสินทรัพย์ถาวร */
 export async function saveAsset(form: any): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
   const action = form.id ? 'edit' : 'create';
-  if (!can(ctx, 'accounting.assets', action)) return { ok: false, error: 'คุณไม่มีสิทธิ์ดำเนินการนี้' };
+  if (!can(ctx, 'accounting.assets', action)) return { ok: false, error: t().ui.act.noPermission };
 
-  if (!form.code || !form.name) return { ok: false, error: 'กรุณากรอกรหัสและชื่อสินทรัพย์' };
-  if (!form.acquired_date) return { ok: false, error: 'กรุณาระบุวันที่ได้มา' };
-  if (num(form.cost) <= 0) return { ok: false, error: 'ราคาทุนต้องมากกว่า 0' };
-  if (num(form.salvage_value) > num(form.cost)) return { ok: false, error: 'มูลค่าซากต้องไม่เกินราคาทุน' };
+  if (!form.code || !form.name) return { ok: false, error: t().ui.act.assetCodeNameRequired };
+  if (!form.acquired_date) return { ok: false, error: t().ui.act.assetAcquireDateRequired };
+  if (num(form.cost) <= 0) return { ok: false, error: t().ui.act.assetCostPositive };
+  if (num(form.salvage_value) > num(form.cost)) return { ok: false, error: t().ui.act.assetSalvageTooHigh };
   if (form.method !== 'none' && num(form.useful_life_months) <= 0) {
-    return { ok: false, error: 'อายุการใช้งาน (เดือน) ต้องมากกว่า 0' };
+    return { ok: false, error: t().ui.act.assetLifePositive };
   }
   if (!form.asset_account_id || !form.accum_dep_account_id) {
-    return { ok: false, error: 'กรุณาเลือกบัญชีสินทรัพย์และบัญชีค่าเสื่อมราคาสะสม' };
+    return { ok: false, error: t().ui.act.assetAccountsRequired };
   }
 
   const supabase = createClient();
@@ -59,7 +60,7 @@ export async function saveAsset(form: any): Promise<Res> {
 
   const { data, error } = await q;
   if (error) {
-    if (error.code === '23505') return { ok: false, error: 'รหัสสินทรัพย์นี้ถูกใช้ไปแล้ว' };
+    if (error.code === '23505') return { ok: false, error: t().ui.act.assetCodeUsed };
     return { ok: false, error: error.message };
   }
 
@@ -73,11 +74,11 @@ export async function saveAsset(form: any): Promise<Res> {
  */
 export async function runDepreciation(periodEnd: string, dryRun = false): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'accounting.assets', 'post')) return { ok: false, error: 'คุณไม่มีสิทธิ์คิดค่าเสื่อมราคา' };
-  if (!periodEnd) return { ok: false, error: 'กรุณาเลือกงวด' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'accounting.assets', 'post')) return { ok: false, error: t().ui.act.assetNoDepreciate };
+  if (!periodEnd) return { ok: false, error: t().ui.act.assetPeriodRequired };
   if (!dryRun && ctx.lockedThrough && periodEnd <= ctx.lockedThrough) {
-    return { ok: false, error: `งวดบัญชีถูกปิด (freeze) ถึงวันที่ ${ctx.lockedThrough}` };
+    return { ok: false, error: t().ui.misc.periodFrozen.replace('{date}', String(ctx.lockedThrough)) };
   }
 
   const supabase = createClient();
@@ -100,11 +101,11 @@ export async function disposeAsset(form: {
   note?: string | null;
 }): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'accounting.assets', 'post')) return { ok: false, error: 'คุณไม่มีสิทธิ์ตัดจำหน่ายสินทรัพย์' };
-  if (!form.disposed_date) return { ok: false, error: 'กรุณาระบุวันที่ตัดจำหน่าย' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'accounting.assets', 'post')) return { ok: false, error: t().ui.act.assetNoDispose };
+  if (!form.disposed_date) return { ok: false, error: t().ui.act.assetDisposeDateRequired };
   if (ctx.lockedThrough && form.disposed_date <= ctx.lockedThrough) {
-    return { ok: false, error: `งวดบัญชีถูกปิด (freeze) ถึงวันที่ ${ctx.lockedThrough}` };
+    return { ok: false, error: t().ui.misc.periodFrozen.replace('{date}', String(ctx.lockedThrough)) };
   }
 
   const supabase = createClient();

@@ -5,6 +5,9 @@ import {
   X, Trash2, Plus, Send, Paperclip, ExternalLink, CalendarClock, Link2, CheckSquare, Square,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/i18n/provider';
+import { dayMonth } from '@/lib/format';
+import type { Dictionary } from '@/i18n';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { Avatar, type Member } from './task-bits';
 import { TASK_STATUS, TASK_PRIORITY, TASK_KIND, statusMeta, kindMeta } from '@/lib/task-meta';
@@ -44,13 +47,15 @@ function toLocalInput(iso?: string | null): string {
 }
 const fromLocalInput = (v: string) => (v ? new Date(v).toISOString() : '');
 
-const relTime = (iso: string) => {
+const relTime = (iso: string, d: Dictionary, locale: string) => {
+  const L = d.ui.task;
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return 'เมื่อครู่';
-  if (diff < 3600) return `${Math.floor(diff / 60)} นาทีที่แล้ว`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} ชั่วโมงที่แล้ว`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)} วันที่แล้ว`;
-  return new Date(iso).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+  const n = (tpl: string, v: number) => tpl.replace('{n}', String(Math.floor(v)));
+  if (diff < 60) return L.justNow;
+  if (diff < 3600) return n(L.minsAgo, diff / 60);
+  if (diff < 86400) return n(L.hoursAgo, diff / 3600);
+  if (diff < 604800) return n(L.daysAgo, diff / 86400);
+  return dayMonth(iso, locale);
 };
 
 export function TaskPanel({
@@ -63,6 +68,8 @@ export function TaskPanel({
   canDelete: boolean;
   onClose: () => void;
 }) {
+  const { dict, locale } = useI18n();
+  const L = dict.ui.task;
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<any>(task);
@@ -124,7 +131,7 @@ export function TaskPanel({
     setBusy(id);
     const res = await attachmentUrl(id);
     setBusy('');
-    if (!res.ok || !res.url) { setErr(res.error || 'เปิดไฟล์ไม่สำเร็จ'); return; }
+    if (!res.ok || !res.url) { setErr(res.error || L.openFileFailed); return; }
     window.open(res.url, '_blank', 'noopener');
   }
 
@@ -154,7 +161,7 @@ export function TaskPanel({
         <header className={cn('flex items-start gap-3 border-b border-ink-200 px-5 py-4', kindMeta(form.kind).block)}>
           <div className="min-w-0 flex-1">
             <p className="text-xxs font-medium uppercase tracking-wider opacity-70">
-              {form.code} · {kindMeta(form.kind).label}
+              {form.code} · {(dict.ui.taskKind as Record<string, string>)[kindMeta(form.kind).key]}
             </p>
             <textarea
               rows={1}
@@ -164,7 +171,7 @@ export function TaskPanel({
               onChange={(e) => set('title', e.target.value)}
             />
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-white/50" title="ปิด (Esc)">
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-white/50" title={L.closeEsc}>
             <X className="h-4 w-4" strokeWidth={2} />
           </button>
         </header>
@@ -177,33 +184,33 @@ export function TaskPanel({
           {/* สถานะ / ความสำคัญ / ประเภท */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="label">สถานะ</label>
+              <label className="label">{L.status}</label>
               <select className="input" value={form.status} disabled={!canEdit} onChange={(e) => set('status', e.target.value)}>
-                {TASK_STATUS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+                {TASK_STATUS.map((s) => <option key={s.key} value={s.key}>{(dict.ui.taskStatus as Record<string, string>)[s.key]}</option>)}
               </select>
             </div>
             <div>
-              <label className="label">ความสำคัญ</label>
+              <label className="label">{L.priority}</label>
               <select className="input" value={form.priority} disabled={!canEdit} onChange={(e) => set('priority', e.target.value)}>
-                {TASK_PRIORITY.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
+                {TASK_PRIORITY.map((p) => <option key={p.key} value={p.key}>{(dict.ui.taskPriority as Record<string, string>)[p.key]}</option>)}
               </select>
             </div>
             <div>
-              <label className="label">ประเภท</label>
+              <label className="label">{L.kind}</label>
               <select className="input" value={form.kind} disabled={!canEdit} onChange={(e) => set('kind', e.target.value)}>
-                {TASK_KIND.map((k) => <option key={k.key} value={k.key}>{k.label}</option>)}
+                {TASK_KIND.map((k) => <option key={k.key} value={k.key}>{(dict.ui.taskKind as Record<string, string>)[k.key]}</option>)}
               </select>
             </div>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div>
-              <label className="label">เริ่ม</label>
+              <label className="label">{L.start}</label>
               <input type="datetime-local" className="input" disabled={!canEdit}
                 value={toLocalInput(form.start_at)} onChange={(e) => set('start_at', fromLocalInput(e.target.value))} />
             </div>
             <div>
-              <label className="label">ครบกำหนด</label>
+              <label className="label">{L.due}</label>
               <input type="datetime-local" className="input" disabled={!canEdit}
                 value={toLocalInput(form.due_at)} onChange={(e) => set('due_at', fromLocalInput(e.target.value))} />
             </div>
@@ -211,7 +218,7 @@ export function TaskPanel({
 
           {/* ผู้รับผิดชอบ */}
           <div className="mt-4">
-            <label className="label">ผู้รับผิดชอบ</label>
+            <label className="label">{L.assignee}</label>
             <div className="flex flex-wrap gap-1.5">
               {members.map((m) => {
                 const on = assignees.includes(m.id);
@@ -238,13 +245,13 @@ export function TaskPanel({
 
           {/* รายละเอียด */}
           <div className="mt-4">
-            <label className="label">รายละเอียด</label>
+            <label className="label">{L.description}</label>
             <textarea
               className="input min-h-[5rem]"
               disabled={!canEdit}
               value={form.description || ''}
               onChange={(e) => set('description', e.target.value)}
-              placeholder="อธิบายสิ่งที่ต้องทำ ข้อมูลที่ต้องใช้ หรือผลลัพธ์ที่คาดหวัง"
+              placeholder={L.descPh}
             />
           </div>
 
@@ -268,7 +275,7 @@ export function TaskPanel({
           {/* เช็กลิสต์ */}
           <section className="mt-6">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="section-title">เช็กลิสต์</h3>
+              <h3 className="section-title">{L.checklist}</h3>
               {form.checklist.length > 0 && (
                 <span className="text-xxs tabular-nums text-ink-400">{doneCount}/{form.checklist.length}</span>
               )}
@@ -308,7 +315,7 @@ export function TaskPanel({
                 className="mt-2 flex gap-2"
                 onSubmit={(e) => { e.preventDefault(); if (check.trim()) run(() => addChecklistItem(form.id, check), () => setCheck('')); }}
               >
-                <input className="input py-1.5 text-sm" placeholder="เพิ่มหัวข้อย่อย…"
+                <input className="input py-1.5 text-sm" placeholder={L.addChecklistPh}
                        value={check} onChange={(e) => setCheck(e.target.value)} />
                 <button className="btn-secondary px-2.5 py-1.5" disabled={pending || !check.trim()}>
                   <Plus className="h-4 w-4" strokeWidth={2} />
@@ -320,19 +327,19 @@ export function TaskPanel({
           {/* ไฟล์แนบ */}
           <section className="mt-6">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="section-title">ไฟล์แนบ</h3>
+              <h3 className="section-title">{L.attachments}</h3>
               {canEdit && (
                 <>
                   <input ref={fileRef} type="file" className="hidden"
                          accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.csv,.xls,.xlsx" onChange={pickFile} />
                   <button className="btn-ghost px-2 py-1 text-xs" disabled={pending} onClick={() => fileRef.current?.click()}>
-                    <Paperclip className="h-3.5 w-3.5" strokeWidth={1.8} /> แนบไฟล์
+                    <Paperclip className="h-3.5 w-3.5" strokeWidth={1.8} /> {L.attach}
                   </button>
                 </>
               )}
             </div>
             {form.attachments.length === 0 ? (
-              <p className="text-xs text-ink-400">ยังไม่มีไฟล์แนบ — แนบรูปหน้างานหรือเอกสารประกอบได้</p>
+              <p className="text-xs text-ink-400">{L.noAttachments}</p>
             ) : (
               <ul className="space-y-1">
                 {form.attachments.map((a: any) => (
@@ -354,7 +361,7 @@ export function TaskPanel({
 
           {/* โน้ต */}
           <section className="mt-6">
-            <h3 className="section-title mb-2">โน้ต / ความคืบหน้า</h3>
+            <h3 className="section-title mb-2">{L.notes}</h3>
             <ul className="space-y-3">
               {form.comments.map((c: any) => (
                 <li key={c.id} className="group flex gap-2.5">
@@ -362,7 +369,7 @@ export function TaskPanel({
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-2 text-xxs text-ink-400">
                       <b className="font-medium text-ink-600">{c.author}</b>
-                      {relTime(c.created_at)}
+                      {relTime(c.created_at, dict, locale)}
                       {(c.created_by === currentUserId || canDelete) && (
                         <button onClick={() => run(() => deleteComment(c.id))}
                                 className="opacity-0 transition group-hover:opacity-100">
@@ -375,7 +382,7 @@ export function TaskPanel({
                 </li>
               ))}
               {form.comments.length === 0 && (
-                <li className="text-xs text-ink-400">ยังไม่มีโน้ต — บันทึกความคืบหน้าไว้ให้ทีมตามงานต่อได้</li>
+                <li className="text-xs text-ink-400">{L.noNotes}</li>
               )}
             </ul>
 
@@ -387,7 +394,7 @@ export function TaskPanel({
                 <textarea
                   className="input min-h-[2.5rem] py-2 text-sm"
                   rows={1}
-                  placeholder="เขียนโน้ต… (Ctrl+Enter เพื่อส่ง)"
+                  placeholder={L.notePh}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   onKeyDown={(e) => {
@@ -413,16 +420,16 @@ export function TaskPanel({
               disabled={pending}
               onClick={() => run(() => deleteTask(form.id), onClose)}
             >
-              <Trash2 className="h-4 w-4" strokeWidth={1.8} /> ลบงาน
+              <Trash2 className="h-4 w-4" strokeWidth={1.8} /> {L.deleteTask}
             </button>
           ) : <span />}
 
           <div className="flex items-center gap-2">
-            {dirty && <span className="text-xxs text-amber-700">มีการแก้ไขที่ยังไม่บันทึก</span>}
-            <button className="btn-secondary" onClick={onClose}>ปิด</button>
+            {dirty && <span className="text-xxs text-amber-700">{L.unsaved}</span>}
+            <button className="btn-secondary" onClick={onClose}>{dict.common.close}</button>
             {canEdit && (
               <button className="btn-primary" disabled={pending || !dirty} onClick={save}>
-                {pending && <ShdSpinner size={16} />} บันทึก
+                {pending && <ShdSpinner size={16} />} {dict.common.save}
               </button>
             )}
           </div>
@@ -434,10 +441,11 @@ export function TaskPanel({
 
 /** ป้ายเวลาเล็ก ๆ ใช้ซ้ำในหลายที่ */
 export function DueBadge({ due, overdue }: { due: string; overdue: boolean }) {
+  const { locale } = useI18n();
   return (
     <span className={cn('inline-flex items-center gap-1 text-xxs', overdue ? 'font-medium text-rose-600' : 'text-ink-400')}>
       <CalendarClock className="h-3 w-3" strokeWidth={1.8} />
-      {new Date(due).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
+      {dayMonth(due, locale)}
     </span>
   );
 }

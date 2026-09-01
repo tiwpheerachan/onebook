@@ -5,6 +5,8 @@ import {
   ChevronLeft, ChevronRight, Plus, Search, CalendarDays, List, AlertTriangle, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/i18n/provider';
+import { monthName, localeYear, weekdayShort, dayMonth } from '@/lib/format';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { AvatarStack, KindDot, timeLabel, dayKey, type Member } from './task-bits';
 import { TaskPanel, type TaskDetail } from './task-panel';
@@ -34,9 +36,6 @@ export interface TaskRow {
 
 type View = 'day' | 'week' | 'month' | 'list';
 
-const TH_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
-  'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-const TH_DOW = ['อา','จ','อ','พ','พฤ','ศ','ส'];
 const HOUR_FROM = 8;
 const HOUR_TO = 20;
 const HOUR_PX = 52;
@@ -44,7 +43,6 @@ const HOUR_PX = 52;
 const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
 const startOfWeek = (d: Date) => addDays(d, -d.getDay());
 const sameDay = (a: Date, b: Date) => dayKey(a) === dayKey(b);
-const beYear = (d: Date) => d.getFullYear() + 543;
 
 /** วันที่ใช้จัดวางงานบนปฏิทิน : ใช้วันเริ่ม ถ้าไม่มีก็ใช้วันครบกำหนด */
 const anchorOf = (t: TaskRow) => t.start_at || t.due_at;
@@ -63,6 +61,8 @@ export function TaskWorkspace({
   /** แถบผู้ช่วยฝั่งขวา ส่งมาจากฝั่งเซิร์ฟเวอร์เพราะต้องเรียก AI */
   aiPanel: React.ReactNode;
 }) {
+  const { dict, locale } = useI18n();
+  const L = dict.ui.task;
   const router = useRouter();
   const params = useSearchParams();
 
@@ -141,18 +141,26 @@ export function TaskWorkspace({
     [visible]
   );
 
+  const weekdayLong = useMemo(() => {
+    const tag = locale === 'th' ? 'th-TH' : locale === 'zh' ? 'zh-CN' : 'en-GB';
+    const fmt = new Intl.DateTimeFormat(tag, { weekday: 'long' });
+    return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(Date.UTC(2023, 0, 1 + i))));
+  }, [locale]);
+
   const days = useMemo(() => {
     if (view === 'day') return [anchor];
     if (view === 'week') return Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(anchor), i));
     return [];
   }, [view, anchor]);
 
+  // ปีตามภาษา : ไทยใช้ พ.ศ. อีกสองภาษาใช้ ค.ศ. จึงคำนวณจาก localeYear ไม่ใช่บวก 543 ตรง ๆ
+  const yr = (d: Date) => localeYear(d.getFullYear(), locale);
   const headTitle =
     view === 'month'
-      ? `${TH_MONTHS[anchor.getMonth()]} ${beYear(anchor)}`
+      ? `${monthName(anchor.getMonth() + 1, locale)} ${yr(anchor)}`
       : view === 'day'
-        ? anchor.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' }) + ` ${beYear(anchor)}`
-        : `${days[0]?.getDate()} – ${days[6]?.getDate()} ${TH_MONTHS[days[6]?.getMonth() ?? 0]} ${beYear(anchor)}`;
+        ? `${weekdayLong[anchor.getDay()]} ${anchor.getDate()} ${monthName(anchor.getMonth() + 1, locale)} ${yr(anchor)}`
+        : `${days[0]?.getDate()} – ${days[6]?.getDate()} ${monthName((days[6]?.getMonth() ?? 0) + 1, locale)} ${yr(anchor)}`;
 
   const step = view === 'month' ? 'month' : view === 'day' ? 1 : 7;
   const shift = (dir: number) => {
@@ -191,7 +199,7 @@ export function TaskWorkspace({
               <ChevronRight className="h-4 w-4" strokeWidth={2} />
             </button>
             <button onClick={() => goDate(new Date())} className="ml-1 rounded-lg px-2.5 py-1 text-xs font-medium text-ink-600 hover:bg-ink-100">
-              วันนี้
+              {L.today}
             </button>
             {navBusy && <ShdSpinner size={14} />}
           </div>
@@ -200,14 +208,14 @@ export function TaskWorkspace({
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-400" strokeWidth={2} />
             <input
               className="input w-52 py-1.5 pl-8 text-sm"
-              placeholder="ค้นหางาน / ผู้รับผิดชอบ"
+              placeholder={L.searchPh}
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
 
           <div className="flex rounded-lg bg-ink-100 p-0.5">
-            {([['day','วัน'],['week','สัปดาห์'],['month','เดือน'],['list','รายการ']] as [View,string][]).map(([v, l]) => (
+            {([['day', L.viewDay], ['week', L.viewWeek], ['month', L.viewMonth], ['list', L.viewList]] as [View, string][]).map(([v, l]) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
@@ -223,7 +231,7 @@ export function TaskWorkspace({
 
           {perms.create && (
             <button className="btn-primary" onClick={() => setCreating(dayKey(anchor))}>
-              <Plus className="h-4 w-4" strokeWidth={2} /> สร้างงาน
+              <Plus className="h-4 w-4" strokeWidth={2} /> {L.create}
             </button>
           )}
         </div>
@@ -264,6 +272,8 @@ export function TaskWorkspace({
 function MiniCalendar({
   anchor, byDay, onPick,
 }: { anchor: Date; byDay: Map<string, TaskRow[]>; onPick: (d: Date) => void }) {
+  const { locale } = useI18n();
+  const dow = weekdayShort(locale);
   const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
   const start = startOfWeek(first);
   const cells = Array.from({ length: 42 }, (_, i) => addDays(start, i));
@@ -273,7 +283,7 @@ function MiniCalendar({
     <div className="card card-pad">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-ink-900">
-          {TH_MONTHS[anchor.getMonth()]} {beYear(anchor)}
+          {monthName(anchor.getMonth() + 1, locale)} {localeYear(anchor.getFullYear(), locale)}
         </h2>
         <div className="flex gap-0.5">
           <button
@@ -292,7 +302,7 @@ function MiniCalendar({
       </div>
 
       <div className="grid grid-cols-7 gap-y-1 text-center">
-        {TH_DOW.map((d) => <span key={d} className="text-xxs font-medium text-ink-400">{d}</span>)}
+        {dow.map((d, i) => <span key={i} className="text-xxs font-medium text-ink-400">{d}</span>)}
         {cells.map((d) => {
           const out = d.getMonth() !== anchor.getMonth();
           const on = sameDay(d, anchor);
@@ -329,6 +339,8 @@ function TimeGrid({
   onOpen: (id: string) => void;
   onAdd?: (day: string) => void;
 }) {
+  const { dict, locale } = useI18n();
+  const dow = weekdayShort(locale);
   const hours = Array.from({ length: HOUR_TO - HOUR_FROM + 1 }, (_, i) => HOUR_FROM + i);
   const today = new Date();
 
@@ -341,7 +353,7 @@ function TimeGrid({
           const isToday = sameDay(d, today);
           return (
             <div key={dayKey(d)} className={cn('px-2 py-2 text-center', isToday && 'bg-brand-50')}>
-              <p className="text-xxs text-ink-400">{TH_DOW[d.getDay()]}</p>
+              <p className="text-xxs text-ink-400">{dow[d.getDay()]}</p>
               <p className={cn('text-lg font-semibold', isToday ? 'text-brand-700' : 'text-ink-800')}>{d.getDate()}</p>
             </div>
           );
@@ -350,7 +362,7 @@ function TimeGrid({
 
       {/* แถบงานทั้งวัน / งานที่ไม่ระบุเวลา */}
       <div className="grid border-b border-ink-200 bg-ink-50/60" style={{ gridTemplateColumns: `3.5rem repeat(${days.length}, minmax(0,1fr))` }}>
-        <div className="border-r border-ink-100 px-2 py-1.5 text-xxs text-ink-400">ทั้งวัน</div>
+        <div className="border-r border-ink-100 px-2 py-1.5 text-xxs text-ink-400">{dict.ui.task.allDay}</div>
         {days.map((d) => {
           const list = (byDay.get(dayKey(d)) || []).filter((t) => !hasTime(t));
           return (
@@ -475,6 +487,8 @@ function MonthGrid({
   onOpen: (id: string) => void;
   onAdd?: (day: string) => void;
 }) {
+  const { dict, locale } = useI18n();
+  const dow = weekdayShort(locale);
   const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
   const start = startOfWeek(first);
   const cells = Array.from({ length: 42 }, (_, i) => addDays(start, i));
@@ -483,8 +497,8 @@ function MonthGrid({
   return (
     <div className="card overflow-hidden">
       <div className="grid grid-cols-7 border-b border-ink-200 bg-ink-50">
-        {TH_DOW.map((d) => (
-          <span key={d} className="px-2 py-2 text-center text-xxs font-medium text-ink-500">{d}</span>
+        {dow.map((d, i) => (
+          <span key={i} className="px-2 py-2 text-center text-xxs font-medium text-ink-500">{d}</span>
         ))}
       </div>
       <div className="grid grid-cols-7">
@@ -514,7 +528,7 @@ function MonthGrid({
               <div className="mt-1 space-y-1">
                 {list.slice(0, 3).map((t) => <Chip key={t.id} t={t} onOpen={onOpen} />)}
                 {list.length > 3 && (
-                  <p className="pl-1 text-xxs text-ink-400">+{list.length - 3} รายการ</p>
+                  <p className="pl-1 text-xxs text-ink-400">{dict.ui.task.more.replace('{n}', String(list.length - 3))}</p>
                 )}
               </div>
             </div>
@@ -528,6 +542,8 @@ function MonthGrid({
 /* ─────────────────────────── มุมมองรายการ ─────────────────────────── */
 
 function ListView({ rows, onOpen }: { rows: TaskRow[]; onOpen: (id: string) => void }) {
+  const { dict, locale } = useI18n();
+  const L = dict.ui.task;
   const sorted = useMemo(
     () =>
       [...rows].sort((a, b) => {
@@ -548,7 +564,7 @@ function ListView({ rows, onOpen }: { rows: TaskRow[]; onOpen: (id: string) => v
     return (
       <div className="card card-pad text-center">
         <CalendarDays className="mx-auto h-8 w-8 text-ink-300" strokeWidth={1.5} />
-        <p className="mt-2 text-sm text-ink-500">ไม่มีงานตามเงื่อนไขที่เลือก</p>
+        <p className="mt-2 text-sm text-ink-500">{L.noneMatch}</p>
       </div>
     );
   }
@@ -570,17 +586,23 @@ function ListView({ rows, onOpen }: { rows: TaskRow[]; onOpen: (id: string) => v
                     <span className="font-mono">{t.code}</span>
                     {t.due_at && (
                       <span className={cn(over && 'font-medium text-rose-600')}>
-                        ครบกำหนด {new Date(t.due_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
-                        {over && ' (เลยกำหนด)'}
+                        {L.dueOn.replace('{date}', dayMonth(t.due_at, locale))}
+                        {over && ` ${L.overdueTag}`}
                       </span>
                     )}
-                    {t.checklist_total > 0 && <span>เช็กลิสต์ {t.checklist_done}/{t.checklist_total}</span>}
-                    {t.comment_count > 0 && <span>{t.comment_count} โน้ต</span>}
-                    {t.attachment_count > 0 && <span>{t.attachment_count} ไฟล์</span>}
+                    {t.checklist_total > 0 && (
+                      <span>{L.checklistCount.replace('{done}', String(t.checklist_done)).replace('{total}', String(t.checklist_total))}</span>
+                    )}
+                    {t.comment_count > 0 && <span>{L.noteCount.replace('{n}', String(t.comment_count))}</span>}
+                    {t.attachment_count > 0 && <span>{L.fileCount.replace('{n}', String(t.attachment_count))}</span>}
                   </p>
                 </div>
-                <span className={cn('chip', priorityMeta(t.priority).chip)}>{priorityMeta(t.priority).label}</span>
-                <span className={cn('chip', statusMeta(t.status).chip)}>{statusMeta(t.status).label}</span>
+                <span className={cn('chip', priorityMeta(t.priority).chip)}>
+                  {(dict.ui.taskPriority as Record<string, string>)[priorityMeta(t.priority).key]}
+                </span>
+                <span className={cn('chip', statusMeta(t.status).chip)}>
+                  {(dict.ui.taskStatus as Record<string, string>)[statusMeta(t.status).key]}
+                </span>
                 <AvatarStack people={t.assignees} size={22} max={3} />
               </button>
             </li>

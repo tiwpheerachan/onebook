@@ -18,14 +18,14 @@ export async function adjustStock(form: {
   note?: string | null;
 }): Promise<Res> {
   const ctx = await getSessionContext();
-  if (!ctx) return { ok: false, error: 'ไม่พบเซสชัน กรุณาเข้าสู่ระบบใหม่' };
-  if (!can(ctx, 'products.inventory', 'edit')) return { ok: false, error: 'คุณไม่มีสิทธิ์ปรับปรุงสต๊อก' };
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'products.inventory', 'edit')) return { ok: false, error: t().ui.act.stockNoAdjust };
 
   const qty = Number(form.qty_delta);
-  if (!form.product_id) return { ok: false, error: 'กรุณาเลือกสินค้า' };
-  if (!qty || Number.isNaN(qty)) return { ok: false, error: 'กรุณาระบุจำนวนที่ต้องการปรับ (บวก = รับเข้า, ลบ = ตัดออก)' };
+  if (!form.product_id) return { ok: false, error: t().ui.act.productRequired };
+  if (!qty || Number.isNaN(qty)) return { ok: false, error: t().ui.act.qtyRequired };
   if (ctx.lockedThrough && form.move_date <= ctx.lockedThrough) {
-    return { ok: false, error: `งวดบัญชีถูกปิด (freeze) ถึงวันที่ ${ctx.lockedThrough}` };
+    return { ok: false, error: t().ui.misc.periodFrozen.replace('{date}', String(ctx.lockedThrough)) };
   }
 
   const supabase = createClient();
@@ -136,7 +136,7 @@ export async function transferStock(form: {
     if (error.message.includes('INVALID_QTY')) return { ok: false, error: L.invalidQty };
     if (error.message.includes('FORBIDDEN')) return { ok: false, error: L.noPermission };
     if (error.message.includes('PERIOD_LOCKED'))
-      return { ok: false, error: 'งวดบัญชีถูกปิดแล้ว บันทึกรายการวันที่นี้ไม่ได้' };
+      return { ok: false, error: t().ui.act.periodClosedForDate };
     return { ok: false, error: error.message };
   }
 

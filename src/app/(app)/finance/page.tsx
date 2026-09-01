@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function FinanceOverviewPage() {
   const ctx = await requirePermission('finance.channels', 'view');
   const d = t();
+  const L = d.ui.finance;
   const locale = currentLocale();
   const supabase = createClient();
 
@@ -33,21 +34,21 @@ export default async function FinanceOverviewPage() {
   const net = cash + ar - ap;
 
   const cards = [
-    { label: 'เงินสด/ธนาคาร/e-Wallet', value: cash, icon: Wallet, tone: cash < 0 ? 'text-rose-600' : 'text-ink-900',
-      note: `${b.account_count || 0} บัญชี`, href: '/finance/channels' },
-    { label: 'ลูกหนี้คงค้าง (ต้องเก็บ)', value: ar, icon: ArrowDownLeft, tone: 'text-emerald-600',
-      note: 'ยังเก็บเงินไม่ได้', href: '/reports/ar-aging' },
-    { label: 'เจ้าหนี้คงค้าง (ต้องจ่าย)', value: ap, icon: ArrowUpRight, tone: 'text-rose-600',
-      note: 'ยังไม่ได้จ่าย', href: '/reports/ap-aging' },
-    { label: 'สภาพคล่องสุทธิ', value: net, icon: Scale, tone: net < 0 ? 'text-rose-600' : 'text-brand-700',
-      note: 'เงินสด + ลูกหนี้ − เจ้าหนี้' },
+    { label: L.cash, value: cash, icon: Wallet, tone: cash < 0 ? 'text-rose-600' : 'text-ink-900',
+      note: L.nAccounts.replace('{n}', String(b.account_count || 0)), href: '/finance/channels' },
+    { label: L.ar, value: ar, icon: ArrowDownLeft, tone: 'text-emerald-600',
+      note: L.arNote, href: '/reports/ar-aging' },
+    { label: L.ap, value: ap, icon: ArrowUpRight, tone: 'text-rose-600',
+      note: L.apNote, href: '/reports/ap-aging' },
+    { label: L.net, value: net, icon: Scale, tone: net < 0 ? 'text-rose-600' : 'text-brand-700',
+      note: L.netNote },
   ];
 
   return (
     <>
       <PageHeader
         title={d.nav.finance}
-        subtitle={`${ctx.company.name_th} · ข้อมูล ณ วันที่ ${localeDate(b.as_of, locale)}`}
+        subtitle={`${ctx.company.name_th} · ${L.asOf.replace('{date}', localeDate(b.as_of, locale))}`}
       />
 
       <FinanceTabs />
@@ -71,23 +72,23 @@ export default async function FinanceOverviewPage() {
 
       <Card className="mt-5">
         <div className="border-b border-ink-200 px-5 py-3.5">
-          <h2 className="text-sm font-semibold text-ink-900">ยอดคงเหลือแยกตามประเภทช่องทาง</h2>
-          <p className="mt-0.5 text-xs text-ink-500">อ่านจากบัญชีแยกประเภท จึงตรงกับงบแสดงฐานะการเงิน</p>
+          <h2 className="text-sm font-semibold text-ink-900">{L.byTypeTitle}</h2>
+          <p className="mt-0.5 text-xs text-ink-500">{L.byTypeHint}</p>
         </div>
         {groups.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-ink-400">
-            ยังไม่มีช่องทางการเงิน —{' '}
-            <Link href="/finance/channels" className="text-brand-700 hover:underline">เพิ่มบัญชีแรก</Link>
+            {L.noChannels}{' '}
+            <Link href="/finance/channels" className="text-brand-700 hover:underline">{L.addFirst}</Link>
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-full text-sm">
             <thead>
               <tr className="bg-ink-50">
-                <th className="th-cell">ประเภท</th>
-                <th className="th-cell text-right">จำนวนบัญชี</th>
-                <th className="th-cell text-right">ยอดคงเหลือ</th>
-                <th className="th-cell text-right">สัดส่วน</th>
+                <th className="th-cell">{L.type}</th>
+                <th className="th-cell text-right">{L.accountCount}</th>
+                <th className="th-cell text-right">{L.balance}</th>
+                <th className="th-cell text-right">{L.share}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-100">
@@ -116,7 +117,7 @@ export default async function FinanceOverviewPage() {
             </tbody>
             <tfoot className="bg-ink-50 font-semibold">
               <tr>
-                <td className="td-cell">รวมทั้งหมด</td>
+                <td className="td-cell">{L.grandTotal}</td>
                 <td className="td-cell num">{b.account_count || 0}</td>
                 <td className={cn('td-cell num', cash < 0 ? 'text-rose-600' : 'text-ink-900')}>{money(cash)}</td>
                 <td className="td-cell num">100%</td>

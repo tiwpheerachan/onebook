@@ -11,17 +11,19 @@ import { lastDayOfMonth, firstDayOfYear, localeDate, money } from '@/lib/format'
 
 export const dynamic = 'force-dynamic';
 
+/** ช่วงอายุหนี้ — โครงสร้างและสี ส่วนชื่ออยู่ในพจนานุกรม (ui.aging) */
 const BUCKETS = [
-  { key: 'current', label: 'ยังไม่ครบกำหนด', tone: 'success' as const },
-  { key: 'd1_30', label: '1-30 วัน', tone: 'neutral' as const },
-  { key: 'd31_60', label: '31-60 วัน', tone: 'warn' as const },
-  { key: 'd61_90', label: '61-90 วัน', tone: 'warn' as const },
-  { key: 'd90_plus', label: 'เกิน 90 วัน', tone: 'danger' as const },
+  { key: 'current' as const, tone: 'success' as const },
+  { key: 'd1_30' as const, tone: 'neutral' as const },
+  { key: 'd31_60' as const, tone: 'warn' as const },
+  { key: 'd61_90' as const, tone: 'warn' as const },
+  { key: 'd90_plus' as const, tone: 'danger' as const },
 ];
 
 export default async function AgingPage({ searchParams }: { searchParams: { to?: string; from?: string } }) {
   const ctx = await requirePermission('report', 'view');
   const d = t();
+  const L = d.ui.aging;
   const locale = currentLocale();
   const asOf = searchParams.to || lastDayOfMonth();
   const supabase = createClient();
@@ -34,13 +36,13 @@ export default async function AgingPage({ searchParams }: { searchParams: { to?:
     <>
       <PageHeader
         title={d.nav.apAging}
-        subtitle={`${ctx.company.name_th} · ณ ${localeDate(asOf, locale)}`}
+        subtitle={`${ctx.company.name_th} · ${L.asOf} ${localeDate(asOf, locale)}`}
         action={<>
           <DateRangeFilter from={searchParams.from || firstDayOfYear()} to={asOf} singleDate
-            labels={{ from: d.common.from, to: 'ณ วันที่', apply: d.common.filter }} />
+            labels={{ from: d.common.from, to: L.asOf, apply: d.common.filter }} />
           {can(ctx, 'report', 'export') && (
             <ExportCsvButton label={d.common.export} filename="ap-aging.csv"
-              rows={[['เจ้าหนี้','เลขที่','วันที่','ครบกำหนด','คงค้าง','ช่วงอายุ'],
+              rows={[[L.vendor, L.docNumber, L.docDate, L.dueDate, L.outstanding, L.bucket],
                 ...rows.map((r) => [r.contact_name, r.doc_number, r.doc_date, r.due_date, r.outstanding, r.bucket])]} />
           )}
           <PrintButton label={d.common.print} />
@@ -49,7 +51,7 @@ export default async function AgingPage({ searchParams }: { searchParams: { to?:
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
         {BUCKETS.map((b) => (
           <div key={b.key} className="card px-4 py-3">
-            <p className="text-xxs text-ink-500">{b.label}</p>
+            <p className="text-xxs text-ink-500">{L[b.key]}</p>
             <p className="mt-1 text-lg font-semibold tabular-nums text-ink-900">{money(bucketTotal(b.key))}</p>
           </div>
         ))}
@@ -57,8 +59,8 @@ export default async function AgingPage({ searchParams }: { searchParams: { to?:
       <Card>
         <Table>
           <THead>
-            <TR><TH>เจ้าหนี้</TH><TH>เลขที่</TH><TH>วันที่</TH><TH>ครบกำหนด</TH>
-              <TH align="right">คงค้าง</TH><TH>ช่วงอายุ</TH></TR>
+            <TR><TH>{L.vendor}</TH><TH>{L.docNumber}</TH><TH>{L.docDate}</TH><TH>{L.dueDate}</TH>
+              <TH align="right">{L.outstanding}</TH><TH>{L.bucket}</TH></TR>
           </THead>
           <TBody>
             {rows.length === 0 && <EmptyRow colSpan={6} label={d.common.noData} />}
@@ -71,7 +73,7 @@ export default async function AgingPage({ searchParams }: { searchParams: { to?:
                   <TD>{localeDate(r.doc_date, locale)}</TD>
                   <TD>{r.due_date ? localeDate(r.due_date, locale) : '–'}</TD>
                   <TD align="right" className="font-medium">{money(r.outstanding)}</TD>
-                  <TD><Badge tone={b?.tone || 'neutral'}>{b?.label}</Badge></TD>
+                  <TD><Badge tone={b?.tone || 'neutral'}>{b ? L[b.key] : r.bucket}</Badge></TD>
                 </TR>
               );
             })}

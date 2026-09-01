@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 export default async function UsersPage() {
   const ctx = await requirePermission('settings.users', 'view');
   const d = t();
+  const L = d.ui.usersPage;
   const locale = currentLocale();
   const supabase = createClient();
 
@@ -45,7 +46,7 @@ export default async function UsersPage() {
     <>
       <PageHeader
         title={d.nav.users}
-        subtitle={`${ctx.company.name_th} · ${rows.length} ผู้ใช้ที่ได้รับสิทธิ์ในบริษัทนี้`}
+        subtitle={`${ctx.company.name_th} · ${L.subtitle.replace('{n}', String(rows.length))}`}
         action={
           <>
           <SsoInvite
@@ -63,11 +64,11 @@ export default async function UsersPage() {
 
       <InvitationList rows={invitations} canEdit={can(ctx, 'settings.users', 'edit')} />
       <Card>
-        <CardHeader title="ผู้ใช้และบทบาทในบริษัทนี้" />
+        <CardHeader title={L.cardTitle} />
         <Table>
           <THead>
-            <TR><TH>ชื่อ</TH><TH>รหัสพนักงาน</TH><TH>แผนก / ตำแหน่ง</TH><TH>บทบาทใน ONEBOOK</TH>
-              <TH>เห็นบริษัทลูก</TH><TH>เข้าใช้ล่าสุด</TH><TH>สถานะ</TH><TH /></TR>
+            <TR><TH>{L.name}</TH><TH>{L.empCode}</TH><TH>{L.deptRole}</TH><TH>{L.onebookRole}</TH>
+              <TH>{L.seeSubs}</TH><TH>{L.lastSeen}</TH><TH>{L.status}</TH><TH /></TR>
           </THead>
           <TBody>
             {rows.length === 0 && <EmptyRow colSpan={8} label={d.common.noData} />}
@@ -89,16 +90,16 @@ export default async function UsersPage() {
                   {r.profiles?.goodhr_app_role && r.profiles.goodhr_app_role !== r.roles?.code
                     && r.profiles.goodhr_app_role !== r.roles?.name_th && (
                     <span
-                      title={`ผู้ดูแล GoodHR ตั้งไว้เป็น "${r.profiles.goodhr_app_role}" แต่สิทธิ์จริงใช้ค่าที่ตั้งใน ONEBOOK`}
+                      title={L.goodhrHint.replace('{role}', r.profiles.goodhr_app_role)}
                       className="ml-1 text-xxs text-amber-600"
                     >
                       (GoodHR : {r.profiles.goodhr_app_role})
                     </span>
                   )}
                 </TD>
-                <TD>{r.can_view_subsidiaries ? <Badge tone="success">ใช่</Badge> : <span className="text-ink-300">–</span>}</TD>
+                <TD>{r.can_view_subsidiaries ? <Badge tone="success">{L.yes}</Badge> : <span className="text-ink-300">–</span>}</TD>
                 <TD className="text-xs text-ink-500">{r.profiles?.last_login_at ? localeDate(r.profiles.last_login_at, locale) : '–'}</TD>
-                <TD>{r.is_active ? <Badge tone="success">ใช้งาน</Badge> : <Badge tone="danger">ระงับ</Badge>}</TD>
+                <TD>{r.is_active ? <Badge tone="success">{L.active}</Badge> : <Badge tone="danger">{L.suspended}</Badge>}</TD>
                 <TD>
                   <UserAccessManager
                     canCreate={false}
