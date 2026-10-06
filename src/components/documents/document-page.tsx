@@ -131,9 +131,11 @@ export async function DocumentPage({
     }
   }
 
-  // รับเป็นทรัพย์สิน — เฉพาะเอกสารฝั่งซื้อที่เป็นสินทรัพย์ได้ และยังไม่ถูกยกเลิก
+  // รับเป็นทรัพย์สิน — ปิดใน ONEBOOK แล้ว: สร้างทรัพย์สินที่ "แอปทรัพย์สิน" ที่เดียว
+  // (แอปทรัพย์สินจะดึงบิลที่ลงบัญชีแล้วไปขึ้นทะเบียนเอง) ตั้ง true เพื่อเปิดกลับได้
+  const CAPITALIZE_IN_ONEBOOK = false;
   const assetEligible =
-    !isNew && doc && section === 'purchase'
+    CAPITALIZE_IN_ONEBOOK && !isNew && doc && section === 'purchase'
     && ['bill', 'goods_receipt', 'expense'].includes(doc.kind) && doc.status !== 'void';
   let docAssets: any[] = [];
   if (assetEligible) {
