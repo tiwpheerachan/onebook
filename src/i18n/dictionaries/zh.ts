@@ -28,7 +28,7 @@ const zh: Dictionary = {
     bills: '采购单', expenses: '费用记账',
     purchaseCreditNotes: '收到红字发票', purchaseDebitNotes: '收到蓝字发票', depositPayments: '预付定金单',
     channels: '资金账户', payments: '收付款',
-    coa: '会计科目表', journal: '记账凭证', ledger: '总分类账', assetKnowledge: '知识库', assetFlow: '资产流程',
+    coa: '会计科目表', journal: '记账凭证', ledger: '总分类账', assetKnowledge: '知识库', assetFlow: '资产流程', assetLocations: '资产位置',
     trialBalance: '试算平衡表', profitLoss: '利润表', balanceSheet: '资产负债表',
     arAging: '应收账龄', apAging: '应付账龄',
     vat: '增值税', vatSales: '销项税报表', vatPurchase: '进项税报表',
@@ -1263,6 +1263,14 @@ const zh: Dictionary = {
       schedule: '折旧明细表', scheduleHint: '已过账期间 + 未来期间预测', period: '期间',
       posted: '已过账', planned: '预测', noSchedule: '无折旧表（请检查启用日期/年限）',
       endDate: '最后期间', docsHint: '附件见来源单据', openSourceDoc: '打开来源单据', noHistory: '尚未计提折旧',
+    },
+    assetLoc: {
+      title: '资产位置',
+      subtitle: '资产存放位置登记（楼栋/楼层/房间）',
+      create: '新增位置', edit: '编辑位置', delete: '删除', confirmDelete: '删除此位置？',
+      code: '编码', name: '名称', building: '楼栋', floor: '楼层', room: '房间',
+      active: '启用', yes: '是', no: '否',
+      codeNameRequired: '请填写编码和名称', codeUsed: '该位置编码已被使用',
     },
     deposit: {
       title: '预收／预付款',

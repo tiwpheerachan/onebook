@@ -28,7 +28,7 @@ const en: Dictionary = {
     bills: 'Purchases', expenses: 'Expenses',
     purchaseCreditNotes: 'Received credit notes', purchaseDebitNotes: 'Received debit notes', depositPayments: 'Deposits paid',
     channels: 'Financial channels', payments: 'Receipts & payments',
-    coa: 'Chart of accounts', journal: 'Journal', ledger: 'General ledger', assetKnowledge: 'Knowledge base', assetFlow: 'Asset flow',
+    coa: 'Chart of accounts', journal: 'Journal', ledger: 'General ledger', assetKnowledge: 'Knowledge base', assetFlow: 'Asset flow', assetLocations: 'Asset locations',
     trialBalance: 'Trial balance', profitLoss: 'Profit & loss', balanceSheet: 'Balance sheet',
     arAging: 'AR ageing', apAging: 'AP ageing',
     vat: 'VAT', vatSales: 'Output VAT report', vatPurchase: 'Input VAT report',
@@ -1263,6 +1263,14 @@ const en: Dictionary = {
       schedule: 'Depreciation schedule', scheduleHint: 'Posted periods + forecast of future periods', period: 'Period',
       posted: 'Posted', planned: 'Planned', noSchedule: 'No schedule (check in-service date / life)',
       endDate: 'Final period', docsHint: 'Attachments are on the source document', openSourceDoc: 'Open source document', noHistory: 'No depreciation posted yet',
+    },
+    assetLoc: {
+      title: 'Asset locations',
+      subtitle: 'Register of asset locations (building/floor/room)',
+      create: 'Add location', edit: 'Edit location', delete: 'Delete', confirmDelete: 'Delete this location?',
+      code: 'Code', name: 'Name', building: 'Building', floor: 'Floor', room: 'Room',
+      active: 'Active', yes: 'Yes', no: 'No',
+      codeNameRequired: 'Code and name are required', codeUsed: 'That location code is already in use',
     },
     deposit: {
       title: 'Deposits',

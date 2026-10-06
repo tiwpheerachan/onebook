@@ -26,7 +26,7 @@ const th = {
     bills: 'ซื้อสินค้า/บริการ', expenses: 'บันทึกค่าใช้จ่าย',
     purchaseCreditNotes: 'รับใบลดหนี้', purchaseDebitNotes: 'รับใบเพิ่มหนี้', depositPayments: 'ใบจ่ายเงินมัดจำ',
     channels: 'ช่องทางการเงิน', payments: 'รับ-จ่ายเงิน',
-    coa: 'ผังบัญชี', journal: 'สมุดรายวัน', ledger: 'บัญชีแยกประเภท', assetKnowledge: 'คลังความรู้', assetFlow: 'กระบวนการทรัพย์สิน',
+    coa: 'ผังบัญชี', journal: 'สมุดรายวัน', ledger: 'บัญชีแยกประเภท', assetKnowledge: 'คลังความรู้', assetFlow: 'กระบวนการทรัพย์สิน', assetLocations: 'สถานที่ทรัพย์สิน',
     trialBalance: 'งบทดลอง', profitLoss: 'งบกำไรขาดทุน', balanceSheet: 'งบแสดงฐานะการเงิน',
     arAging: 'อายุลูกหนี้', apAging: 'อายุเจ้าหนี้',
     vat: 'ภาษีมูลค่าเพิ่ม', vatSales: 'รายงานภาษีขาย', vatPurchase: 'รายงานภาษีซื้อ',
@@ -1261,6 +1261,14 @@ const th = {
       schedule: 'ตารางค่าเสื่อมราคา', scheduleHint: 'งวดที่ลงบัญชีแล้ว + พยากรณ์งวดอนาคต', period: 'งวด',
       posted: 'ลงบัญชีแล้ว', planned: 'พยากรณ์', noSchedule: 'ไม่มีตารางค่าเสื่อม (ตรวจวันเริ่มใช้งาน/อายุ)',
       endDate: 'งวดสุดท้าย', docsHint: 'เอกสารแนบดูจากเอกสารต้นทาง', openSourceDoc: 'เปิดเอกสารต้นทาง', noHistory: 'ยังไม่มีการลงค่าเสื่อม',
+    },
+    assetLoc: {
+      title: 'สถานที่ทรัพย์สิน',
+      subtitle: 'ทะเบียนสถานที่ตั้งทรัพย์สิน (อาคาร/ชั้น/ห้อง)',
+      create: 'เพิ่มสถานที่', edit: 'แก้ไขสถานที่', delete: 'ลบ', confirmDelete: 'ลบสถานที่นี้?',
+      code: 'รหัส', name: 'ชื่อสถานที่', building: 'อาคาร', floor: 'ชั้น', room: 'ห้อง',
+      active: 'ใช้งาน', yes: 'ใช้', no: 'ปิด',
+      codeNameRequired: 'กรุณากรอกรหัสและชื่อสถานที่', codeUsed: 'รหัสสถานที่นี้ถูกใช้แล้ว',
     },
     deposit: {
       title: 'เงินมัดจำ',
