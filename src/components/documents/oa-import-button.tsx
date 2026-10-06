@@ -24,7 +24,9 @@ export function OaImportButton({
           .replace('{imported}', String(res.imported ?? 0))
           .replace('{skipped}', String(res.skipped ?? 0)),
       );
-      router.refresh();
+      // refresh ให้เห็นใบที่นำเข้าใหม่ เฉพาะตอนมีของจริง —
+      // ไม่งั้น router.refresh จะ remount แล้วข้อความผลลัพธ์หายไปทันที
+      if ((res.imported ?? 0) > 0) router.refresh();
     });
   }
 
