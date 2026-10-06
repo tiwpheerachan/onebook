@@ -68,6 +68,35 @@ export async function saveAsset(form: any): Promise<Res> {
   return { ok: true, id: data?.id };
 }
 
+/** รับเอกสารซื้อที่อนุมัติ/ลงบัญชีแล้วเป็นทรัพย์สินถาวร (capitalize) */
+export async function capitalizeAsset(form: any): Promise<Res> {
+  const ctx = await getSessionContext();
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'accounting.assets', 'create')) return { ok: false, error: t().ui.act.noPermission };
+
+  if (!form.document_id) return { ok: false, error: t().ui.act.assetDocRequired };
+  if (!form.name) return { ok: false, error: t().ui.act.assetCodeNameRequired };
+  if (num(form.cost) <= 0) return { ok: false, error: t().ui.act.assetCostPositive };
+  if (num(form.salvage_value) > num(form.cost)) return { ok: false, error: t().ui.act.assetSalvageTooHigh };
+  if (!form.asset_account_id || !form.accum_dep_account_id) {
+    return { ok: false, error: t().ui.act.assetAccountsRequired };
+  }
+
+  const supabase = createClient();
+  const { document_id, ...payload } = form;
+  const { data, error } = await supabase.rpc('capitalize_asset', {
+    p_document: document_id,
+    p_payload: payload,
+  });
+  if (error) {
+    if (error.code === '23505') return { ok: false, error: t().ui.act.assetCodeUsed };
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath('/accounting/assets');
+  return { ok: true, id: data as string };
+}
+
 /**
  * คิดค่าเสื่อมราคาประจำงวด
  * dryRun = true จะคำนวณให้ดูอย่างเดียว ยังไม่ลงบัญชี

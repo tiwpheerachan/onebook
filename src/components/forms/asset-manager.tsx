@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, Pencil } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
-import { saveAsset } from '@/actions/assets';
+import { saveAsset, capitalizeAsset } from '@/actions/assets';
 
 const blank = {
   id: null as string | null,
@@ -19,13 +19,16 @@ const blank = {
 };
 
 export function AssetManager({
-  canCreate, canEdit, editRow, accounts, labels,
+  canCreate, canEdit, editRow, accounts, labels, documentId, prefill,
 }: {
   canCreate: boolean;
   canEdit: boolean;
   editRow?: any;
   accounts: { id: string; label: string }[];
   labels: Record<string, string>;
+  /** ตั้งไว้เมื่อใช้โหมด "รับเป็นทรัพย์สิน" จากเอกสารซื้อ — จะบันทึกผ่าน capitalizeAsset แทน */
+  documentId?: string;
+  prefill?: Record<string, any>;
 }) {
   const M = useI18n().dict.ui.misc;
   const router = useRouter();
@@ -38,7 +41,9 @@ export function AssetManager({
   function submit() {
     setErr('');
     start(async () => {
-      const res = await saveAsset(form);
+      const res = documentId
+        ? await capitalizeAsset({ ...form, document_id: documentId })
+        : await saveAsset(form);
       if (!res.ok) { setErr(res.error || ''); return; }
       setOpen(false);
       router.refresh();
@@ -53,7 +58,13 @@ export function AssetManager({
 
   return (
     <>
-      {editRow ? (
+      {documentId ? (
+        canCreate && (
+          <button onClick={() => { setForm({ ...blank, ...prefill }); setOpen(true); }} className="btn-primary">
+            <Plus className="h-4 w-4" /> {labels.create}
+          </button>
+        )
+      ) : editRow ? (
         canEdit && (
           <button
             onClick={() => { setForm({ ...blank, ...editRow }); setOpen(true); }}

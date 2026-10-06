@@ -3,12 +3,13 @@ import { Printer, GitBranch, Info } from 'lucide-react';
 import { requirePermission, can } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { t, currentLocale } from '@/i18n/server';
-import { PageHeader } from '@/components/ui/page-header';
+import { PageHeader, Card, CardHeader } from '@/components/ui/page-header';
 import { StatusBadge } from '@/components/ui/badge';
 import { PrintButton } from '@/components/ui/print-button';
 import { KIND_SLUG, SLUG_BY_KIND } from '@/lib/constants';
 import { nextKinds } from '@/lib/doc-flow';
-import { localeDate } from '@/lib/format';
+import { localeDate, money } from '@/lib/format';
+import { AssetManager } from '@/components/forms/asset-manager';
 import { DocumentEditor } from './document-editor';
 import { ConvertButton } from './convert-button';
 import { ReserveButton } from './reserve-button';
@@ -128,6 +129,34 @@ export async function DocumentPage({
       openDeposits = (op || []) as any[];
     }
   }
+
+  // รับเป็นทรัพย์สิน — เฉพาะเอกสารฝั่งซื้อที่เป็นสินทรัพย์ได้ และยังไม่ถูกยกเลิก
+  const assetEligible =
+    !isNew && doc && section === 'purchase'
+    && ['bill', 'goods_receipt', 'expense'].includes(doc.kind) && doc.status !== 'void';
+  let docAssets: any[] = [];
+  if (assetEligible) {
+    const { data: fa } = await supabase.from('fixed_assets')
+      .select('id, code, name, cost, status').eq('document_id', doc.id).order('code');
+    docAssets = fa || [];
+  }
+  const accOptions = (accounts || []).map((a: any) => ({ id: a.id, label: `${a.code} ${a.name_th}` }));
+  // กดได้ต่อเมื่อเอกสารผ่านการอนุมัติ/ลงบัญชีแล้ว (draft/awaiting = ยังจัดซื้อไม่เสร็จ)
+  const canCapitalize =
+    assetEligible && can(ctx, 'accounting.assets', 'create')
+    && !['draft', 'awaiting_approval'].includes(doc.status);
+  const assetLabels = {
+    create: d.ui.capitalize.confirm, edit: d.common.edit, save: d.common.save, cancel: d.common.cancel,
+    code: d.assets.code, name: d.assets.name, category: d.assets.category,
+    serialNo: d.assets.serialNo, location: d.assets.location,
+    acquiredDate: d.assets.acquiredDate, inServiceDate: d.assets.inServiceDate,
+    cost: d.assets.cost, salvage: d.assets.salvage, method: d.assets.method,
+    straightLine: d.assets.straightLine, declining: d.assets.declining, noDep: d.assets.noDep,
+    lifeMonths: d.assets.lifeMonths, decliningRate: d.assets.decliningRate,
+    openingAccum: d.assets.openingAccum, assetAccount: d.assets.assetAccount,
+    accumAccount: d.assets.accumAccount, depExpenseAccount: d.assets.depExpenseAccount,
+    auto: d.assets.auto, note: d.common.notes, monthlyPreview: d.assets.monthlyPreview,
+  };
 
   return (
     <>
@@ -256,6 +285,48 @@ export async function DocumentPage({
 
       {match?.checked && <MatchPanel result={match} d={d} />}
       {budget?.checked && <BudgetPanel result={budget} d={d} />}
+
+      {assetEligible && (
+        <Card>
+          <CardHeader title={d.ui.capitalize.title} description={d.ui.capitalize.hint} />
+          <div className="space-y-3 px-4 pb-4">
+            <div className="text-xs text-ink-500">
+              {d.ui.capitalize.existing}:{' '}
+              {docAssets.length === 0 ? (
+                <span className="text-ink-400">{d.ui.capitalize.none}</span>
+              ) : (
+                <span className="inline-flex flex-wrap gap-2 align-middle">
+                  {docAssets.map((a: any) => (
+                    <a key={a.id} href="/accounting/assets"
+                       className="chip bg-brand-50 text-brand-700 ring-brand-200 hover:bg-brand-100">
+                      <span className="font-mono text-xxs">{a.code}</span> · {a.name} · {money(a.cost)}
+                    </a>
+                  ))}
+                </span>
+              )}
+            </div>
+            {canCapitalize ? (
+              <AssetManager
+                canCreate
+                canEdit={false}
+                documentId={doc.id}
+                accounts={accOptions}
+                labels={assetLabels}
+                prefill={{
+                  name: doc.notes || doc.doc_number,
+                  cost: Number(doc.subtotal || doc.grand_total || 0),
+                  acquired_date: doc.doc_date,
+                  in_service_date: doc.doc_date,
+                }}
+              />
+            ) : (
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 ring-1 ring-inset ring-amber-200">
+                {d.ui.capitalize.notReady}
+              </p>
+            )}
+          </div>
+        </Card>
+      )}
       {doc && approval && (
         <ApprovalPanel
           documentId={doc.id}
