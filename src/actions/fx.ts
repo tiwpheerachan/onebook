@@ -4,7 +4,6 @@ import { getSessionContext, can } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { t } from '@/i18n/server';
 import { fetchBotRates, fetchBotRange, isBotConfigured } from '@/lib/bot-fx';
-import { bangkokToday } from '@/lib/format';
 
 export interface RateResult {
   ok: boolean;
@@ -115,6 +114,26 @@ export async function backfillRates(currencies: string[], from: string, to: stri
 const TOP_CURRENCIES = ['USD', 'CNY'];
 
 /**
+ * วันที่ที่ควรมีอัตราแล้ว
+ *
+ * ธปท. ประกาศทุกวันทำการ 18.00 น. ตามเวลาไทย ก่อนหน้านั้นอัตราของวันนี้
+ * ยังไม่เกิด ถ้าเทียบกับ "วันนี้" ตรง ๆ ระบบจะเห็นว่าขาดแล้วไล่ยิง ธปท.
+ * ทั้งวันโดยไม่มีทางได้อะไรกลับมา จึงเลื่อนเป็นเมื่อวานจนกว่าจะพ้นเวลาประกาศ
+ */
+function expectedRateDate(): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit',
+    day: '2-digit', hour: '2-digit', hour12: false,
+  }).formatToParts(new Date());
+  const get = (t: string) => parts.find((p) => p.type === t)?.value || '';
+  const today = `${get('year')}-${get('month')}-${get('day')}`;
+  if (Number(get('hour')) >= 19) return today;
+  const d = new Date(`${today}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
  * เวลาที่ลองยิง ธปท. ครั้งล่าสุด เก็บไว้ในหน่วยความจำของ process
  *
  * แถบด้านบนถามทุกหนึ่งนาทีต่อผู้ใช้หนึ่งคน ถ้ายิง ธปท. ทุกครั้งที่อัตราของวันนี้
@@ -144,18 +163,24 @@ export async function getLiveFx(): Promise<{ ok: boolean; rows?: LiveFxRow[] }> 
   if (!ctx) return { ok: false };
 
   const supabase = createClient();
-  const today = bangkokToday();
+  const want = expectedRateDate();
   const read = async () => ((await supabase.rpc('rpt_fx_latest', { p_days: 30 })).data || []) as any[];
 
   let rows = await read();
-  const missing = TOP_CURRENCIES.filter(
-    (c) => !rows.some((r) => r.currency === c && String(r.rate_date) === today),
+
+  // ไล่อัปเดตทุกสกุลที่เคยเก็บไว้ ไม่ใช่แค่สองตัวบนแถบ
+  // เพราะสกุลที่ธุรกิจใช้จริงคือสกุลที่มีประวัติอยู่แล้ว ถ้าไม่ตามให้
+  // หน้ากราฟของสกุลนั้นจะค้างอยู่ที่วันที่เปิดดูครั้งสุดท้าย
+  const tracked = [...new Set([...TOP_CURRENCIES, ...rows.map((r) => String(r.currency))])];
+  const missing = tracked.filter(
+    (c) => !rows.some((r) => r.currency === c && String(r.rate_date) >= want),
   );
 
   if (missing.length && isBotConfigured() && Date.now() - lastBotTry > BOT_RETRY_MS) {
     lastBotTry = Date.now();
     for (const cur of missing) {
-      const bot = await fetchBotRates(cur, today);
+      // fetchBotRates ถอยให้เจ็ดวันอยู่แล้ว จึงได้อัตราของวันหยุดยาวมาด้วย
+      const bot = await fetchBotRates(cur, want);
       if (!bot.ok || !bot.rates?.length) continue;
       await supabase.rpc('upsert_exchange_rates', {
         p_rows: bot.rates.map((r) => ({
@@ -176,7 +201,9 @@ export async function getLiveFx(): Promise<{ ok: boolean; rows?: LiveFxRow[] }> 
         sell: Number(r.sell),
         pct: r.pct == null ? null : Number(r.pct),
         rateDate: String(r.rate_date),
-        stale: String(r.rate_date) !== today,
+        // เทียบกับวันที่ที่ควรมีแล้ว ไม่ใช่วันนี้ ไม่งั้นทั้งวันก่อนหกโมงเย็น
+        // ทุกสกุลจะถูกป้ายว่าล้าสมัยทั้งที่เป็นอัตราล่าสุดที่ ธปท. ประกาศจริง
+        stale: String(r.rate_date) < want,
       })),
   };
 }

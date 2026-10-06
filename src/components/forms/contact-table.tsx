@@ -157,7 +157,7 @@ export function ContactTable({
                   )}
                   <td className="td-cell text-center text-xxs text-ink-400">{(page - 1) * perPage + i + 1}</td>
                   <td className="td-cell">
-                    <Link href={`/sales/invoices?contact=${r.id}`} className="font-mono text-xs text-brand-700 hover:underline">
+                    <Link href={`/contacts/${r.id}`} className="font-mono text-xs text-brand-700 hover:underline">
                       {r.code}
                     </Link>
                   </td>
