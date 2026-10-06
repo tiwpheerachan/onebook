@@ -1270,6 +1270,13 @@ const th = {
       active: 'ใช้งาน', yes: 'ใช้', no: 'ปิด',
       codeNameRequired: 'กรุณากรอกรหัสและชื่อสถานที่', codeUsed: 'รหัสสถานที่นี้ถูกใช้แล้ว',
     },
+    apps: {
+      title: 'สลับระบบ',
+      accounting: 'บัญชี (ONEBOOK)',
+      assets: 'ทรัพย์สินถาวร',
+      oa: 'ขออนุมัติ (OA)',
+      current: 'กำลังใช้',
+    },
     deposit: {
       title: 'เงินมัดจำ',
       applied: 'หักเงินมัดจำ', available: 'มัดจำที่ใช้ได้', remaining: 'คงเหลือ',

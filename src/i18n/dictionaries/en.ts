@@ -1272,6 +1272,13 @@ const en: Dictionary = {
       active: 'Active', yes: 'Yes', no: 'No',
       codeNameRequired: 'Code and name are required', codeUsed: 'That location code is already in use',
     },
+    apps: {
+      title: 'Switch system',
+      accounting: 'Accounting (ONEBOOK)',
+      assets: 'Fixed assets',
+      oa: 'Approvals (OA)',
+      current: 'current',
+    },
     deposit: {
       title: 'Deposits',
       applied: 'Deposit applied', available: 'Deposits available', remaining: 'Remaining',

@@ -4,6 +4,7 @@ import { t, currentLocale } from '@/i18n/server';
 import { buildNav } from '@/components/layout/nav-config';
 import { AppShell, type QuickAction } from '@/components/layout/app-shell';
 import { CompanySwitcher, LanguageSwitcher, UserMenu, LockBanner } from '@/components/layout/switchers';
+import { AppSwitcher } from '@/components/layout/app-switcher';
 import { LiveBar } from '@/components/layout/live-bar';
 import { localeDate } from '@/lib/format';
 import { HELP } from '@/lib/help/content';
@@ -55,6 +56,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
       <div className="flex items-center gap-2">
         <LiveBar />
+        <AppSwitcher
+          assetUrl={process.env.ASSET_APP_URL}
+          oaUrl={process.env.OA_APP_URL}
+          labels={{ title: d.ui.apps.title, accounting: d.ui.apps.accounting, assets: d.ui.apps.assets, oa: d.ui.apps.oa, current: d.ui.apps.current }}
+        />
         <LanguageSwitcher locale={locale} />
         <UserMenu name={ctx.fullName} email={ctx.email} isGroupAdmin={ctx.isGroupAdmin} />
       </div>

@@ -1272,6 +1272,13 @@ const zh: Dictionary = {
       active: '启用', yes: '是', no: '否',
       codeNameRequired: '请填写编码和名称', codeUsed: '该位置编码已被使用',
     },
+    apps: {
+      title: '切换系统',
+      accounting: '会计（ONEBOOK）',
+      assets: '固定资产',
+      oa: '审批（OA）',
+      current: '当前',
+    },
     deposit: {
       title: '预收／预付款',
       applied: '已抵扣定金', available: '可用定金', remaining: '剩余',
