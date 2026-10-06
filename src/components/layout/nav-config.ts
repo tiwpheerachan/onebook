@@ -77,10 +77,8 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/accounting/coa', label: d.nav.coa, resource: 'accounting.coa' },
         { href: '/accounting/journal', label: d.nav.journal, resource: 'journal' },
         { href: '/accounting/ledger', label: d.nav.ledger, resource: 'journal' },
-        { href: '/accounting/assets', label: d.nav.assets, resource: 'accounting.assets' },
-        { href: '/accounting/asset-flow', label: d.nav.assetFlow, resource: 'accounting.assets' },
-        { href: '/accounting/asset-locations', label: d.nav.assetLocations, resource: 'accounting.assets' },
-        { href: '/accounting/knowledge', label: d.nav.assetKnowledge, resource: 'accounting.assets' },
+        // เมนูทรัพย์สินถูกย้ายไปใช้ "แอปทรัพย์สิน" แยกต่างหาก — สลับได้ผ่านไอคอนสลับระบบบน navbar
+        // (หน้า /accounting/assets, asset-flow, asset-locations, knowledge ยังอยู่ แต่ไม่โชว์ในเมนู)
         { href: '/accounting/recurring', label: d.ui.recurring.title, resource: 'journal' },
         { href: '/accounting/budget', label: d.ui.budget.title, resource: 'accounting.budget' },
         { href: '/accounting/close-check', label: d.nav.closeCheck, resource: 'report' },
