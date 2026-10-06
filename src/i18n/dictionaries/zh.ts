@@ -1202,6 +1202,8 @@ const zh: Dictionary = {
       notReady: '需先审批/过账此单据，才能确认为固定资产。',
       existing: '由此单据创建的资产',
       none: '暂无',
+      chooseCategory: '税法资产类别（选择后自动填入年限和科目）',
+      belowThreshold: '成本低于固定资产门槛（3,000 泰铢）——通常应计入费用，而非固定资产。',
     },
     oaImport: {
       importBtn: '从 OA 导入',

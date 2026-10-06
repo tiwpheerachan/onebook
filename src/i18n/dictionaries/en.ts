@@ -1202,6 +1202,8 @@ const en: Dictionary = {
       notReady: 'Approve/post this document first before it can be capitalized.',
       existing: 'Assets created from this document',
       none: 'None yet',
+      chooseCategory: 'Tax category (fills life + accounts)',
+      belowThreshold: 'Cost is below the capitalization threshold (3,000 THB) — normally this should be expensed, not capitalized.',
     },
     oaImport: {
       importBtn: 'Import from OA',

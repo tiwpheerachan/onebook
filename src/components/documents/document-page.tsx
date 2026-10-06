@@ -10,6 +10,7 @@ import { KIND_SLUG, SLUG_BY_KIND } from '@/lib/constants';
 import { nextKinds } from '@/lib/doc-flow';
 import { localeDate, money } from '@/lib/format';
 import { AssetManager } from '@/components/forms/asset-manager';
+import { ASSET_CATEGORIES, CAPITALIZE_THRESHOLD } from '@/lib/asset-categories';
 import { DocumentEditor } from './document-editor';
 import { ConvertButton } from './convert-button';
 import { ReserveButton } from './reserve-button';
@@ -141,6 +142,18 @@ export async function DocumentPage({
     docAssets = fa || [];
   }
   const accOptions = (accounts || []).map((a: any) => ({ id: a.id, label: `${a.code} ${a.name_th}` }));
+  // หมวดทรัพย์สินตามกฎหมายภาษี — เลือกแล้วเติมอายุ+บัญชีให้ (resolve รหัสบัญชี→id ของบริษัทนี้)
+  const acctByCode = new Map((accounts || []).map((a: any) => [a.code, a.id]));
+  const depExpenseId = (acctByCode.get('6170') as string) ?? '';
+  const categoryOptions = ASSET_CATEGORIES.map((c) => ({
+    key: c.key,
+    label: c.name[locale] ?? c.name.th,
+    lifeMonths: c.lifeMonths,
+    method: c.method,
+    assetAccountId: (acctByCode.get(c.assetCode) as string) ?? '',
+    accumAccountId: c.accumCode ? ((acctByCode.get(c.accumCode) as string) ?? '') : '',
+    expenseAccountId: depExpenseId,
+  })).filter((c) => c.assetAccountId); // แสดงเฉพาะหมวดที่มีบัญชีในผังบัญชีบริษัท
   // กดได้ต่อเมื่อเอกสารผ่านการอนุมัติ/ลงบัญชีแล้ว (draft/awaiting = ยังจัดซื้อไม่เสร็จ)
   const canCapitalize =
     assetEligible && can(ctx, 'accounting.assets', 'create')
@@ -156,6 +169,7 @@ export async function DocumentPage({
     openingAccum: d.assets.openingAccum, assetAccount: d.assets.assetAccount,
     accumAccount: d.assets.accumAccount, depExpenseAccount: d.assets.depExpenseAccount,
     auto: d.assets.auto, note: d.common.notes, monthlyPreview: d.assets.monthlyPreview,
+    chooseCategory: d.ui.capitalize.chooseCategory, belowThreshold: d.ui.capitalize.belowThreshold,
   };
 
   return (
@@ -311,6 +325,8 @@ export async function DocumentPage({
                 canEdit={false}
                 documentId={doc.id}
                 accounts={accOptions}
+                categories={categoryOptions}
+                threshold={CAPITALIZE_THRESHOLD}
                 labels={assetLabels}
                 prefill={{
                   name: doc.notes || doc.doc_number,

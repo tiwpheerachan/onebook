@@ -18,8 +18,18 @@ const blank = {
   note: '',
 };
 
+export interface AssetCategoryOption {
+  key: string;
+  label: string;
+  lifeMonths: number;
+  method: string;
+  assetAccountId: string;
+  accumAccountId: string;
+  expenseAccountId: string;
+}
+
 export function AssetManager({
-  canCreate, canEdit, editRow, accounts, labels, documentId, prefill,
+  canCreate, canEdit, editRow, accounts, labels, documentId, prefill, categories, threshold,
 }: {
   canCreate: boolean;
   canEdit: boolean;
@@ -29,6 +39,10 @@ export function AssetManager({
   /** ตั้งไว้เมื่อใช้โหมด "รับเป็นทรัพย์สิน" จากเอกสารซื้อ — จะบันทึกผ่าน capitalizeAsset แทน */
   documentId?: string;
   prefill?: Record<string, any>;
+  /** หมวดทรัพย์สินตามกฎหมายภาษี — เลือกแล้วเติมอายุ+วิธี+บัญชีให้ (เฉพาะโหมดรับเป็นทรัพย์สิน) */
+  categories?: AssetCategoryOption[];
+  /** เกณฑ์เข้าทรัพย์สิน — ต่ำกว่านี้เตือนว่าควรลงเป็นค่าใช้จ่าย */
+  threshold?: number;
 }) {
   const M = useI18n().dict.ui.misc;
   const router = useRouter();
@@ -37,6 +51,23 @@ export function AssetManager({
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+
+  // เลือกหมวดตามกฎหมายภาษี → เติมอายุค่าเสื่อม วิธี และบัญชีที่เกี่ยวข้องให้อัตโนมัติ
+  function pickCategory(key: string) {
+    const c = categories?.find((x) => x.key === key);
+    if (!c) return;
+    setForm((f: any) => ({
+      ...f,
+      category: c.label,
+      useful_life_months: c.lifeMonths,
+      method: c.method,
+      asset_account_id: c.assetAccountId,
+      accum_dep_account_id: c.accumAccountId,
+      expense_account_id: c.expenseAccountId || f.expense_account_id,
+    }));
+  }
+  const belowThreshold =
+    !!documentId && !!threshold && Number(form.cost) > 0 && Number(form.cost) < threshold;
 
   function submit() {
     setErr('');
@@ -98,7 +129,21 @@ export function AssetManager({
           <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700 ring-1 ring-inset ring-rose-200">{err}</p>
         )}
 
+        {belowThreshold && (
+          <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-inset ring-amber-200">
+            {labels.belowThreshold}
+          </p>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
+          {categories && categories.length > 0 && (
+            <F label={labels.chooseCategory} span>
+              <select className="input" defaultValue="" onChange={(e) => pickCategory(e.target.value)}>
+                <option value="">—</option>
+                {categories.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+              </select>
+            </F>
+          )}
           <F label={`${labels.code} *`}><input className="input" value={form.code} onChange={(e) => set('code', e.target.value)} /></F>
           <F label={labels.category}><input className="input" value={form.category || ''} onChange={(e) => set('category', e.target.value)} /></F>
           <F label={`${labels.name} *`} span><input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} /></F>
