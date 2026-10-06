@@ -78,6 +78,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/accounting/journal', label: d.nav.journal, resource: 'journal' },
         { href: '/accounting/ledger', label: d.nav.ledger, resource: 'journal' },
         { href: '/accounting/assets', label: d.nav.assets, resource: 'accounting.assets' },
+        { href: '/accounting/asset-flow', label: d.nav.assetFlow, resource: 'accounting.assets' },
         { href: '/accounting/knowledge', label: d.nav.assetKnowledge, resource: 'accounting.assets' },
         { href: '/accounting/recurring', label: d.ui.recurring.title, resource: 'journal' },
         { href: '/accounting/budget', label: d.ui.budget.title, resource: 'accounting.budget' },
