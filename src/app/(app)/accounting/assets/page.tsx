@@ -1,3 +1,4 @@
+import { Printer } from 'lucide-react';
 import { requirePermission, can } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { t } from '@/i18n/server';
@@ -141,6 +142,15 @@ export default async function AssetsPage({ searchParams }: { searchParams: { as_
                 </TD>
                 <TD>
                   <div className="flex items-center justify-end gap-1">
+                    <a
+                      href={`/asset-label/${r.asset_id}`}
+                      target="_blank"
+                      rel="noopener"
+                      title={d.assets.printLabel}
+                      className="rounded p-1 text-ink-400 hover:bg-brand-50 hover:text-brand-600"
+                    >
+                      <Printer className="h-4 w-4" strokeWidth={1.8} />
+                    </a>
                     <AssetManager
                       canCreate={false}
                       canEdit={can(ctx, 'accounting.assets', 'edit') && r.status !== 'disposed'}

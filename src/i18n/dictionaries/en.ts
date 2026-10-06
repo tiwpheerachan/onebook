@@ -69,7 +69,7 @@ const en: Dictionary = {
     adjustHint: 'Enter a positive quantity to receive or a negative one to issue. Adjustments appear on the stock card but are not posted to the ledger automatically.',
   },
   assets: {
-    create: 'Add asset', register: 'Fixed asset register',
+    create: 'Add asset', register: 'Fixed asset register', printLabel: 'Print label',
     registerHint: 'Monthly depreciation posts automatically: debit depreciation expense / credit accumulated depreciation',
     code: 'Code', name: 'Asset name', category: 'Category', serialNo: 'Serial no.', location: 'Location',
     acquiredDate: 'Acquired', inServiceDate: 'In service', cost: 'Cost', salvage: 'Salvage value',
@@ -1210,6 +1210,14 @@ const en: Dictionary = {
       done: 'Imported {imported} (skipped {skipped})',
       failed: 'Import failed',
       notConfigured: 'OA connection not configured (OA_BASE_URL / OA_API_KEY)',
+    },
+    scan: {
+      title: 'Fixed asset',
+      supplier: 'Supplier',
+      notFound: 'Asset not found',
+      notFoundHint: 'The code/QR may be invalid, or the asset has been disposed.',
+      footer: 'This page shows asset identification only.',
+      scanHint: 'Scan to view details',
     },
     deposit: {
       title: 'Deposits',

@@ -69,7 +69,7 @@ const zh: Dictionary = {
     adjustHint: '正数为入库，负数为出库。调整会记入存货卡，但不会自动过账到总账。',
   },
   assets: {
-    create: '新增资产', register: '固定资产台账',
+    create: '新增资产', register: '固定资产台账', printLabel: '打印标签',
     registerHint: '按月计提折旧并自动过账：借 折旧费用 / 贷 累计折旧',
     code: '编号', name: '资产名称', category: '类别', serialNo: '序列号', location: '存放地点',
     acquiredDate: '取得日期', inServiceDate: '启用日期', cost: '原值', salvage: '残值',
@@ -1210,6 +1210,14 @@ const zh: Dictionary = {
       done: '已导入 {imported} 条（跳过 {skipped}）',
       failed: '导入失败',
       notConfigured: '尚未配置 OA 连接（OA_BASE_URL / OA_API_KEY）',
+    },
+    scan: {
+      title: '固定资产',
+      supplier: '供应商',
+      notFound: '未找到该资产',
+      notFoundHint: '编码/二维码可能无效，或资产已处置。',
+      footer: '本页仅显示资产识别信息。',
+      scanHint: '扫码查看详情',
     },
     deposit: {
       title: '预收／预付款',

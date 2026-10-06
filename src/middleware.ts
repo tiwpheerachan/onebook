@@ -9,7 +9,8 @@ import { frameAncestors } from '@/lib/frame-policy';
 //   · start    ยังไม่มีเซสชันอยู่แล้วโดยธรรมชาติ
 //   · callback เป็นขาที่กลับมาสร้างเซสชัน ถ้าโดนเด้งไป login ก่อนก็ไม่มีวันสร้างได้
 //   · logout   ต้องผ่านเพื่อไปล้างคุกกี้ให้เรียบร้อย
-const PUBLIC_PATHS = ['/login', '/blocked', '/_next', '/favicon.ico', '/api/health', '/api/auth'];
+// /scan = หน้าสแกน QR ของทรัพย์สิน เปิดดูได้โดยไม่ต้องล็อกอิน (คืนเฉพาะข้อมูลระบุตัว ไม่มีตัวเลขบัญชี)
+const PUBLIC_PATHS = ['/login', '/blocked', '/_next', '/favicon.ico', '/api/health', '/api/auth', '/scan'];
 
 /**
  * ใครฝังหน้าจอนี้ได้บ้าง
