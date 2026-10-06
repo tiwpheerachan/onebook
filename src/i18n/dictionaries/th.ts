@@ -1251,6 +1251,17 @@ const th = {
       items: 'รายการ',
       flowHint: 'คลิกแต่ละขั้นเพื่อไปยังหน้าที่เกี่ยวข้อง · ตัวเลขอัปเดตสดจากข้อมูลจริง',
     },
+    assetDetail: {
+      back: 'กลับทะเบียน',
+      tabOverview: 'ภาพรวม', tabAccounting: 'บัญชี', tabDepreciation: 'ค่าเสื่อม', tabDocuments: 'เอกสาร', tabHistory: 'ประวัติ',
+      remaining: 'คงเหลือ', months: 'เดือน',
+      qrHint: 'สแกน QR เพื่อเปิดหน้าข้อมูลทรัพย์สิน',
+      general: 'ข้อมูลทั่วไป', source: 'ที่มา (เอกสารซื้อ)', splitGroup: 'ชุด/กลุ่มที่แยกมา', supplier: 'ผู้ขาย',
+      costInfo: 'ข้อมูลต้นทุน', policy: 'นโยบายค่าเสื่อม', glMapping: 'ผังบัญชีที่เกี่ยวข้อง',
+      schedule: 'ตารางค่าเสื่อมราคา', scheduleHint: 'งวดที่ลงบัญชีแล้ว + พยากรณ์งวดอนาคต', period: 'งวด',
+      posted: 'ลงบัญชีแล้ว', planned: 'พยากรณ์', noSchedule: 'ไม่มีตารางค่าเสื่อม (ตรวจวันเริ่มใช้งาน/อายุ)',
+      endDate: 'งวดสุดท้าย', docsHint: 'เอกสารแนบดูจากเอกสารต้นทาง', openSourceDoc: 'เปิดเอกสารต้นทาง', noHistory: 'ยังไม่มีการลงค่าเสื่อม',
+    },
     deposit: {
       title: 'เงินมัดจำ',
       applied: 'หักเงินมัดจำ', available: 'มัดจำที่ใช้ได้', remaining: 'คงเหลือ',

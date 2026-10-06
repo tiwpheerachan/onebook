@@ -128,7 +128,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: { as_
             {rows.length === 0 && <EmptyRow colSpan={9} label={d.common.noData} />}
             {rows.map((r) => (
               <TR key={r.asset_id}>
-                <TD className="font-mono text-xxs">{r.code}</TD>
+                <TD className="font-mono text-xxs"><a href={`/accounting/assets/${r.asset_id}`} className="text-brand-700 hover:underline">{r.code}</a></TD>
                 <TD>{r.name}</TD>
                 <TD className="text-ink-500">{r.category || '—'}</TD>
                 <TD className="whitespace-nowrap text-ink-500">{r.acquired_date}</TD>

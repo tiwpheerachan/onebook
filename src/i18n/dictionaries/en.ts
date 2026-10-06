@@ -1253,6 +1253,17 @@ const en: Dictionary = {
       items: 'items',
       flowHint: 'Click each step to open the related page · figures update live',
     },
+    assetDetail: {
+      back: 'Back to register',
+      tabOverview: 'Overview', tabAccounting: 'Accounting', tabDepreciation: 'Depreciation', tabDocuments: 'Documents', tabHistory: 'History',
+      remaining: 'Remaining', months: 'months',
+      qrHint: 'Scan the QR to open the asset info page',
+      general: 'General', source: 'Source (purchase document)', splitGroup: 'Split group', supplier: 'Supplier',
+      costInfo: 'Cost info', policy: 'Depreciation policy', glMapping: 'GL accounts',
+      schedule: 'Depreciation schedule', scheduleHint: 'Posted periods + forecast of future periods', period: 'Period',
+      posted: 'Posted', planned: 'Planned', noSchedule: 'No schedule (check in-service date / life)',
+      endDate: 'Final period', docsHint: 'Attachments are on the source document', openSourceDoc: 'Open source document', noHistory: 'No depreciation posted yet',
+    },
     deposit: {
       title: 'Deposits',
       applied: 'Deposit applied', available: 'Deposits available', remaining: 'Remaining',

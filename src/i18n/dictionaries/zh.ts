@@ -1253,6 +1253,17 @@ const zh: Dictionary = {
       items: '项',
       flowHint: '点击各步骤打开相关页面 · 数据实时更新',
     },
+    assetDetail: {
+      back: '返回台账',
+      tabOverview: '概览', tabAccounting: '会计', tabDepreciation: '折旧', tabDocuments: '文件', tabHistory: '历史',
+      remaining: '剩余', months: '个月',
+      qrHint: '扫描二维码打开资产信息页',
+      general: '基本信息', source: '来源（采购单据）', splitGroup: '拆分组', supplier: '供应商',
+      costInfo: '成本信息', policy: '折旧政策', glMapping: '相关会计科目',
+      schedule: '折旧明细表', scheduleHint: '已过账期间 + 未来期间预测', period: '期间',
+      posted: '已过账', planned: '预测', noSchedule: '无折旧表（请检查启用日期/年限）',
+      endDate: '最后期间', docsHint: '附件见来源单据', openSourceDoc: '打开来源单据', noHistory: '尚未计提折旧',
+    },
     deposit: {
       title: '预收／预付款',
       applied: '已抵扣定金', available: '可用定金', remaining: '剩余',
