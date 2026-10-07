@@ -49,7 +49,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // บน Windows เบราว์เซอร์ต้องเบลอพื้นหลังใหม่ทุกเฟรมที่เลื่อน กิน GPU หนักและทำให้กระตุก
   // พื้นทึบให้ผลตาเกือบเหมือนกันแต่ไม่มีค่าใช้จ่ายเลย
   const header = (
-    <header className="no-print sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-ink-200 bg-white px-4 sm:px-6">
+    <header className="no-print sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-ink-200/70 bg-white/70 px-4 backdrop-blur-xl sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <CompanySwitcher companies={ctx.companies} current={ctx.company.id} />
         {ctx.lockedThrough && <LockBanner date={localeDate(ctx.lockedThrough, locale)} />}
