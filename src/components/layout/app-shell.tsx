@@ -9,6 +9,7 @@ import { cn } from '@/lib/cn';
 import { Sidebar } from './sidebar';
 import { CommandPalette, type PageEntry } from './command-palette';
 import { AiPanel } from './ai-panel';
+import { HelpAssistant } from './help-assistant';
 import type { NavGroup } from './nav-config';
 import type { Dictionary } from '@/i18n';
 
@@ -154,6 +155,7 @@ export function AppShell({
         locale={locale}
         canPropose={canPropose}
       />
+      <HelpAssistant locale={locale} />
     </div>
   );
 }
