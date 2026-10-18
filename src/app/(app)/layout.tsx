@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSessionContext, can } from '@/lib/session';
+import { createAdminClient } from '@/lib/supabase/server';
 import { t, currentLocale } from '@/i18n/server';
 import { buildNav } from '@/components/layout/nav-config';
 import { AppShell, type QuickAction } from '@/components/layout/app-shell';
@@ -16,6 +17,31 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const d = t();
   const locale = currentLocale();
+
+  // โปรไฟล์บนแถบบน (รูป + บทบาท) — อ่านผ่าน admin client ฝั่งเซิร์ฟเวอร์ ไม่แตะ rpt_session_context
+  // รูปเก็บใน user_metadata.avatar_url (ตั้งจาก claim picture ตอนล็อกอิน) · บทบาท = group admin หรือชื่อบทบาทในบริษัทที่เลือก
+  let avatarUrl: string | null = null;
+  let roleLabel = '';
+  try {
+    const admin = createAdminClient();
+    const { data: au } = await admin.auth.admin.getUserById(ctx.userId);
+    avatarUrl = ((au?.user?.user_metadata as Record<string, unknown> | undefined)?.avatar_url as string) || null;
+    if (ctx.isGroupAdmin) {
+      roleLabel = locale === 'en' ? 'Group Admin' : locale === 'zh' ? '集团管理员' : 'ผู้ดูแลสูงสุด';
+    } else {
+      const { data: m } = await admin
+        .from('user_companies')
+        .select('roles(name_th,name_en,name_zh)')
+        .eq('user_id', ctx.userId)
+        .eq('company_id', ctx.company.id)
+        .maybeSingle();
+      const r = (m as { roles?: { name_th?: string; name_en?: string; name_zh?: string } } | null)?.roles;
+      if (r) roleLabel = (locale === 'en' ? r.name_en : locale === 'zh' ? r.name_zh : r.name_th) || r.name_th || '';
+    }
+  } catch {
+    /* แถบบนจะใช้อักษรย่อ/ไม่มีบทบาทแทน */
+  }
+
   const groups = buildNav(d)
     .map((g) => ({ ...g, items: g.items.filter((i) => can(ctx, i.resource, i.action || 'view')) }))
     .filter((g) => g.items.length > 0);
@@ -62,7 +88,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           labels={{ title: d.ui.apps.title, accounting: d.ui.apps.accounting, assets: d.ui.apps.assets, oa: d.ui.apps.oa, current: d.ui.apps.current }}
         />
         <LanguageSwitcher locale={locale} />
-        <UserMenu name={ctx.fullName} email={ctx.email} isGroupAdmin={ctx.isGroupAdmin} />
+        <UserMenu name={ctx.fullName} email={ctx.email} isGroupAdmin={ctx.isGroupAdmin} avatarUrl={avatarUrl} roleLabel={roleLabel} />
       </div>
     </header>
   );

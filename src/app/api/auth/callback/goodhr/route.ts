@@ -83,12 +83,17 @@ export async function GET(req: Request) {
     if (userId) {
       const { data: existing } = await admin.auth.admin.getUserById(userId);
       if (existing?.user?.email) sessionEmail = existing.user.email;
+      // รีเฟรชรูปโปรไฟล์จาก GoodHR (claim picture) ลง user_metadata ทุกครั้งที่ล็อกอิน
+      const prevMeta = (existing?.user?.user_metadata as Record<string, unknown>) || {};
+      if (c.picture && prevMeta.avatar_url !== c.picture) {
+        await admin.auth.admin.updateUserById(userId, { user_metadata: { ...prevMeta, avatar_url: c.picture } }).catch(() => {});
+      }
     }
     if (!userId) {
       const { data: created, error: cErr } = await admin.auth.admin.createUser({
         email: c.email,
         email_confirm: true,
-        user_metadata: { full_name: c.name, provider: 'goodhr', goodhr_sub: c.sub },
+        user_metadata: { full_name: c.name, provider: 'goodhr', goodhr_sub: c.sub, avatar_url: c.picture || '' },
       });
       if (cErr || !created?.user) return back(req, 'create_failed');
       userId = created.user.id;

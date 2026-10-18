@@ -9,6 +9,7 @@ import { Table, THead, TBody, TR, TH, TD, EmptyRow } from '@/components/ui/table
 import { firstDayOfMonth, lastDayOfMonth, localeDate, money, currencyLabel } from '@/lib/format';
 import { SLUG_BY_KIND } from '@/lib/constants';
 import { isPurchase } from '@/components/documents/doc-meta';
+import { MonthlyBars, ProgressRow, type Series } from '@/components/charts/charts';
 import { FileText, ShoppingCart, UserPlus, BookOpen, BellRing, AlertTriangle } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +26,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   // ยิงพร้อมกัน : สรุปตัวเลขกับรายการเอกสารล่าสุดไม่ขึ้นต่อกัน
   const seesContacts = can(ctx, 'contacts', 'view');
   const seesReport = can(ctx, 'report', 'view');
-  const [{ data: stats }, { data: recent }, { data: cycles }, { data: kpi }, { data: unread }] = await Promise.all([
+  // แนวโน้มรายเดือนใช้ปีของวันสิ้นสุดช่วง เพื่อให้กราฟครอบคลุมทั้งปีปัจจุบัน
+  const chartYear = new Date(to).getFullYear() || new Date().getFullYear();
+  const chartMonth = new Date(to).getMonth() + 1;
+  const [{ data: stats }, { data: recent }, { data: cycles }, { data: kpi }, { data: unread },
+    { data: revOv }, { data: expOv }, { data: aging }] = await Promise.all([
     supabase.rpc('rpt_dashboard', { p_company: ctx.company.id, p_from: from, p_to: to }),
     supabase
       .from('documents')
@@ -44,6 +49,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
       ? supabase.rpc('rpt_kpi', { p_company: ctx.company.id, p_from: from, p_to: to })
       : Promise.resolve({ data: null }),
     supabase.rpc('rpt_unread_count', { p_company: ctx.company.id }),
+    // กราฟแนวโน้ม + อายุลูกหนี้ ใช้ RPC เดียวกับหน้ารายงาน เห็นภาพรวมได้ตั้งแต่หน้าแรก (เฉพาะคนที่ดูรายงานได้)
+    seesReport
+      ? supabase.rpc('rpt_revenue_overview', { p_company: ctx.company.id, p_year: chartYear, p_month: chartMonth })
+      : Promise.resolve({ data: null }),
+    seesReport
+      ? supabase.rpc('rpt_expense_overview', { p_company: ctx.company.id, p_year: chartYear, p_month: chartMonth })
+      : Promise.resolve({ data: null }),
+    seesReport
+      ? supabase.rpc('rpt_aging', { p_company: ctx.company.id, p_as_of: to, p_side: 'ar' })
+      : Promise.resolve({ data: null }),
   ]);
   const s = (stats || {}) as any;
 
@@ -74,6 +89,31 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
     { href: '/contacts?new=1', label: d.nav.contacts, icon: UserPlus, resource: 'contacts' },
     { href: '/accounting/journal?new=1', label: d.nav.journal, icon: BookOpen, resource: 'journal' },
   ].filter((q) => can(ctx, q.resource, 'create'));
+
+  // แนวโน้มรายรับ–รายจ่าย 12 เดือน — รวม paid+open+overdue เป็นยอดรวมของเดือนนั้น (ตามที่หน้า sales/purchase ส่งมา)
+  const sumMonth = (monthly: any[], i: number) =>
+    Number(monthly?.find((m) => m.month === i + 1)?.paid || 0) +
+    Number(monthly?.find((m) => m.month === i + 1)?.open || 0) +
+    Number(monthly?.find((m) => m.month === i + 1)?.overdue || 0);
+  const revMonthly = ((revOv as any)?.monthly || []) as any[];
+  const expMonthly = ((expOv as any)?.monthly || []) as any[];
+  const trendSeries: Series[] = [
+    { key: 'rev', label: d.dash.revenue, color: '#14827c', values: Array.from({ length: 12 }, (_, i) => sumMonth(revMonthly, i)) },
+    { key: 'exp', label: d.dash.expense, color: '#f59e0b', values: Array.from({ length: 12 }, (_, i) => sumMonth(expMonthly, i)) },
+  ];
+  const hasTrend = trendSeries.some((s) => s.values.some((v) => v > 0));
+
+  // อายุลูกหนี้คงค้าง — จัดกลุ่มตามช่วงอายุ ใช้โครงสร้างเดียวกับหน้ารายงาน
+  const AGING_BUCKETS: { key: string; color: string }[] = [
+    { key: 'current', color: 'bg-emerald-500' },
+    { key: 'd1_30', color: 'bg-brand-500' },
+    { key: 'd31_60', color: 'bg-amber-500' },
+    { key: 'd61_90', color: 'bg-orange-500' },
+    { key: 'd90_plus', color: 'bg-rose-500' },
+  ];
+  const agingRows = ((aging as any) || []) as any[];
+  const agingGrand = agingRows.reduce((a, r) => a + Number(r.outstanding || 0), 0);
+  const agingOf = (k: string) => agingRows.filter((r) => r.bucket === k);
 
   return (
     <>
@@ -178,6 +218,58 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
               value={k.ar_overdue_pct == null ? '–' : `${k.ar_overdue_pct}%`}
               tone={Number(k.ar_overdue_pct || 0) > 25 ? 'negative' : 'neutral'} />
           </div>
+        </div>
+      )}
+
+      {/* กราฟภาพรวมการเงิน — แนวโน้มรายรับ/รายจ่าย และอายุลูกหนี้ */}
+      {seesReport && (
+        <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <Card className="card-pad">
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-sm font-semibold text-ink-900">{d.ui.dashUi.revExpTrend}</h2>
+              <Link href="/reports/profit-loss" className="text-xs text-brand-600 hover:underline">
+                {d.ui.dashUi.viewReport}
+              </Link>
+            </div>
+            {hasTrend ? (
+              <MonthlyBars series={trendSeries} year={chartYear} />
+            ) : (
+              <p className="py-10 text-center text-sm text-ink-400">{d.ui.dashUi.noData}</p>
+            )}
+          </Card>
+
+          <Card className="card-pad">
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-sm font-semibold text-ink-900">{d.ui.dashUi.arAgingTitle}</h2>
+              <Link href="/reports/ar-aging" className="text-xs text-brand-600 hover:underline">
+                {d.ui.dashUi.viewReport}
+              </Link>
+            </div>
+            {agingGrand > 0 ? (
+              <div className="divide-y divide-ink-100">
+                {AGING_BUCKETS.map((b) => {
+                  const rows = agingOf(b.key);
+                  const amount = rows.reduce((a, r) => a + Number(r.outstanding || 0), 0);
+                  return (
+                    <ProgressRow
+                      key={b.key}
+                      label={(d.ui.aging as any)[b.key]}
+                      amount={amount}
+                      count={rows.length}
+                      ratio={agingGrand > 0 ? amount / agingGrand : 0}
+                      color={b.color}
+                    />
+                  );
+                })}
+                <div className="flex items-baseline justify-between gap-3 pt-3">
+                  <span className="text-xs font-medium text-ink-700">{d.ui.aging.outstanding}</span>
+                  <b className="text-sm tabular-nums text-ink-900">{money(agingGrand)}</b>
+                </div>
+              </div>
+            ) : (
+              <p className="py-10 text-center text-sm text-ink-400">{d.ui.dashUi.noData}</p>
+            )}
+          </Card>
         </div>
       )}
 
