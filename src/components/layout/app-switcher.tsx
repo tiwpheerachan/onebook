@@ -3,7 +3,10 @@ import { useState } from 'react';
 import { LayoutGrid, Boxes, FileCheck2, BookOpen } from 'lucide-react';
 
 // ไอคอนสลับแอปบน navbar — ลิงก์ไประบบอื่นในชุดเดียวกัน (ทรัพย์สิน / ขออนุมัติ)
-// URL ส่งมาจาก server (env ASSET_APP_URL / OA_APP_URL) ไม่ตั้ง = ไม่แสดงรายการนั้น
+// URL ส่งมาจาก server (env ASSET_APP_URL / OA_APP_URL) ถ้าไม่ตั้ง ใช้ค่า default ของ Render
+const DEFAULT_ASSET = 'https://shd-asset.onrender.com';
+const DEFAULT_OA = 'https://shd-oa.onrender.com';
+
 export function AppSwitcher({
   assetUrl, oaUrl, labels,
 }: {
@@ -13,9 +16,9 @@ export function AppSwitcher({
 }) {
   const [open, setOpen] = useState(false);
   const external = [
-    assetUrl ? { key: 'assets', label: labels.assets, href: assetUrl, icon: Boxes } : null,
-    oaUrl ? { key: 'oa', label: labels.oa, href: oaUrl, icon: FileCheck2 } : null,
-  ].filter(Boolean) as { key: string; label: string; href: string; icon: typeof Boxes }[];
+    { key: 'assets', label: labels.assets, href: assetUrl || DEFAULT_ASSET, icon: Boxes },
+    { key: 'oa', label: labels.oa, href: oaUrl || DEFAULT_OA, icon: FileCheck2 },
+  ];
 
   return (
     <div className="relative">

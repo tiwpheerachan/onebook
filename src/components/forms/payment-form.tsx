@@ -5,7 +5,7 @@ import { Plus, X } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { recordPayment, voidPayment } from '@/actions/payments';
-import { money, localeDate } from '@/lib/format';
+import { money, localeDate, bangkokToday} from '@/lib/format';
 import { cn } from '@/lib/cn';
 import type { Dictionary } from '@/i18n';
 
@@ -31,7 +31,7 @@ export function PaymentForm({
   const [err, setErr] = useState('');
 
   const [docNumber, setDocNumber] = useState('');
-  const [docDate, setDocDate] = useState(new Date().toISOString().slice(0, 10));
+  const [docDate, setDocDate] = useState(bangkokToday());
   const [contactId, setContactId] = useState('');
   const [channelId, setChannelId] = useState(channels[0]?.id || '');
   const [wht, setWht] = useState<number | string>(0);

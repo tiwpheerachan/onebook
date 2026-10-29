@@ -1,4 +1,5 @@
 import 'server-only';
+import { bangkokToday } from '@/lib/format';
 
 // ตัวเชื่อมฝั่ง ONEBOOK ไปยังระบบ OA (ขออนุมัติ) ผ่าน REST สาธารณะของ OA
 // OA เป็นคนละระบบ/คนละฐานข้อมูล จึงคุยผ่าน HTTP + X-API-Key ไม่ได้ import ข้ามโปรเจกต์
@@ -62,7 +63,7 @@ export async function fetchApprovedPurchaseRequests(): Promise<OaPurchaseRequest
         docNo: str(r.doc_no),
         title: str(r.title),
         vendor: str(r?.fields?.vendor),
-        date: str(r.closed_at ?? r.doc_date).slice(0, 10) || new Date().toISOString().slice(0, 10),
+        date: str(r.closed_at ?? r.doc_date).slice(0, 10) || bangkokToday(),
         requester: str(r?.requester?.name),
         lines,
       };

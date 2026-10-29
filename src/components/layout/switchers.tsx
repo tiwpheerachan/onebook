@@ -103,8 +103,29 @@ export function LanguageSwitcher({ locale }: { locale: string }) {
   );
 }
 
-export function UserMenu({ name, email, isGroupAdmin }: { name: string; email: string; isGroupAdmin: boolean }) {
+export function UserMenu({ name, email, isGroupAdmin, avatarUrl, roleLabel }: { name: string; email: string; isGroupAdmin: boolean; avatarUrl?: string | null; roleLabel?: string }) {
   const [open, setOpen] = useState(false);
+  const [imgErr, setImgErr] = useState(false);
+  const initials = (name || email).slice(0, 2).toUpperCase();
+  const Avatar = ({ size }: { size: number }) =>
+    avatarUrl && !imgErr ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt={name}
+        referrerPolicy="no-referrer"
+        onError={() => setImgErr(true)}
+        className="rounded-full object-cover ring-1 ring-ink-200"
+        style={{ width: size, height: size }}
+      />
+    ) : (
+      <div
+        className="flex items-center justify-center rounded-full bg-brand-600 font-semibold text-white"
+        style={{ width: size, height: size, fontSize: Math.round(size * 0.36) }}
+      >
+        {initials}
+      </div>
+    );
   return (
     <div className="relative">
       <button
@@ -112,21 +133,25 @@ export function UserMenu({ name, email, isGroupAdmin }: { name: string; email: s
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-ink-100"
       >
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xxs font-semibold text-white">
-          {(name || email).slice(0, 2).toUpperCase()}
-        </div>
-        <span className="hidden text-sm text-ink-700 sm:block">{name}</span>
+        <Avatar size={30} />
+        <span className="hidden text-left leading-tight sm:block">
+          <span className="block text-sm font-medium text-ink-800">{name}</span>
+          {roleLabel && <span className="block text-xxs text-ink-500">{roleLabel}</span>}
+        </span>
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1.5 w-60 rounded-xl border border-ink-200 bg-white py-1.5 shadow-pop">
-            <div className="border-b border-ink-100 px-3.5 py-2.5">
-              <p className="truncate text-sm font-medium text-ink-900">{name}</p>
-              <p className="truncate text-xs text-ink-500">{email}</p>
-              {isGroupAdmin && (
-                <span className="chip mt-1.5 bg-brand-50 text-brand-700 ring-brand-200">Group Admin</span>
-              )}
+          <div className="absolute right-0 z-20 mt-1.5 w-64 rounded-xl border border-ink-200 bg-white py-1.5 shadow-pop">
+            <div className="flex items-center gap-2.5 border-b border-ink-100 px-3.5 py-2.5">
+              <Avatar size={36} />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-ink-900">{name}</p>
+                <p className="truncate text-xs text-ink-500">{email}</p>
+                {(roleLabel || isGroupAdmin) && (
+                  <span className="chip mt-1 bg-brand-50 text-brand-700 ring-brand-200">{roleLabel || 'Group Admin'}</span>
+                )}
+              </div>
             </div>
             <Link
               href="/settings/profile"

@@ -7,6 +7,7 @@ import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { saveWarehouse, transferStock } from '@/actions/inventory';
 import type { Dictionary } from '@/i18n';
+import { bangkokToday } from '@/lib/format';
 
 export interface WarehouseRow {
   id: string;
@@ -137,7 +138,7 @@ export function StockTransfer({
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     product_id: '', qty: '', from_id: '', to_id: '',
-    date: new Date().toISOString().slice(0, 10), note: '',
+    date: bangkokToday(), note: '',
   });
   const [err, setErr] = useState('');
   const [done, setDone] = useState(false);

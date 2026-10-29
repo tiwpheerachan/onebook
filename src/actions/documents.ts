@@ -6,6 +6,7 @@ import { t } from '@/i18n/server';
 import { calcDocument, type VatTreatment } from '@/lib/tax';
 import { canConvert, NEEDS_DUE_DATE } from '@/lib/doc-flow';
 import type { DocKind } from '@/lib/constants';
+import { bangkokToday } from '@/lib/format';
 
 export interface LinePayload {
   product_id?: string | null;
@@ -233,7 +234,7 @@ export async function convertDocument(sourceId: string, targetKind: DocKind): Pr
     .order('line_no');
   if (!srcLines || srcLines.length === 0) return { ok: false, error: t().ui.act.srcDocNoLines };
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = bangkokToday();
 
   // วันครบกำหนดคิดจากเครดิตเทอมของลูกค้า ณ ตอนแปลง ไม่ใช่ลอกจากใบเดิม
   let dueDate: string | null = null;
@@ -248,13 +249,30 @@ export async function convertDocument(sourceId: string, targetKind: DocKind): Pr
     dueDate = due.toISOString().slice(0, 10);
   }
 
+  // กันลงบัญชีซ้ำ (#1): ถ้าแปลงใบสั่งซื้อ (PO) เป็นใบซื้อ และ PO นี้มี "ใบรับสินค้า (GR)"
+  // อยู่แล้ว ให้ผูกใบซื้อเข้ากับ GR แทน PO → สายเป็นเส้นตรง PO→GR→ใบซื้อ
+  // ไม่งั้น GR กับใบซื้อจะเป็นพี่น้องที่ต่างชี้ไป PO แล้วต่างลงบัญชี (Dr สินทรัพย์/Cr เจ้าหนี้) ซ้ำกัน
+  let refId: string = src.id;
+  let refNumber: string = src.doc_number;
+  if (src.kind === 'purchase_order' && targetKind === 'bill') {
+    const { data: grs } = await supabase
+      .from('documents')
+      .select('id, doc_number')
+      .eq('ref_document_id', src.id)
+      .eq('kind', 'goods_receipt')
+      .neq('status', 'void')
+      .order('doc_date', { ascending: false })
+      .limit(1);
+    if (grs && grs.length > 0) { refId = grs[0].id; refNumber = grs[0].doc_number; }
+  }
+
   return saveDocument({
     kind: targetKind,
     doc_date: today,
     due_date: dueDate,
     contact_id: src.contact_id,
-    reference: src.doc_number,          // อ้างเลขที่เอกสารต้นทางไว้บนหน้าเอกสาร
-    ref_document_id: src.id,
+    reference: refNumber,               // อ้างเลขที่เอกสารต้นทาง (ผูกกับ GR ถ้ามี เพื่อกันลงซ้ำ)
+    ref_document_id: refId,
     notes: src.notes,
     discount_amount: Number(src.discount_amount || 0),
     lines: srcLines.map((l: any) => ({

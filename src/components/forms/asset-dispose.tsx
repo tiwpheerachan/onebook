@@ -5,6 +5,7 @@ import { PackageMinus } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { disposeAsset } from '@/actions/assets';
+import { bangkokToday } from '@/lib/format';
 
 const fmt = (n: any) =>
   Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -18,7 +19,7 @@ export function AssetDispose({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
-    disposed_date: new Date().toISOString().slice(0, 10),
+    disposed_date: bangkokToday(),
     proceeds: 0 as any,
     note: '',
   });

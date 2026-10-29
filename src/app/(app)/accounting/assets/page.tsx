@@ -9,7 +9,7 @@ import { ExportCsvButton } from '@/components/ui/export-csv';
 import { AssetManager } from '@/components/forms/asset-manager';
 import { AssetDispose } from '@/components/forms/asset-dispose';
 import { DepreciationRunner } from '@/components/forms/depreciation-runner';
-import { money } from '@/lib/format';
+import { money, bangkokToday} from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +24,7 @@ export default async function AssetsPage({ searchParams }: { searchParams: { as_
   const ctx = await requirePermission('accounting.assets', 'view');
   const d = t();
   const supabase = createClient();
-  const asOf = searchParams.as_of || new Date().toISOString().slice(0, 10);
+  const asOf = searchParams.as_of || bangkokToday();
 
   const [{ data: register }, { data: assets }, { data: accounts }] = await Promise.all([
     supabase.rpc('rpt_asset_register', { p_company: ctx.company.id, p_as_of: asOf }),

@@ -6,11 +6,12 @@ import { Plus, Pencil } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { saveAsset, capitalizeAsset } from '@/actions/assets';
+import { bangkokToday } from '@/lib/format';
 
 const blank = {
   id: null as string | null,
   code: '', name: '', name_en: '', category: '', serial_no: '', location: '',
-  acquired_date: new Date().toISOString().slice(0, 10),
+  acquired_date: bangkokToday(),
   in_service_date: '',
   cost: 0, salvage_value: 0, useful_life_months: 60,
   method: 'straight_line', declining_rate: 0, opening_accum_dep: 0,

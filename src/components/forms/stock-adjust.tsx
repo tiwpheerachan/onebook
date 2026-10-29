@@ -5,8 +5,9 @@ import { SlidePanel } from './slide-panel';
 import { SlidersHorizontal } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { adjustStock } from '@/actions/inventory';
+import { bangkokToday } from '@/lib/format';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => bangkokToday();
 
 export function StockAdjust({
   products,

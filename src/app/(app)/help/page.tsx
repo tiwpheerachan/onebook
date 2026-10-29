@@ -5,6 +5,7 @@ import { t, currentLocale } from '@/i18n/server';
 import { PageHeader } from '@/components/ui/page-header';
 import { HELP, GAPS } from '@/lib/help/content';
 import { tx } from '@/lib/help/types';
+import { HelpAskBox } from '@/components/layout/help-ask-box';
 import {
   Rocket, Settings, TrendingUp, ShoppingCart, Wallet, Package,
   Receipt, ClipboardCheck, ChevronRight, Lightbulb, BookOpen,
@@ -32,6 +33,8 @@ export default async function HelpPage() {
   return (
     <>
       <PageHeader title={L.title} subtitle={L.subtitle} />
+
+      <HelpAskBox locale={locale} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cats.map((c) => {

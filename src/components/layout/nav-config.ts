@@ -88,6 +88,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
     {
       id: 'reports', label: d.nav.reports, icon: 'BarChart3',
       items: [
+        { href: '/peak', label: 'การเงิน PEAK', resource: 'report' },
         { href: '/reports/kpi', label: d.ui.kpi.title, resource: 'report' },
         { href: '/reports/trial-balance', label: d.nav.trialBalance, resource: 'report' },
         { href: '/reports/compare', label: d.ui.compare.title, resource: 'report' },

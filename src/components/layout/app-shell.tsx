@@ -9,6 +9,7 @@ import { cn } from '@/lib/cn';
 import { Sidebar } from './sidebar';
 import { CommandPalette, type PageEntry } from './command-palette';
 import { AiPanel } from './ai-panel';
+import { HelpAssistant } from './help-assistant';
 import type { NavGroup } from './nav-config';
 import type { Dictionary } from '@/i18n';
 
@@ -82,7 +83,7 @@ export function AppShell({
         {header}
 
         {/* ---------- แถบนวัตกรรม ---------- */}
-        <div className="no-print sticky top-14 z-20 border-b border-ink-200 bg-white">
+        <div className="no-print sticky top-14 z-20 border-b border-ink-200/70 bg-white/70 backdrop-blur-xl">
           <div className="flex items-center gap-1.5 overflow-x-auto px-4 py-2 sm:px-6">
             <button
               type="button"
@@ -154,6 +155,7 @@ export function AppShell({
         locale={locale}
         canPropose={canPropose}
       />
+      <HelpAssistant locale={locale} />
     </div>
   );
 }

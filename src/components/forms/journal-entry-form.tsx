@@ -5,7 +5,7 @@ import { Plus, Trash2, RotateCcw } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { saveJournalEntry, reverseJournalEntry } from '@/actions/journal';
-import { money } from '@/lib/format';
+import { money, bangkokToday} from '@/lib/format';
 import { cn } from '@/lib/cn';
 import type { Dictionary } from '@/i18n';
 
@@ -40,7 +40,7 @@ export function JournalEntryForm({
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
 
-  const [entryDate, setEntryDate] = useState(new Date().toISOString().slice(0, 10));
+  const [entryDate, setEntryDate] = useState(bangkokToday());
   const [book, setBook] = useState<'GL' | 'ADJ'>('GL');
   const [description, setDescription] = useState('');
   const [lines, setLines] = useState<Line[]>([blankLine(), blankLine()]);
@@ -58,7 +58,7 @@ export function JournalEntryForm({
 
   const reset = () => {
     setDescription(''); setLines([blankLine(), blankLine()]); setErr('');
-    setEntryDate(new Date().toISOString().slice(0, 10)); setBook('GL');
+    setEntryDate(bangkokToday()); setBook('GL');
   };
 
   const submit = (post: boolean) => {

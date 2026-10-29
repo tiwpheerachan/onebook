@@ -151,7 +151,7 @@ export function Sidebar({
       ref={asideRef}
       style={{ width: ready ? w : undefined }}
       className={cn(
-        'no-print relative hidden shrink-0 border-r border-ink-200 bg-white lg:block',
+        'no-print relative hidden shrink-0 border-r border-ink-200/70 bg-white/70 backdrop-blur-xl lg:block',
         !dragging && 'transition-[width] duration-150',
         !ready && 'w-60'
       )}

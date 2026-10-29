@@ -3,7 +3,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { ClipboardList, Check, AlertTriangle, Save } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { money } from '@/lib/format';
+import { money, bangkokToday} from '@/lib/format';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { openStockCount, saveCountedQty, confirmStockCount } from '@/actions/inventory';
@@ -22,7 +22,7 @@ export function OpenCount({
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     warehouse_id: warehouses[0]?.id || '',
-    date: new Date().toISOString().slice(0, 10),
+    date: bangkokToday(),
     note: '',
   });
   const [err, setErr] = useState('');
