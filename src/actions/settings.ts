@@ -5,6 +5,14 @@ import { getSessionContext, can } from '@/lib/session';
 import { t } from '@/i18n/server';
 import { isValidThaiTaxId } from '@/lib/format';
 import { isValidPromptPayId, detectIdType } from '@/lib/promptpay';
+import { searchDirectory } from '@/lib/directory';
+
+/** ค้นหาพนักงานจากไดเรกทอรีกลาง (sso.shd) เพื่อเพิ่มผู้ใช้/ให้สิทธิ์ — คืนชื่อ/อีเมล/รูปโปรไฟล์ */
+export async function searchDirectoryAction(q: string) {
+  const ctx = await getSessionContext();
+  if (!ctx || !can(ctx, 'settings.users', 'create')) return { ok: false as const, error: 'forbidden' };
+  return searchDirectory(q);
+}
 
 /**
  * ปิดงวดพร้อมเก็บ "ลายนิ้วมือ" ของตัวเลขทั้งงวดไว้เป็นหลักฐาน

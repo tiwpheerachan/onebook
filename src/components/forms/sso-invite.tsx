@@ -1,11 +1,13 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserPlus, Trash2, IdCard, Mail } from 'lucide-react';
+import { UserPlus, Trash2, IdCard, Mail, Search, User } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { useI18n } from '@/i18n/provider';
-import { inviteSsoUser, cancelSsoInvitation } from '@/actions/settings';
+import { inviteSsoUser, cancelSsoInvitation, searchDirectoryAction } from '@/actions/settings';
+
+interface DirPerson { union_id: string; name: string; en_name: string | null; email: string | null; job_title: string | null; departments: string[]; avatar_url: string | null; status: string }
 
 export interface Invitation {
   id: string;
@@ -37,6 +39,26 @@ export function SsoInvite({
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+
+  // ───── ค้นหาพนักงานจากไดเรกทอรีกลาง (Lark/GoodHR) พร้อมรูปโปรไฟล์ ─────
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState<DirPerson[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [dirMsg, setDirMsg] = useState('');
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doSearch = (val: string) => {
+    setQ(val);
+    if (timer.current) clearTimeout(timer.current);
+    if (val.trim().length < 2) { setResults([]); setDirMsg(''); return; }
+    timer.current = setTimeout(() => {
+      setSearching(true);
+      searchDirectoryAction(val).then((r: any) => {
+        if (r.ok) { setResults(r.items); setDirMsg(r.items.length ? '' : 'ไม่พบพนักงานที่ตรงกับคำค้น'); }
+        else { setResults([]); setDirMsg(r.error === 'not_configured' ? 'ยังไม่ได้ตั้งค่า CENTRAL_API_KEY (ค้นหาจากไดเรกทอรีกลาง) — ติดต่อผู้ดูแลระบบ' : 'ค้นหาไดเรกทอรีไม่สำเร็จ'); }
+      }).finally(() => setSearching(false));
+    }, 350);
+  };
+  const pick = (p: DirPerson) => { set('email', p.email || ''); set('note', `${p.name}${p.job_title ? ' · ' + p.job_title : ''}`); setResults([]); setQ(p.name); };
 
   if (!canCreate) return null;
 
@@ -75,6 +97,33 @@ export function SsoInvite({
         <p className="mb-4 rounded-lg bg-brand-50 px-3 py-2.5 text-xs leading-relaxed text-brand-800">
           {L.inviteHint}
         </p>
+
+        {/* ───── ค้นหาพนักงานจากไดเรกทอรีกลาง (พร้อมรูปโปรไฟล์) ───── */}
+        <div className="mb-4">
+          <label className="label">ค้นหาพนักงาน (จากระบบกลาง / Lark)</label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-ink-400" />
+            <input className="input pl-8" placeholder="พิมพ์ชื่อหรืออีเมล…" value={q} onChange={(e) => doSearch(e.target.value)} />
+            {searching && <ShdSpinner size={14} />}
+          </div>
+          {dirMsg && <p className="mt-1 text-xxs text-ink-400">{dirMsg}</p>}
+          {results.length > 0 && (
+            <div className="mt-2 max-h-64 overflow-auto rounded-lg border border-ink-100">
+              {results.map((p) => (
+                <button key={p.union_id} type="button" onClick={() => pick(p)}
+                  className="flex w-full items-center gap-3 border-b border-ink-50 px-3 py-2 text-left last:border-0 hover:bg-ink-50">
+                  {p.avatar_url
+                    ? <img src={p.avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                    : <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-100 text-ink-400"><User className="h-4 w-4" /></span>}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-ink-800">{p.name}{p.en_name ? <span className="ml-1 text-xs font-normal text-ink-400">{p.en_name}</span> : null}</span>
+                    <span className="block truncate text-xs text-ink-400">{[p.job_title, p.departments?.[0], p.email].filter(Boolean).join(' · ')}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="space-y-4">
           <div>
