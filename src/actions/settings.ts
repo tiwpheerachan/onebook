@@ -157,6 +157,7 @@ export async function updateCompanyProfile(form: Record<string, any>) {
       email: form.email || null,
       website: form.website || null,
       logo_url: form.logo_url || null,
+      stamp_url: form.stamp_url || null,
       promptpay_id: ppId || null,
       promptpay_type: ppId ? detectIdType(ppId) : null,
       bank_name: form.bank_name || null,

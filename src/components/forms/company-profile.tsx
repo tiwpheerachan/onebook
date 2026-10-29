@@ -21,6 +21,32 @@ export function CompanyProfileEditor({
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
+  // อัปโหลดไฟล์รูป → base64 data URL (เก็บในฐานข้อมูล · เตือนถ้าเกิน 400KB)
+  const onImg = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 400 * 1024) { setErr('ไฟล์ใหญ่เกิน 400KB — กรุณาใช้รูปเล็กลง'); return; }
+    const reader = new FileReader();
+    reader.onload = () => set(k, String(reader.result));
+    reader.readAsDataURL(file);
+  };
+  const ImgUpload = ({ field, label }: { field: string; label: string }) => (
+    <div className="col-span-2">
+      <label className="label">{label}</label>
+      <div className="flex items-center gap-4">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-ink-200 bg-ink-50">
+          {form[field] ? <img src={form[field]} alt={label} className="max-h-full max-w-full object-contain" /> : <span className="text-xxs text-ink-400">ไม่มีรูป</span>}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-ink-200 px-3 py-1.5 text-sm hover:bg-ink-50">
+            อัปโหลดรูป<input type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden" onChange={onImg(field)} />
+          </label>
+          {form[field] && <button type="button" className="text-left text-xs text-rose-600 hover:underline" onClick={() => set(field, '')}>ลบรูป</button>}
+          <span className="text-xxs text-ink-400">PNG/JPG/SVG · ≤400KB</span>
+        </div>
+      </div>
+    </div>
+  );
 
   if (!canEdit) return null;
 
@@ -96,8 +122,8 @@ export function CompanyProfileEditor({
             <input className="input" value={form.email || ''} onChange={(e) => set('email', e.target.value)} /></div>
           <div><label className="label">{L.website}</label>
             <input className="input" value={form.website || ''} onChange={(e) => set('website', e.target.value)} /></div>
-          <div><label className="label">{L.logoUrl}</label>
-            <input className="input" placeholder="https://…" value={form.logo_url || ''} onChange={(e) => set('logo_url', e.target.value)} /></div>
+          <ImgUpload field="logo_url" label="โลโก้บริษัท" />
+          <ImgUpload field="stamp_url" label="ตราประทับ / ตรายาง" />
         </div>
 
         <p className="section-title mb-3 mt-6">{L.payChannels}</p>
