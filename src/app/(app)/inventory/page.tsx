@@ -7,7 +7,7 @@ import { Table, THead, TBody, TR, TH, TD, EmptyRow } from '@/components/ui/table
 import { StatCard } from '@/components/ui/stat-card';
 import { ExportCsvButton } from '@/components/ui/export-csv';
 import { StockAdjust } from '@/components/forms/stock-adjust';
-import { money } from '@/lib/format';
+import { money, bangkokToday} from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: { 
   const ctx = await requirePermission('products.inventory', 'view');
   const d = t();
   const supabase = createClient();
-  const asOf = searchParams.as_of || new Date().toISOString().slice(0, 10);
+  const asOf = searchParams.as_of || bangkokToday();
 
   // wh ว่าง = รวมทุกคลัง
   const wh = searchParams.wh || null;

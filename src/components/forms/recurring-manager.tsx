@@ -5,7 +5,7 @@ import { Plus, Pencil, Trash2, Play, X } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { useI18n } from '@/i18n/provider';
-import { money } from '@/lib/format';
+import { money, bangkokToday} from '@/lib/format';
 import {
   saveRecurring, deleteRecurring, saveAmortization, deleteAmortization, runRecurring,
 } from '@/actions/recurring';
@@ -32,7 +32,7 @@ export function RecurringEditor({
   const L = d.ui.recurring;
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = bangkokToday();
   const [form, setForm] = useState<any>({
     name: row?.name || '', description: row?.description || '',
     book: row?.book || 'GL', frequency: row?.frequency || 'monthly',
@@ -201,7 +201,7 @@ export function AmortEditor({
   const L = d.ui.recurring;
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = bangkokToday();
   const [form, setForm] = useState<any>({
     name: row?.name || '',
     prepaid_account_id: row?.prepaid_account_id || '',

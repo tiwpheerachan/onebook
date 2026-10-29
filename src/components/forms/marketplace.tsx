@@ -5,6 +5,7 @@ import { Plus, Pencil, FileDown, BookCheck } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { saveMarketplaceAccount, saveSettlement, postSettlement } from '@/actions/marketplace';
+import { bangkokToday } from '@/lib/format';
 
 type Opt = { id: string; label: string };
 
@@ -120,7 +121,7 @@ export function MarketplaceManager({
   );
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => bangkokToday();
 
 export function SettlementImport({ shops, labels }: { shops: Opt[]; labels: Record<string, string> }) {
   const router = useRouter();

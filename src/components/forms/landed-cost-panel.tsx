@@ -3,7 +3,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Coins, Plus, Trash2, Check, Info } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { money } from '@/lib/format';
+import { money, bangkokToday} from '@/lib/format';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import {
@@ -23,7 +23,7 @@ export function NewLandedCost({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
-    source_document_id: '', date: new Date().toISOString().slice(0, 10),
+    source_document_id: '', date: bangkokToday(),
     method: 'value' as 'value' | 'qty' | 'weight', note: '',
   });
   const [err, setErr] = useState('');

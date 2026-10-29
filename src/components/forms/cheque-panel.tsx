@@ -7,6 +7,7 @@ import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { saveCheque, clearCheque, bounceCheque } from '@/actions/cheques';
 import type { Dictionary } from '@/i18n';
+import { bangkokToday } from '@/lib/format';
 
 /** บันทึกเช็คใบใหม่ */
 export function NewCheque({
@@ -23,7 +24,7 @@ export function NewCheque({
   const [form, setForm] = useState({
     direction: 'receive' as 'receive' | 'pay',
     cheque_number: '', bank_name: '', cheque_date: '',
-    due_date: new Date().toISOString().slice(0, 10),
+    due_date: bangkokToday(),
     amount: '', contact_id: '', channel_id: channels[0]?.id || '', note: '',
   });
   const [err, setErr] = useState('');
@@ -133,7 +134,7 @@ export function ChequeActions({
   const L = d.ui.cheque;
   const router = useRouter();
   const [mode, setMode] = useState<null | 'clear' | 'bounce'>(null);
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(bangkokToday());
   const [channel, setChannel] = useState(channels[0]?.id || '');
   const [reason, setReason] = useState('');
   const [err, setErr] = useState('');

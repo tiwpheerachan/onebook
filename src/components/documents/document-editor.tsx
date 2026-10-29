@@ -7,6 +7,7 @@ import { calcDocument, calcLine, WHT_PRESETS, type VatTreatment } from '@/lib/ta
 import { money, bahtTextSafe } from '@/lib/ui-helpers';
 import { saveDocument, approveDocument, voidDocument } from '@/actions/documents';
 import { FxPanel, type FxState } from './fx-panel';
+import { bangkokToday } from '@/lib/format';
 
 interface Option {
   id: string; label: string; sub?: string; price?: number; unit?: string;
@@ -108,7 +109,7 @@ export function DocumentEditor(p: EditorProps) {
     !!p.doc && (['approved', 'paid', 'partial', 'void', 'closed'].includes(p.doc.status) || !p.perms.edit);
   const frozen = !!p.lockedThrough && !!p.doc && p.doc.doc_date <= p.lockedThrough;
 
-  const [docDate, setDocDate] = useState<string>(p.doc?.doc_date || new Date().toISOString().slice(0, 10));
+  const [docDate, setDocDate] = useState<string>(p.doc?.doc_date || bangkokToday());
   const [dueDate, setDueDate] = useState<string>(p.doc?.due_date || '');
   const [contactId, setContactId] = useState<string>(p.doc?.contact_id || p.initialContactId || '');
   const [reference, setReference] = useState<string>(p.doc?.reference || '');

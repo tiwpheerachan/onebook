@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import { t } from '@/i18n/server';
 import { PageHeader, Card } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
-import { money } from '@/lib/format';
+import { money, bangkokToday} from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +24,7 @@ export default async function AssetFlowPage() {
   const ctx = await requirePermission('accounting.assets', 'view');
   const d = t();
   const supabase = createClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = bangkokToday();
 
   const [{ data: docs }, { data: reg }] = await Promise.all([
     supabase.from('documents').select('kind, status')

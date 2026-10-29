@@ -8,6 +8,7 @@ import type { TaskDetail } from '@/components/tasks/task-panel';
 import { aiBrief, type TaskSummary } from '@/lib/ai-brief';
 import { SLUG_BY_KIND } from '@/lib/constants';
 import { buildSuggestions, type OverdueDoc } from '@/lib/task-suggest';
+import { bangkokToday } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -159,7 +160,7 @@ export default async function TasksPage({
   }
 
   /* ───────── ข้อมูลตั้งต้นสำหรับงานที่ระบบเสนอ ───────── */
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = bangkokToday();
   const [{ data: arRows }, { data: keyRows }] = await Promise.all([
     supabase
       .from('documents')

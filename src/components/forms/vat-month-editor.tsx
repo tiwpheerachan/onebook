@@ -7,6 +7,7 @@ import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
 import { setVatTaxMonth } from '@/actions/settings';
 import type { Dictionary } from '@/i18n';
+import { bangkokToday } from '@/lib/format';
 
 export interface VatRow {
   id: string;
@@ -50,7 +51,7 @@ export function VatMonthEditor({ row, d, canEdit }: { row: VatRow; d: Dictionary
   // บิลซื้อมักตั้งจากใบแจ้งหนี้ก่อนได้รับใบกำกับ สองวันที่นี้จึงคนละตัวกัน
   const anchor = (tiDate || row.doc_date).slice(0, 7);
   const lastMonth = addMonths(anchor, 6);
-  const futureTi = !!tiDate && tiDate > new Date().toISOString().slice(0, 10);
+  const futureTi = !!tiDate && tiDate > bangkokToday();
   const monthOutOfRange = mode === 'month' && !!month && (month < anchor || month > lastMonth);
 
   const submit = () => {
@@ -145,7 +146,7 @@ export function VatMonthEditor({ row, d, canEdit }: { row: VatRow; d: Dictionary
               <input
                 type="date"
                 className={cn('input', futureTi && 'border-rose-400 focus:border-rose-400 focus:ring-rose-100')}
-                max={new Date().toISOString().slice(0, 10)}
+                max={bangkokToday()}
                 value={tiDate}
                 onChange={(e) => setTiDate(e.target.value)}
               />
