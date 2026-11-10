@@ -89,6 +89,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
       id: 'reports', label: d.nav.reports, icon: 'BarChart3',
       items: [
         { href: '/peak', label: 'การเงิน PEAK', resource: 'report' },
+        { href: '/oa', label: 'เอกสาร OA', resource: 'report' },
         { href: '/reports/kpi', label: d.ui.kpi.title, resource: 'report' },
         { href: '/reports/trial-balance', label: d.nav.trialBalance, resource: 'report' },
         { href: '/reports/compare', label: d.ui.compare.title, resource: 'report' },
@@ -127,6 +128,7 @@ export function buildNav(d: Dictionary): NavGroup[] {
         { href: '/settings/approval', label: d.ui.approval.title, resource: 'settings.roles' },
         { href: '/settings/roles', label: d.nav.roles, resource: 'settings.roles' },
         { href: '/settings/numbering', label: d.nav.numbering, resource: 'settings.numbering' },
+        { href: '/settings/document', label: 'ตั้งค่าเอกสาร/นโยบาย', resource: 'settings.companies' },
         { href: '/settings/dimensions', label: d.ui.dimension.title, resource: 'settings.dimensions' },
         { href: '/settings/sales-reps', label: d.ui.salesRep.title, resource: 'contacts' },
         { href: '/settings/data-import', label: d.nav.dataImport, resource: 'contacts', action: 'create' },

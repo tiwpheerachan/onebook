@@ -15,6 +15,7 @@ export interface PrintCompany {
   email?: string | null;
   website?: string | null;
   logo_url?: string | null;
+  stamp_url?: string | null;
   bank_name?: string | null;
   bank_account_name?: string | null;
   bank_account_no?: string | null;
@@ -322,7 +323,12 @@ export function DocumentPrint({
                     { label: company.authorized_signer ? `ผู้มีอำนาจลงนาม\n(${company.authorized_signer})` : 'ผู้มีอำนาจลงนาม', note: 'ประทับตราบริษัท' },
                   ].map((s, i) => (
                     <div key={i} className="text-center">
-                      <div className="h-[16mm]" />
+                      <div className="flex h-[16mm] items-center justify-center">
+                        {i === 2 && company.stamp_url && (
+                          /* ตราประทับบริษัท — วางเหนือช่องผู้มีอำนาจลงนาม */
+                          <img src={company.stamp_url} alt="ตราประทับบริษัท" className="max-h-[16mm] max-w-[28mm] object-contain opacity-90" />
+                        )}
+                      </div>
                       <p className="border-t border-dotted border-ink-500 pt-1 whitespace-pre-line text-ink-800">{s.label}</p>
                       <p className="text-[7pt] text-ink-500">{s.note}</p>
                     </div>

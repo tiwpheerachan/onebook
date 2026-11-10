@@ -1,0 +1,1813 @@
+{
+  "pulledAt": "2026-10-29T08:55:37Z",
+  "note": "เอกสารรออนุมัติ (AwaitApproval) ปี 2026 — แสดงชุดล่าสุด; จำนวนเต็มดูใน PEAK",
+  "invoices": {
+    "total": 1353,
+    "rows": [
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6901150001",
+        "date": "20260115",
+        "due": "20260122",
+        "contact": "ค001",
+        "amount": 27581.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODU2MjkzNjE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6901270009",
+        "date": "20260127",
+        "due": "20260203",
+        "contact": "MDT40012",
+        "amount": 243715.79,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODY5MzkyNTg=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6901270011",
+        "date": "20260127",
+        "due": "20260203",
+        "contact": "MDT40002",
+        "amount": 153006.41,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODY5NDA3MjI=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902100016",
+        "date": "20260210",
+        "due": "20260327",
+        "contact": "MDT40012",
+        "amount": 391452.9,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODg0MDI4NTQ=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902100017",
+        "date": "20260210",
+        "due": "20260327",
+        "contact": "MDT40008",
+        "amount": 226145.4,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODg0MDQwMTE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902180010",
+        "date": "20260218",
+        "due": "20260404",
+        "contact": "MDT40007",
+        "amount": 339858.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODkzMjcwNTI=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902180011",
+        "date": "20260218",
+        "due": "20260404",
+        "contact": "MDT40012",
+        "amount": 312269.62,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODkzMjczODA=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902180014",
+        "date": "20260218",
+        "due": "20260225",
+        "contact": "MDT40009",
+        "amount": 511745.41,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODkzMjgwMDk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902180015",
+        "date": "20260218",
+        "due": "20260404",
+        "contact": "MDT40019",
+        "amount": 235235.93,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODkzMjg0MDA=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902180017",
+        "date": "20260218",
+        "due": "20260404",
+        "contact": "MDT40002",
+        "amount": 302654.53,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODkzMjkwMjM=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902180018",
+        "date": "20260218",
+        "due": "20260404",
+        "contact": "MDT40010",
+        "amount": 311962.31,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODkzMjkzNzM=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902180020",
+        "date": "20260218",
+        "due": "20260404",
+        "contact": "MDT40006",
+        "amount": 353017.82,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODkzMjk5MjE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902190003",
+        "date": "20260219",
+        "due": "20260405",
+        "contact": "MDT40012",
+        "amount": 18324.84,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODkzNjY4MTk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902190006",
+        "date": "20260219",
+        "due": "20260405",
+        "contact": "MDT40005",
+        "amount": 43574.82,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk0MDUzMzg=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902190007",
+        "date": "20260219",
+        "due": "20260226",
+        "contact": "MDT40005",
+        "amount": 17719.7,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk0MDczMTU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902190008",
+        "date": "20260219",
+        "due": "20260405",
+        "contact": "MDT40010",
+        "amount": 51010.3,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk0MTAwOTY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902190013",
+        "date": "20260219",
+        "due": "20260405",
+        "contact": "MDT40027",
+        "amount": 94133.24,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk0NjgxMTU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902190014",
+        "date": "20260219",
+        "due": "20260405",
+        "contact": "C00512",
+        "amount": 2289.42,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk0Njg2MTA=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902240003",
+        "date": "20260224",
+        "due": "20260410",
+        "contact": "MDT40007",
+        "amount": 329137.7,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk5NjY2NTg=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902240004",
+        "date": "20260224",
+        "due": "20260410",
+        "contact": "MDT40012",
+        "amount": 246053.4,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk5NjcxNTY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902240009",
+        "date": "20260224",
+        "due": "20260410",
+        "contact": "MDT40002",
+        "amount": 221745.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk5NzA4MDk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902240010",
+        "date": "20260224",
+        "due": "20260410",
+        "contact": "MDT40010",
+        "amount": 192839.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk5NzIyNDQ=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902260002",
+        "date": "20260226",
+        "due": "20260412",
+        "contact": "MDT40012",
+        "amount": 28738.62,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTAwMjA2MTE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6902260003",
+        "date": "20260226",
+        "due": "20260412",
+        "contact": "MDT40012",
+        "amount": 67110.5,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTAwMjA2MTM=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903050005",
+        "date": "20260305",
+        "due": "20260419",
+        "contact": "MDT40007",
+        "amount": 51792.4,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTA4MTY3Njk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903050007",
+        "date": "20260305",
+        "due": "20260419",
+        "contact": "MDT40010",
+        "amount": 16746.42,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTA4MTY5MjQ=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903050008",
+        "date": "20260305",
+        "due": "20260419",
+        "contact": "MDT40012",
+        "amount": 51018.2,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTA4MTcwMTk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903050009",
+        "date": "20260305",
+        "due": "20260419",
+        "contact": "MDT40012",
+        "amount": 1231.61,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTA4MTcwOTI=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903120005",
+        "date": "20260312",
+        "due": "20260426",
+        "contact": "MDT40007",
+        "amount": 6950.42,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE0ODk4Mjg=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903120006",
+        "date": "20260312",
+        "due": "20260426",
+        "contact": "MDT40007",
+        "amount": 6950.42,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE0ODk4NTU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903120009",
+        "date": "20260312",
+        "due": "20260426",
+        "contact": "MDT40010",
+        "amount": 6950.42,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE0ODk5NTM=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903120010",
+        "date": "20260312",
+        "due": "20260426",
+        "contact": "MDT40010",
+        "amount": 6950.42,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE0ODk5ODI=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903120011",
+        "date": "20260312",
+        "due": "20260426",
+        "contact": "MDT40019",
+        "amount": 6950.42,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE0OTAwMjg=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903120012",
+        "date": "20260312",
+        "due": "20260426",
+        "contact": "MDT40019",
+        "amount": 6950.42,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE0OTAwNTk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903190003",
+        "date": "20260319",
+        "due": "20260503",
+        "contact": "MDT40004",
+        "amount": 63258.46,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTIzMjcyMTk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903190004",
+        "date": "20260319",
+        "due": "20260503",
+        "contact": "MDT40004",
+        "amount": 9938.2,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTIzMjcyMjE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903190005",
+        "date": "20260319",
+        "due": "20260503",
+        "contact": "MDT40007",
+        "amount": 9938.2,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTIzMjcyMjU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903190006",
+        "date": "20260319",
+        "due": "20260503",
+        "contact": "MDT40007",
+        "amount": 7266.42,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTIzMjcyODE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903250007",
+        "date": "20260325",
+        "due": "20260509",
+        "contact": "MDT40002",
+        "amount": 10333.2,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTMxNTI1MjI=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903260001",
+        "date": "20260326",
+        "due": "20260510",
+        "contact": "MDT40019",
+        "amount": 10736.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTI4MTk4NzQ=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903260005",
+        "date": "20260326",
+        "due": "20260510",
+        "contact": "MDT40007",
+        "amount": 67210.04,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTMxNTI0NzU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903260006",
+        "date": "20260326",
+        "due": "20260510",
+        "contact": "MDT40021",
+        "amount": 12636.84,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTMxNTI0ODE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903260007",
+        "date": "20260326",
+        "due": "20260510",
+        "contact": "MDT40007",
+        "amount": 6595.71,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTMxNTI0ODc=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903260009",
+        "date": "20260326",
+        "due": "20260510",
+        "contact": "MDT40019",
+        "amount": 82719.32,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTMxNTI0OTc=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903260012",
+        "date": "20260326",
+        "due": "20260510",
+        "contact": "MDT40004",
+        "amount": 59384.3,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTMxNTI1MzA=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903260013",
+        "date": "20260326",
+        "due": "20260510",
+        "contact": "MDT40010",
+        "amount": 18952.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTMxNTI1NDQ=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6903260014",
+        "date": "20260326",
+        "due": "20260510",
+        "contact": "MDT40019",
+        "amount": 32532.2,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTMyNjI2MTA=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904020003",
+        "date": "20260402",
+        "due": "20260517",
+        "contact": "MDT40004",
+        "amount": 29686.62,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTM4NjUyOTY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904020004",
+        "date": "20260402",
+        "due": "20260409",
+        "contact": "MDT40019",
+        "amount": 25429.31,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTM4NjUzNTY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904020006",
+        "date": "20260402",
+        "due": "20260517",
+        "contact": "MDT40004",
+        "amount": 26820.5,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTM4NzMzNjI=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904090002",
+        "date": "20260409",
+        "due": "20260524",
+        "contact": "MDT40004",
+        "amount": 89213.91,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQ2MjU2MTA=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904090003",
+        "date": "20260409",
+        "due": "20260524",
+        "contact": "MDT40004",
+        "amount": 2463.22,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQ2MjU2MjE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904090005",
+        "date": "20260409",
+        "due": "20260524",
+        "contact": "MDT40019",
+        "amount": 67914.72,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQ2MjU2NTA=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904090006",
+        "date": "20260409",
+        "due": "20260524",
+        "contact": "MDT40007",
+        "amount": 17850.05,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQ2MjU2NjU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904220001",
+        "date": "20260422",
+        "due": "20260429",
+        "contact": "MDT40005",
+        "amount": 197763.86,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU3MzQyNDQ=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904220003",
+        "date": "20260422",
+        "due": "20260606",
+        "contact": "MDT40007",
+        "amount": 21167.26,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU3MzQyNTQ=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904220004",
+        "date": "20260422",
+        "due": "20260606",
+        "contact": "MDT40010",
+        "amount": 20244.54,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU3MzQyNTg=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904220005",
+        "date": "20260422",
+        "due": "20260429",
+        "contact": "MDT40003",
+        "amount": 66956.45,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU3MzQyNjI=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904220006",
+        "date": "20260422",
+        "due": "20260429",
+        "contact": "MDT40003",
+        "amount": 14202.62,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU3MzQyNjY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904220007",
+        "date": "20260422",
+        "due": "20260606",
+        "contact": "MDT40004",
+        "amount": 258702.09,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU3MzQyNjk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904220008",
+        "date": "20260422",
+        "due": "20260606",
+        "contact": "MDT40004",
+        "amount": 10913.85,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU3MzQyNzI=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904220009",
+        "date": "20260422",
+        "due": "20260606",
+        "contact": "MDT40019",
+        "amount": 38536.99,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU3MzQyNzU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904220010",
+        "date": "20260422",
+        "due": "20260606",
+        "contact": "MDT40019",
+        "amount": 13704.13,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU3MzQyNzY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904220015",
+        "date": "20260422",
+        "due": "20260606",
+        "contact": "MDT40010",
+        "amount": 50840.45,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU4NzI1NTk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904300001",
+        "date": "20260430",
+        "due": "20260507",
+        "contact": "C-128",
+        "amount": 3799.33,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NzA1MTY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904300004",
+        "date": "20260430",
+        "due": "20260507",
+        "contact": "MDT40005",
+        "amount": 21796.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1OTU0NjE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904300005",
+        "date": "20260430",
+        "due": "20260614",
+        "contact": "MDT40010",
+        "amount": 23377.68,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1OTU0NzU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904300006",
+        "date": "20260430",
+        "due": "20260507",
+        "contact": "MDT40003",
+        "amount": 7124.22,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1OTU0ODE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904300007",
+        "date": "20260430",
+        "due": "20260614",
+        "contact": "MDT40004",
+        "amount": 17369.73,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1OTU0ODY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904300008",
+        "date": "20260430",
+        "due": "20260614",
+        "contact": "MDT40004",
+        "amount": 5431.25,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1OTU0OTE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904300009",
+        "date": "20260430",
+        "due": "20260614",
+        "contact": "MDT40019",
+        "amount": 42063.55,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1OTU0OTM=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904300010",
+        "date": "20260430",
+        "due": "20260614",
+        "contact": "MDT40019",
+        "amount": 5988.2,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1OTU1MDA=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6904300011",
+        "date": "20260430",
+        "due": "20260507",
+        "contact": "MDT40005",
+        "amount": 118452.6,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1OTU1MDc=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905020122",
+        "date": "20260502",
+        "due": "20260509",
+        "contact": "C33526",
+        "amount": 21978534.54,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyNjQ5Mjcx&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070003",
+        "date": "20260507",
+        "due": "20260621",
+        "contact": "MDT40019",
+        "amount": 86072.87,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY2NjQ=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070004",
+        "date": "20260507",
+        "due": "20260621",
+        "contact": "MDT40019",
+        "amount": 10252.62,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY2NzY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070005",
+        "date": "20260507",
+        "due": "20260621",
+        "contact": "MDT40010",
+        "amount": 65095.21,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY2Nzc=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070006",
+        "date": "20260507",
+        "due": "20260621",
+        "contact": "MDT40007",
+        "amount": 17534.05,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY2Nzk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070007",
+        "date": "20260507",
+        "due": "20260514",
+        "contact": "MDT40005",
+        "amount": 4199.64,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY2ODM=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070008",
+        "date": "20260507",
+        "due": "20260621",
+        "contact": "MDT40010",
+        "amount": 28571.14,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY2OTE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070009",
+        "date": "20260507",
+        "due": "20260514",
+        "contact": "MDT40003",
+        "amount": 20055.73,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY2OTY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070010",
+        "date": "20260507",
+        "due": "20260621",
+        "contact": "MDT40004",
+        "amount": 14210.52,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY2OTc=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070011",
+        "date": "20260507",
+        "due": "20260514",
+        "contact": "MDT40005",
+        "amount": 101503.15,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY2OTg=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070012",
+        "date": "20260507",
+        "due": "20260621",
+        "contact": "MDT40004",
+        "amount": 5756.73,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY2OTk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070015",
+        "date": "20260507",
+        "due": "20260621",
+        "contact": "MDT40006",
+        "amount": 10560.72,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0OTkyMjE=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905070016",
+        "date": "20260507",
+        "due": "20260621",
+        "contact": "MDT40006",
+        "amount": 89336.36,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0OTkyMjk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905080003",
+        "date": "20260508",
+        "due": "20260515",
+        "contact": "MDT40005",
+        "amount": 10736.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc0NzY3MDU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905080006",
+        "date": "20260508",
+        "due": "20260515",
+        "contact": "C33717",
+        "amount": 52249.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc1NDExMzc=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905110007",
+        "date": "20260511",
+        "due": "20260518",
+        "contact": "MDT40003",
+        "amount": 27642.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc4MTY1ODc=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905110008",
+        "date": "20260511",
+        "due": "20260625",
+        "contact": "MDT40019",
+        "amount": 82926.3,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc4MTczODY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905110009",
+        "date": "20260511",
+        "due": "20260625",
+        "contact": "MDT40004",
+        "amount": 27642.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc4MjA2OTY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905110010",
+        "date": "20260511",
+        "due": "20260625",
+        "contact": "MDT40007",
+        "amount": 55284.2,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc4MjM3Mzc=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905110011",
+        "date": "20260511",
+        "due": "20260625",
+        "contact": "MDT40006",
+        "amount": 27642.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc4MjQyNTU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905140002",
+        "date": "20260514",
+        "due": "20260628",
+        "contact": "MDT40007",
+        "amount": 37596.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTgwODQ4Nzk=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905140003",
+        "date": "20260514",
+        "due": "20260628",
+        "contact": "MDT40019",
+        "amount": 49430.3,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTgwODQ5NDU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905140004",
+        "date": "20260514",
+        "due": "20260628",
+        "contact": "MDT40019",
+        "amount": 7100.52,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTgwODQ5NTY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905140005",
+        "date": "20260514",
+        "due": "20260521",
+        "contact": "MDT40005",
+        "amount": 95224.23,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTgwODQ5NzI=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905140006",
+        "date": "20260514",
+        "due": "20260521",
+        "contact": "MDT40005",
+        "amount": 8294.21,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTgwODQ5ODU=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905140007",
+        "date": "20260514",
+        "due": "20260628",
+        "contact": "MDT40006",
+        "amount": 18763.29,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTgwODQ5OTY=&etti=Mg==&efti=MQ=="
+      },
+      {
+        "type": "ใบแจ้งหนี้",
+        "code": "IVT6905140008",
+        "date": "20260514",
+        "due": "20260628",
+        "contact": "MDT40006",
+        "amount": 85911.71,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTgwODUwMDk=&etti=Mg==&efti=MQ=="
+      }
+    ]
+  },
+  "expenses": {
+    "rows": [
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101582",
+        "date": "20260106",
+        "due": "20260106",
+        "contact": "C00909",
+        "amount": 6416044.39,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1MDMwODE=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101592",
+        "date": "20260106",
+        "due": "20260106",
+        "contact": "C00909",
+        "amount": 3705461.2,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1NjQyMzM=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101381",
+        "date": "20260108",
+        "due": "20260108",
+        "contact": "S00007",
+        "amount": 880018.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODgzNjA4OTc=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101585",
+        "date": "20260108",
+        "due": "20260108",
+        "contact": "C00909",
+        "amount": 3699264.05,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1MzgwMjU=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101586",
+        "date": "20260108",
+        "due": "20260108",
+        "contact": "C00909",
+        "amount": 3917632.52,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1Mzk1MTE=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101303",
+        "date": "20260110",
+        "due": "20260117",
+        "contact": "C33438",
+        "amount": 231.51,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODgyMjc3NTc=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101380",
+        "date": "20260110",
+        "due": "20260110",
+        "contact": "S00007",
+        "amount": 2305125.4,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODgzNjAwNjc=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101583",
+        "date": "20260113",
+        "due": "20260113",
+        "contact": "C00909",
+        "amount": 8969546.36,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1MTM3NDg=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101379",
+        "date": "20260114",
+        "due": "20260114",
+        "contact": "S00007",
+        "amount": 39099.93,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODgzNTMzMTE=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101579",
+        "date": "20260114",
+        "due": "20260114",
+        "contact": "C00909",
+        "amount": 5771347.04,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk0Nzg2MDI=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101591",
+        "date": "20260115",
+        "due": "20260115",
+        "contact": "C00909",
+        "amount": 4126956.78,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1NjAzNzg=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101588",
+        "date": "20260116",
+        "due": "20260116",
+        "contact": "C00909",
+        "amount": 3845669.52,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1NTY5MzY=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101589",
+        "date": "20260116",
+        "due": "20260116",
+        "contact": "C00909",
+        "amount": 3316042.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1NTc0ODI=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101587",
+        "date": "20260119",
+        "due": "20260119",
+        "contact": "C00909",
+        "amount": 10716236.56,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1NTU1OTU=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101580",
+        "date": "20260120",
+        "due": "20260120",
+        "contact": "C00909",
+        "amount": 1588791.98,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk0Nzk4NTQ=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101581",
+        "date": "20260120",
+        "due": "20260120",
+        "contact": "C00909",
+        "amount": 1549840.9,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk0ODE4OTc=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101600",
+        "date": "20260127",
+        "due": "20260127",
+        "contact": "C00909",
+        "amount": 12546635.19,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk2MjY5ODI=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101594",
+        "date": "20260129",
+        "due": "20260129",
+        "contact": "C00909",
+        "amount": 8056028.55,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1ODg4NTk=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101598",
+        "date": "20260129",
+        "due": "20260129",
+        "contact": "C00909",
+        "amount": 723959.68,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1OTk1Mjg=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101599",
+        "date": "20260129",
+        "due": "20260129",
+        "contact": "C00909",
+        "amount": 6406389.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk2MDE2NDI=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101597",
+        "date": "20260130",
+        "due": "20260130",
+        "contact": "C00909",
+        "amount": 2675952.62,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODk1OTc3NTQ=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260101316",
+        "date": "20260131",
+        "due": "20260131",
+        "contact": "S00007",
+        "amount": 1259134.42,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=ODgyMjg2NTQ=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201387",
+        "date": "20260206",
+        "due": "20260206",
+        "contact": "S00007",
+        "amount": 73908.9,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE4MDU4OTU=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201378",
+        "date": "20260209",
+        "due": "20260209",
+        "contact": "C00909",
+        "amount": 4870085.76,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE3NzMwMjQ=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201385",
+        "date": "20260217",
+        "due": "20260217",
+        "contact": "S00007",
+        "amount": 184758.8,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE4MDI3MTk=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201386",
+        "date": "20260217",
+        "due": "20260217",
+        "contact": "S00007",
+        "amount": 483837.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE4MDUwODg=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201376",
+        "date": "20260218",
+        "due": "20260218",
+        "contact": "C00909",
+        "amount": 4429987.18,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE3MzY4NjM=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201367",
+        "date": "20260219",
+        "due": "20260219",
+        "contact": "C00909",
+        "amount": 3981185.14,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE3MTkxMDc=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201375",
+        "date": "20260219",
+        "due": "20260219",
+        "contact": "C00909",
+        "amount": 5894827.5,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE3MzUzOTc=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201384",
+        "date": "20260221",
+        "due": "20260221",
+        "contact": "S00007",
+        "amount": 263884.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE4MDA5OTc=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201364",
+        "date": "20260223",
+        "due": "20260223",
+        "contact": "C00909",
+        "amount": 6682315.58,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE2Nzg0MjY=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201366",
+        "date": "20260223",
+        "due": "20260223",
+        "contact": "C00909",
+        "amount": 1693950.43,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE3MTQxNDQ=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201383",
+        "date": "20260224",
+        "due": "20260224",
+        "contact": "S00007",
+        "amount": 1031595.4,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE4MDAxMTk=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201382",
+        "date": "20260225",
+        "due": "20260225",
+        "contact": "S00007",
+        "amount": 263884.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE3OTcwNjc=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201365",
+        "date": "20260227",
+        "due": "20260227",
+        "contact": "C00909",
+        "amount": 7553635.9,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE3MDI3ODA=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201381",
+        "date": "20260227",
+        "due": "20260227",
+        "contact": "S00007",
+        "amount": 787579.7,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE3OTQzNzU=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201379",
+        "date": "20260228",
+        "due": "20260228",
+        "contact": "S00007",
+        "amount": 640160.6,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE3Nzk3ODc=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201380",
+        "date": "20260228",
+        "due": "20260228",
+        "contact": "S00007",
+        "amount": 527768.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTE3OTM1NTQ=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260201416",
+        "date": "20260228",
+        "due": "20260228",
+        "contact": "C00824",
+        "amount": 7070000.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTI1NjY4MTQ=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301537",
+        "date": "20260302",
+        "due": "20260302",
+        "contact": "C00909",
+        "amount": 49815.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1MDc3MjE=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260300777",
+        "date": "20260305",
+        "due": "20260305",
+        "contact": "S00007",
+        "amount": 1336857.12,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQzNzI5MzM=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301531",
+        "date": "20260305",
+        "due": "20260305",
+        "contact": "C00909",
+        "amount": 5010458.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0Nzg4OTg=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301534",
+        "date": "20260306",
+        "due": "20260306",
+        "contact": "C00909",
+        "amount": 2227167.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0ODM4MzI=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301536",
+        "date": "20260306",
+        "due": "20260306",
+        "contact": "C00909",
+        "amount": 4966059.6,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0OTM3ODU=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301527",
+        "date": "20260309",
+        "due": "20260309",
+        "contact": "C00909",
+        "amount": 2202055.92,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NzM2MzI=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301528",
+        "date": "20260309",
+        "due": "20260309",
+        "contact": "C00909",
+        "amount": 731930.64,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NzQ1NjI=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260300779",
+        "date": "20260311",
+        "due": "20260311",
+        "contact": "S00007",
+        "amount": 554123.4,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQzNzM1ODY=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301521",
+        "date": "20260311",
+        "due": "20260311",
+        "contact": "C00909",
+        "amount": 6427295.22,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NTI5ODg=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301529",
+        "date": "20260311",
+        "due": "20260311",
+        "contact": "C00909",
+        "amount": 1235842.8,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NzYxMDg=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260300781",
+        "date": "20260314",
+        "due": "20260314",
+        "contact": "S00007",
+        "amount": 184718.8,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQzNzQ0ODE=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301523",
+        "date": "20260317",
+        "due": "20260317",
+        "contact": "C00909",
+        "amount": 7288761.92,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NTg0NjE=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301525",
+        "date": "20260317",
+        "due": "20260317",
+        "contact": "C00909",
+        "amount": 3144288.4,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NjA1OTk=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301524",
+        "date": "20260318",
+        "due": "20260318",
+        "contact": "C00909",
+        "amount": 6772420.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NTk5NTE=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301526",
+        "date": "20260318",
+        "due": "20260318",
+        "contact": "C00909",
+        "amount": 7999122.05,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NjM0MTE=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301520",
+        "date": "20260320",
+        "due": "20260320",
+        "contact": "C00909",
+        "amount": 49866.04,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NDY4NDI=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260300783",
+        "date": "20260321",
+        "due": "20260321",
+        "contact": "S00007",
+        "amount": 527768.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQzNzQ5NjU=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301522",
+        "date": "20260323",
+        "due": "20260323",
+        "contact": "C00909",
+        "amount": 4028574.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY0NTYwMDk=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301538",
+        "date": "20260325",
+        "due": "20260325",
+        "contact": "C00909",
+        "amount": 17838841.92,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1MTg2MDk=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301541",
+        "date": "20260325",
+        "due": "20260325",
+        "contact": "C00909",
+        "amount": 6515939.69,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY1OTY2NTQ=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301542",
+        "date": "20260325",
+        "due": "20260325",
+        "contact": "C00909",
+        "amount": 6197062.83,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY2MDQ4OTU=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260300785",
+        "date": "20260326",
+        "due": "20260326",
+        "contact": "S00007",
+        "amount": 383619.62,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQzNzY0NjE=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260300786",
+        "date": "20260328",
+        "due": "20260328",
+        "contact": "S00007",
+        "amount": 738875.2,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQzNzY4OTg=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301544",
+        "date": "20260330",
+        "due": "20260330",
+        "contact": "C00909",
+        "amount": 6140201.76,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY2MTA0NDM=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301545",
+        "date": "20260330",
+        "due": "20260330",
+        "contact": "C00909",
+        "amount": 7671358.84,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY2MTE1ODU=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260300787",
+        "date": "20260331",
+        "due": "20260331",
+        "contact": "S00007",
+        "amount": 2638840.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTQzNzc1MTk=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301422",
+        "date": "20260331",
+        "due": "20260331",
+        "contact": "S00007",
+        "amount": 853357.6,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTU2MDU5MTg=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301543",
+        "date": "20260331",
+        "due": "20260331",
+        "contact": "C00909",
+        "amount": 6650422.06,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTY2MDcwODU=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260301593",
+        "date": "20260331",
+        "due": "20260331",
+        "contact": "C00909",
+        "amount": 4088675.5,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjYzMjI2&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401336",
+        "date": "20260401",
+        "due": "20260401",
+        "contact": "C00909",
+        "amount": 11511326.72,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjI1NDg2&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401346",
+        "date": "20260401",
+        "due": "20260401",
+        "contact": "C00909",
+        "amount": 4201762.71,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjY0MzUx&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401197",
+        "date": "20260408",
+        "due": "20260408",
+        "contact": "S00007",
+        "amount": 1055536.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc5NjU2NjI=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401343",
+        "date": "20260409",
+        "due": "20260409",
+        "contact": "C00909",
+        "amount": 3492031.9,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjYwNTg0&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401349",
+        "date": "20260409",
+        "due": "20260409",
+        "contact": "C00909",
+        "amount": 2692190.17,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjY1NTg1&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401353",
+        "date": "20260409",
+        "due": "20260409",
+        "contact": "C00909",
+        "amount": 10365254.15,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjczMjcz&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401348",
+        "date": "20260410",
+        "due": "20260410",
+        "contact": "C00909",
+        "amount": 298268.64,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjY0ODY2&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401196",
+        "date": "20260417",
+        "due": "20260417",
+        "contact": "S00007",
+        "amount": 835563.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc5NjQ3NTE=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401195",
+        "date": "20260421",
+        "due": "20260421",
+        "contact": "S00007",
+        "amount": 1393648.2,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc5NjI5NDU=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401337",
+        "date": "20260421",
+        "due": "20260421",
+        "contact": "C00909",
+        "amount": 6015505.9,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjM4ODEy&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401339",
+        "date": "20260421",
+        "due": "20260421",
+        "contact": "C00909",
+        "amount": 6015192.28,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjQ4OTUz&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401341",
+        "date": "20260423",
+        "due": "20260423",
+        "contact": "C00909",
+        "amount": 3084921.7,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjU2MTcy&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401338",
+        "date": "20260428",
+        "due": "20260428",
+        "contact": "C00909",
+        "amount": 8287179.1,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAwMjQ2NzI4&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401198",
+        "date": "20260430",
+        "due": "20260430",
+        "contact": "S00007",
+        "amount": 1126240.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTc5NjY2OTA=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260401203",
+        "date": "20260430",
+        "due": "20260430",
+        "contact": "S00007",
+        "amount": 1090567.95,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=OTgxMTQwMDQ=&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500950",
+        "date": "20260505",
+        "due": "20260512",
+        "contact": "C00909",
+        "amount": 6996295.94,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTI5NzY3&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500963",
+        "date": "20260506",
+        "due": "20260506",
+        "contact": "C00909",
+        "amount": 863851.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTc0OTMx&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500947",
+        "date": "20260508",
+        "due": "20260508",
+        "contact": "C00909",
+        "amount": 8891072.68,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTI2MzA1&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500948",
+        "date": "20260508",
+        "due": "20260508",
+        "contact": "C00909",
+        "amount": 7723601.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTI2NTk4&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500949",
+        "date": "20260508",
+        "due": "20260508",
+        "contact": "C00909",
+        "amount": 1412888.52,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTI3NzQ1&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500952",
+        "date": "20260508",
+        "due": "20260508",
+        "contact": "C00909",
+        "amount": 3283844.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTUyMDgx&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500953",
+        "date": "20260511",
+        "due": "20260511",
+        "contact": "C00909",
+        "amount": 3298694.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTUyMjkx&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500958",
+        "date": "20260511",
+        "due": "20260511",
+        "contact": "C00909",
+        "amount": 924162.13,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTY3NDIx&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500962",
+        "date": "20260513",
+        "due": "20260513",
+        "contact": "C00909",
+        "amount": 6507.66,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTc0MTQz&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500951",
+        "date": "20260514",
+        "due": "20260514",
+        "contact": "C00909",
+        "amount": 2346294.24,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTUxNzUw&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500954",
+        "date": "20260514",
+        "due": "20260514",
+        "contact": "C00909",
+        "amount": 686963.84,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTUyNzUz&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500961",
+        "date": "20260515",
+        "due": "20260515",
+        "contact": "C00909",
+        "amount": 2682692.6,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTczNzQz&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500943",
+        "date": "20260518",
+        "due": "20260518",
+        "contact": "C00909",
+        "amount": 5066160.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTIyOTQw&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500946",
+        "date": "20260518",
+        "due": "20260518",
+        "contact": "C00909",
+        "amount": 5028830.4,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTI1NjM2&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500936",
+        "date": "20260519",
+        "due": "20260519",
+        "contact": "C00909",
+        "amount": 3323375.0,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTE1NDg0&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500939",
+        "date": "20260519",
+        "due": "20260519",
+        "contact": "C00909",
+        "amount": 6846152.5,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTE4ODQy&etti=Mg==&efti=Mg=="
+      },
+      {
+        "type": "ค่าใช้จ่าย",
+        "code": "EXP-20260500942",
+        "date": "20260519",
+        "due": "20260519",
+        "contact": "C00909",
+        "amount": 4594233.6,
+        "link": "https://doc.peakaccount.com/?emi=NDAyMzk3&eti=MTAyOTIxNzM1&etti=Mg==&efti=Mg=="
+      }
+    ]
+  }
+}

@@ -5,6 +5,14 @@ import { getSessionContext, can } from '@/lib/session';
 import { t } from '@/i18n/server';
 import { isValidThaiTaxId } from '@/lib/format';
 import { isValidPromptPayId, detectIdType } from '@/lib/promptpay';
+import { searchDirectory } from '@/lib/directory';
+
+/** ค้นหาพนักงานจากไดเรกทอรีกลาง (sso.shd) เพื่อเพิ่มผู้ใช้/ให้สิทธิ์ — คืนชื่อ/อีเมล/รูปโปรไฟล์ */
+export async function searchDirectoryAction(q: string) {
+  const ctx = await getSessionContext();
+  if (!ctx || !can(ctx, 'settings.users', 'create')) return { ok: false as const, error: 'forbidden' };
+  return searchDirectory(q);
+}
 
 /**
  * ปิดงวดพร้อมเก็บ "ลายนิ้วมือ" ของตัวเลขทั้งงวดไว้เป็นหลักฐาน
@@ -157,6 +165,7 @@ export async function updateCompanyProfile(form: Record<string, any>) {
       email: form.email || null,
       website: form.website || null,
       logo_url: form.logo_url || null,
+      stamp_url: form.stamp_url || null,
       promptpay_id: ppId || null,
       promptpay_type: ppId ? detectIdType(ppId) : null,
       bank_name: form.bank_name || null,
@@ -400,4 +409,16 @@ export async function setRowFilter(form: {
 
   revalidatePath('/settings/roles');
   return { ok: true };
+}
+
+/** บันทึกการตั้งค่าเอกสาร/นโยบายบัญชี (เก็บใน companies.settings jsonb) */
+export async function saveDocSettings(settings: Record<string, unknown>) {
+  const ctx = await getSessionContext();
+  if (!ctx || !can(ctx, 'settings.companies', 'edit')) return { ok: false as const, error: t().ui.act.companyNoEdit };
+  const supabase = createClient();
+  const { error } = await supabase.from('companies').update({ settings }).eq('id', ctx.company.id);
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath('/settings/document');
+  revalidatePath('/settings');
+  return { ok: true as const };
 }

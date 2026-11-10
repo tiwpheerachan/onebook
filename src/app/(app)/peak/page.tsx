@@ -1,124 +1,73 @@
+import {
+  TrendingUp, TrendingDown, PiggyBank, Landmark, Scale, Building2,
+  ArrowDownCircle, ArrowUpCircle, Wallet, BarChart3, type LucideIcon,
+} from 'lucide-react';
 import { requirePermission } from '@/lib/session';
-import { PageHeader, Card, CardHeader } from '@/components/ui/page-header';
-import { Table, THead, TBody, TR, TH, TD, EmptyRow } from '@/components/ui/table';
-import { StatCard } from '@/components/ui/stat-card';
-import { money } from '@/lib/format';
-import tbJson from '@/data/peak/trial-balance.json';
+import { Card, CardHeader } from '@/components/ui/page-header';
+import { DonutBreakdown } from '@/components/charts/charts';
+import { money, compact } from '@/lib/format';
+import { peakFin, toSlices } from '@/lib/peak-fin';
 
 export const dynamic = 'force-dynamic';
 
-type Acct = { code: string; name: string; debit: number; credit: number };
-type TB = { source: string; period: string; pulledAt: string; accounts: Acct[] };
-
-const tb = tbJson as unknown as TB;
-
-export default async function PeakFinancialsPage() {
-  const ctx = await requirePermission('report', 'view');
-  const accounts = tb.accounts || [];
-  const r2 = (n: number) => Math.round(n * 100) / 100;
-  // ยอดตามด้านธรรมชาติของบัญชี (side: dr = เดบิตปกติ, cr = เครดิตปกติ)
-  const balOf = (a: Acct, side: 'dr' | 'cr') => (side === 'dr' ? a.debit - a.credit : a.credit - a.debit);
-  const sumBy = (pred: (a: Acct) => boolean, side: 'dr' | 'cr') =>
-    r2(accounts.filter(pred).reduce((s, a) => s + balOf(a, side), 0));
-  const group = (prefix: string, side: 'dr' | 'cr') =>
-    accounts
-      .filter((a) => a.code.startsWith(prefix))
-      .map((a) => ({ ...a, bal: r2(balOf(a, side)) }))
-      .filter((a) => Math.abs(a.bal) > 0.005)
-      .sort((x, y) => Math.abs(y.bal) - Math.abs(x.bal));
-
-  const assets = sumBy((a) => a.code.startsWith('1'), 'dr');
-  const liabilities = sumBy((a) => a.code.startsWith('2'), 'cr');
-  const equity = sumBy((a) => a.code.startsWith('3'), 'cr');
-  const revenue = sumBy((a) => a.code.startsWith('4'), 'cr');
-  const expense = sumBy((a) => a.code.startsWith('5'), 'dr');
-  const netProfit = r2(revenue - expense);
-  const ar = sumBy((a) => a.code.startsWith('113'), 'dr');
-  const ap = sumBy((a) => a.code.startsWith('21'), 'cr');
-
-  const revRows = group('4', 'cr');
-  const expRows = group('5', 'dr');
-  const assetRows = group('1', 'dr');
-  const liabRows = group('2', 'cr');
-  const eqRows = group('3', 'cr');
-  const allRows = accounts
-    .filter((a) => Math.abs(a.debit) > 0.005 || Math.abs(a.credit) > 0.005)
-    .sort((x, y) => x.code.localeCompare(y.code));
-
-  const pulled = (tb.pulledAt || '').slice(0, 10);
-
-  const Section = ({ title, rows, totalLabel, total, tone }: { title: string; rows: { code: string; name: string; bal: number }[]; totalLabel: string; total: number; tone?: string }) => (
-    <Card className="mb-5">
-      <CardHeader title={title} />
-      <Table>
-        <THead><TR><TH>รหัส</TH><TH>ชื่อบัญชี</TH><TH align="right">ยอด (บาท)</TH></TR></THead>
-        <TBody>
-          {rows.length === 0 ? <EmptyRow colSpan={3} label="ไม่มีรายการ" /> : rows.map((a) => (
-            <TR key={a.code}><TD className="font-mono text-xs">{a.code}</TD><TD>{a.name}</TD><TD align="right">{money(a.bal)}</TD></TR>
-          ))}
-          <TR className="font-semibold border-t-2">
-            <TD colSpan={2}>{totalLabel}</TD>
-            <TD align="right" className={tone}>{money(total)}</TD>
-          </TR>
-        </TBody>
-      </Table>
-    </Card>
+function Metric({ icon: Icon, label, value, sub, tint }: { icon: LucideIcon; label: string; value: number; sub?: string; tint: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition hover:shadow-md">
+      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tint}`}><Icon size={20} /></span>
+      <div className="min-w-0">
+        <p className="truncate text-xs text-slate-500">{label}</p>
+        <p className="truncate text-[17px] font-bold tabular-nums text-slate-800">{money(value)}</p>
+        {sub && <p className="truncate text-[11px] text-slate-400">{sub}</p>}
+      </div>
+    </div>
   );
+}
+
+export default async function PeakOverviewPage() {
+  await requirePermission('report', 'view');
+  const f = peakFin();
 
   return (
     <>
-      <PageHeader
-        title="การเงิน PEAK"
-        subtitle={`${ctx.company?.name_th ?? 'บริษัท'} · กระจกเงินจากระบบบัญชี PEAK (อ่านอย่างเดียว) · งวด ${tb.period} · ดึงเมื่อ ${pulled}`}
-      />
-
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="รายได้รวม" value={revenue} tone="brand" />
-        <StatCard label="ค่าใช้จ่ายรวม" value={expense} tone="neutral" />
-        <StatCard label="กำไรสุทธิ" value={netProfit} tone={netProfit >= 0 ? 'positive' : 'negative'} size="lg" />
-        <StatCard label="สินทรัพย์รวม" value={assets} tone="neutral" />
-        <StatCard label="หนี้สินรวม" value={liabilities} tone="neutral" />
-        <StatCard label="ส่วนของผู้ถือหุ้น" value={equity} tone="neutral" />
-        <StatCard label="ลูกหนี้การค้าคงค้าง" value={ar} tone="neutral" hint="บัญชี 113xxx" />
-        <StatCard label="เจ้าหนี้การค้าคงค้าง" value={ap} tone="neutral" hint="บัญชี 21xxxx" />
+      {/* สรุปกำไร โทนอ่อน */}
+      <div className="mb-5 grid gap-4 md:grid-cols-[1.4fr_1fr_1fr]">
+        <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-5">
+          <div className="flex items-center gap-2 text-emerald-700"><PiggyBank size={18} /><span className="text-xs font-medium">กำไรสุทธิ · งวด {f.period}</span></div>
+          <p className="mt-2 text-3xl font-bold tabular-nums text-emerald-700">{money(f.netProfit)} <span className="text-base font-normal text-emerald-500">บาท</span></p>
+          <p className="mt-1 text-xs text-emerald-600/80">อัตรากำไรสุทธิ {(f.margin * 100).toFixed(1)}%</p>
+        </div>
+        <div className="rounded-2xl border border-teal-100 bg-white p-5">
+          <div className="flex items-center gap-2 text-teal-600"><TrendingUp size={18} /><span className="text-xs font-medium">รายได้รวม</span></div>
+          <p className="mt-2 text-2xl font-bold tabular-nums text-slate-800">{money(f.revenue)}</p>
+          <p className="mt-1 text-xs text-slate-400">{compact(f.revenue)} บาท</p>
+        </div>
+        <div className="rounded-2xl border border-violet-100 bg-white p-5">
+          <div className="flex items-center gap-2 text-violet-600"><TrendingDown size={18} /><span className="text-xs font-medium">ค่าใช้จ่ายรวม</span></div>
+          <p className="mt-2 text-2xl font-bold tabular-nums text-slate-800">{money(f.expense)}</p>
+          <p className="mt-1 text-xs text-slate-400">{compact(f.expense)} บาท</p>
+        </div>
       </div>
 
-      <h2 className="mb-2 mt-2 text-sm font-semibold text-ink-700">งบกำไรขาดทุน (P&amp;L)</h2>
-      <Section title="รายได้" rows={revRows} totalLabel="รวมรายได้" total={revenue} tone="text-brand-700" />
-      <Section title="ค่าใช้จ่าย" rows={expRows} totalLabel="รวมค่าใช้จ่าย" total={expense} />
-      <Card className="mb-6">
-        <div className="flex items-center justify-between px-4 py-3">
-          <span className="font-semibold">กำไร (ขาดทุน) สุทธิ</span>
-          <span className={`text-lg font-bold ${netProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{money(netProfit)}</span>
-        </div>
-      </Card>
+      {/* KPI icon cards */}
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+        <Metric icon={Landmark} label="สินทรัพย์รวม" value={f.assets} tint="bg-sky-50 text-sky-600" />
+        <Metric icon={Scale} label="หนี้สินรวม" value={f.liabilities} tint="bg-amber-50 text-amber-600" />
+        <Metric icon={Building2} label="ส่วนของผู้ถือหุ้น" value={f.equity} tint="bg-indigo-50 text-indigo-600" />
+        <Metric icon={ArrowDownCircle} label="ลูกหนี้คงค้าง" value={f.arap.ar.total} sub={`${f.arap.ar.parties.length} ราย`} tint="bg-emerald-50 text-emerald-600" />
+        <Metric icon={ArrowUpCircle} label="เจ้าหนี้คงค้าง" value={f.arap.ap.total} sub={`${f.arap.ap.parties.length} ราย`} tint="bg-rose-50 text-rose-600" />
+        <Metric icon={Wallet} label="กำไรสุทธิ" value={f.netProfit} tint="bg-teal-50 text-teal-600" />
+      </div>
 
-      <h2 className="mb-2 mt-2 text-sm font-semibold text-ink-700">งบแสดงฐานะการเงิน (งบดุล)</h2>
-      <Section title="สินทรัพย์" rows={assetRows} totalLabel="รวมสินทรัพย์" total={assets} />
-      <Section title="หนี้สิน" rows={liabRows} totalLabel="รวมหนี้สิน" total={liabilities} />
-      <Section title="ส่วนของผู้ถือหุ้น" rows={eqRows} totalLabel="รวมส่วนของผู้ถือหุ้น" total={equity} />
-      <Card className="mb-6">
-        <div className="flex items-center justify-between px-4 py-3">
-          <span className="font-semibold">หนี้สิน + ส่วนของผู้ถือหุ้น</span>
-          <span className="text-sm font-semibold">{money(r2(liabilities + equity))} <span className="text-ink-400">(สินทรัพย์ {money(assets)})</span></span>
-        </div>
-      </Card>
-
-      <h2 className="mb-2 mt-2 text-sm font-semibold text-ink-700">งบทดลอง (ทุกบัญชีที่มียอด · {allRows.length} บัญชี)</h2>
-      <Card>
-        <Table>
-          <THead><TR><TH>รหัส</TH><TH>ชื่อบัญชี</TH><TH align="right">เดบิต</TH><TH align="right">เครดิต</TH></TR></THead>
-          <TBody>
-            {allRows.map((a) => (
-              <TR key={a.code}>
-                <TD className="font-mono text-xs">{a.code}</TD><TD>{a.name}</TD>
-                <TD align="right">{a.debit ? money(a.debit) : '-'}</TD>
-                <TD align="right">{a.credit ? money(a.credit) : '-'}</TD>
-              </TR>
-            ))}
-          </TBody>
-        </Table>
-      </Card>
+      {/* Donut charts */}
+      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 text-teal-600"><BarChart3 size={15} /></span>ภาพรวมแบบกราฟ
+      </h2>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card><CardHeader title="รายได้ แยกตามประเภท" /><DonutBreakdown slices={toSlices(f.revRows)} total={f.revenue} topN={5} /></Card>
+        <Card><CardHeader title="ค่าใช้จ่าย แยกตามประเภท" /><DonutBreakdown slices={toSlices(f.expRows)} total={f.expense} topN={5} /></Card>
+        <Card><CardHeader title="ลูกหนี้ รายใหญ่" right={<span className="text-xs text-slate-400">{f.arap.ar.parties.length} ราย</span>} /><DonutBreakdown slices={toSlices(f.arap.ar.parties)} total={f.arap.ar.total} topN={6} /></Card>
+        <Card><CardHeader title="เจ้าหนี้ รายใหญ่" right={<span className="text-xs text-slate-400">{f.arap.ap.parties.length} ราย</span>} /><DonutBreakdown slices={toSlices(f.arap.ap.parties)} total={f.arap.ap.total} topN={6} /></Card>
+      </div>
     </>
   );
 }

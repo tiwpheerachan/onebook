@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 const COMPANY_FIELDS =
   'name_th, name_en, legal_form, tax_id, branch_code, branch_name, address_th, phone, email, website, ' +
-  'logo_url, promptpay_id, promptpay_type, bank_name, bank_account_name, bank_account_no, doc_footer_note, authorized_signer';
+  'logo_url, stamp_url, promptpay_id, promptpay_type, bank_name, bank_account_name, bank_account_no, doc_footer_note, authorized_signer';
 
 /** ตรวจว่าข้อมูลครบตามที่ประมวลรัษฎากรกำหนดสำหรับใบกำกับภาษีหรือยัง */
 function completenessWarning(company: any, contact: any, isTaxDoc: boolean): string | null {
