@@ -410,3 +410,15 @@ export async function setRowFilter(form: {
   revalidatePath('/settings/roles');
   return { ok: true };
 }
+
+/** บันทึกการตั้งค่าเอกสาร/นโยบายบัญชี (เก็บใน companies.settings jsonb) */
+export async function saveDocSettings(settings: Record<string, unknown>) {
+  const ctx = await getSessionContext();
+  if (!ctx || !can(ctx, 'settings.companies', 'edit')) return { ok: false as const, error: t().ui.act.companyNoEdit };
+  const supabase = createClient();
+  const { error } = await supabase.from('companies').update({ settings }).eq('id', ctx.company.id);
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath('/settings/document');
+  revalidatePath('/settings');
+  return { ok: true as const };
+}

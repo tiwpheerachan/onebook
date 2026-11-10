@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Printer, GitBranch, Info } from 'lucide-react';
+import { Printer, GitBranch, Info, ExternalLink } from 'lucide-react';
 import { requirePermission, can } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { t, currentLocale } from '@/i18n/server';
@@ -197,6 +197,11 @@ export async function DocumentPage({
             {doc && (
               <a href={`/documents/trace/${doc.id}`} className="btn-secondary no-print">
                 <GitBranch className="h-4 w-4 text-ink-400" strokeWidth={1.8} /> ที่มา
+              </a>
+            )}
+            {doc && typeof doc.reference === 'string' && /^https?:\/\//.test(doc.reference) && (
+              <a href={doc.reference} target="_blank" rel="noopener" className="btn-secondary no-print">
+                <ExternalLink className="h-4 w-4 text-ink-400" strokeWidth={1.8} /> ดูต้นฉบับใน PEAK
               </a>
             )}
             {doc && (
