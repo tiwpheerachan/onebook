@@ -40,7 +40,7 @@ export async function DocumentPage({
   const section: 'sales' | 'purchase' = isPurchase(slug) ? 'purchase' : 'sales';
 
   const [{ data: contacts }, { data: products }, { data: productUnits }, { data: accounts }, { data: dimensions }] = await Promise.all([
-    supabase.from('contacts').select('id, name, tax_id')
+    supabase.from('contacts').select('id, name, tax_id, is_kol, default_wht_code, default_wht_rate, doc_id_card, doc_bank_book')
       .eq('company_id', ctx.company.id).eq('is_active', true).order('name').limit(1000),
     supabase.from('products_masked').select('id, name, sku, sale_price, purchase_price, unit, vat_treatment')
       .eq('company_id', ctx.company.id).eq('is_active', true).order('sku').limit(1000),
@@ -275,7 +275,11 @@ export async function DocumentPage({
         kind={kind}
         section={section}
         title={docTitle(d, slug)}
-        contacts={(contacts || []).map((c: any) => ({ id: c.id, label: c.name, sub: c.tax_id }))}
+        contacts={(contacts || []).map((c: any) => ({
+          id: c.id, label: c.name, sub: c.tax_id,
+          is_kol: c.is_kol, default_wht_code: c.default_wht_code, default_wht_rate: c.default_wht_rate,
+          doc_id_card: c.doc_id_card, doc_bank_book: c.doc_bank_book,
+        }))}
         products={(products || []).map((p: any) => ({
           id: p.id,
           label: `${p.sku} · ${p.name}`,

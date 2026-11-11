@@ -21,6 +21,7 @@ export interface ContactRow {
   credit_days: number;
   credit_limit: number;
   is_active: boolean;
+  is_kol?: boolean;
   groups: { id: string; name: string; color: string }[];
 }
 
@@ -185,6 +186,7 @@ export function ContactTable({
                     <Badge tone={r.kind === 'vendor' ? 'warn' : r.kind === 'both' ? 'brand' : 'neutral'}>
                       {(d.ui.contactKind as Record<string, string>)[r.kind] || r.kind}
                     </Badge>
+                    {r.is_kol && <span className="ml-1 inline-block rounded bg-violet-100 px-1.5 py-0.5 text-xxs font-medium text-violet-700">KOL</span>}
                   </td>
                   <td className="td-cell">{r.phone || '–'}</td>
                   <td className="td-cell num">{L.nDays.replace('{n}', String(r.credit_days))}</td>

@@ -6,6 +6,19 @@ import { t } from '@/i18n/server';
 
 type Res = { ok: boolean; error?: string; id?: string };
 
+/** ดึงผู้ติดต่อฉบับเต็ม สำหรับเปิดแก้ไข (กันฟิลด์ที่ไม่ได้โชว์ในตารางถูกล้างตอนบันทึก) */
+export async function getContact(id: string): Promise<{ ok: boolean; data?: any; error?: string }> {
+  const ctx = await getSessionContext();
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'contacts', 'view') && !can(ctx, 'contacts', 'edit'))
+    return { ok: false, error: t().ui.act.noPermission };
+  const supabase = createClient();
+  const { data, error } = await supabase.from('contacts').select('*')
+    .eq('id', id).eq('company_id', ctx.company.id).maybeSingle();
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data };
+}
+
 export async function saveContact(form: any): Promise<Res> {
   const ctx = await getSessionContext();
   if (!ctx) return { ok: false, error: t().ui.act.noSession };
@@ -20,7 +33,6 @@ export async function saveContact(form: any): Promise<Res> {
     tax_id: form.tax_id || null,
     branch_code: form.branch_code || '00000',
     branch_name: form.branch_name || t().ui.act.headOffice,
-    is_juristic: form.is_juristic ?? true,
     address: form.address || null,
     district: form.district || null,
     province: form.province || null,
@@ -38,6 +50,24 @@ export async function saveContact(form: any): Promise<Res> {
       form.linked_company_id && form.intercompany_markup_pct !== '' && form.intercompany_markup_pct != null
         ? Number(form.intercompany_markup_pct)
         : null,
+    // ===== KOL / Influencer (ผู้ขายบุคคล) =====
+    is_kol: !!form.is_kol,
+    kol_platform: form.is_kol ? (form.kol_platform || null) : null,
+    kol_handle: form.is_kol ? (form.kol_handle || null) : null,
+    kol_brands: form.is_kol ? (form.kol_brands || null) : null,
+    kol_note: form.is_kol ? (form.kol_note || null) : null,
+    bank_name: form.bank_name || null,
+    bank_account_name: form.bank_account_name || null,
+    bank_account_no: form.bank_account_no || null,
+    doc_id_card: form.is_kol ? !!form.doc_id_card : false,
+    doc_bank_book: form.is_kol ? !!form.doc_bank_book : false,
+    // KOL = บริการ หัก ณ ที่จ่าย 3% อัตโนมัติ (ตั้งเองได้ ถ้าเว้นใช้ค่านี้)
+    default_wht_code: form.is_kol ? (form.default_wht_code || '40(8)SVC') : (form.default_wht_code || null),
+    default_wht_rate: form.is_kol
+      ? (form.default_wht_rate !== '' && form.default_wht_rate != null ? Number(form.default_wht_rate) : 3)
+      : (form.default_wht_rate !== '' && form.default_wht_rate != null ? Number(form.default_wht_rate) : null),
+    // KOL เป็นบุคคลธรรมดา
+    is_juristic: form.is_kol ? false : (form.is_juristic ?? true),
     is_active: form.is_active ?? true,
   };
   const q = form.id

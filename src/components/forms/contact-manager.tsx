@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, Pencil } from 'lucide-react';
 import { ShdSpinner } from '@/components/ui/shd-loader';
 import { SlidePanel } from './slide-panel';
-import { saveContact } from '@/actions/master';
+import { saveContact, getContact } from '@/actions/master';
 import { isValidThaiTaxId } from '@/lib/format';
 
 const blank = {
@@ -14,7 +14,12 @@ const blank = {
   contact_person: '', credit_days: 30, credit_limit: 0, is_active: true,
   sales_rep_id: '', sales_zone_id: '',
   linked_company_id: '', intercompany_markup_pct: '',
+  is_kol: false, kol_platform: '', kol_handle: '', kol_brands: '', kol_note: '',
+  bank_name: '', bank_account_name: '', bank_account_no: '',
+  doc_id_card: false, doc_bank_book: false, default_wht_code: '', default_wht_rate: '',
 };
+
+const KOL_PLATFORMS = ['TikTok', 'Instagram', 'Facebook', 'YouTube', 'Lemon8', 'X (Twitter)', 'อื่น ๆ'];
 
 export function ContactManager({
   canCreate, canEdit, editRow, labels, reps = [], zones = [], companies = [],
@@ -34,7 +39,15 @@ export function ContactManager({
   const [pending, start] = useTransition();
 
   function openNew() { setForm({ ...blank }); setErr(''); setOpen(true); }
-  function openEdit() { setForm({ ...blank, ...editRow }); setErr(''); setOpen(true); }
+  function openEdit() {
+    setForm({ ...blank, ...editRow }); setErr(''); setOpen(true);
+    // โหลดข้อมูลเต็ม (ตารางส่งมาแค่บางฟิลด์) กันฟิลด์อื่นถูกล้างตอนบันทึก
+    if (editRow?.id) {
+      getContact(editRow.id).then((res) => {
+        if (res.ok && res.data) setForm((f: any) => ({ ...blank, ...res.data }));
+      });
+    }
+  }
 
   function set(k: string, v: any) { setForm((f: any) => ({ ...f, [k]: v })); }
 
@@ -161,6 +174,77 @@ export function ContactManager({
                   <p className="mt-1 text-xxs leading-relaxed text-ink-400">ว่าง = ใช้ค่าเริ่มต้น 5%</p>
                 </Field>
               )}
+            </>
+          )}
+
+          {/* ===== KOL / Influencer ===== */}
+          {form.kind !== 'customer' && (
+            <div className="col-span-2 mt-2 border-t border-ink-100 pt-3">
+              <label className="flex items-center gap-2 text-xs font-semibold text-ink-700">
+                <input type="checkbox" className="h-4 w-4 rounded border-ink-300"
+                       checked={!!form.is_kol} onChange={(e) => set('is_kol', e.target.checked)} />
+                เป็น KOL / Influencer (ผู้รับงานรีวิว)
+              </label>
+              {form.is_kol && (
+                <p className="mt-1 text-xxs leading-relaxed text-amber-700">
+                  ⚠️ เป็นบุคคลธรรมดา — ระบบตั้งหัก ณ ที่จ่าย <b>3% (ค่าบริการ · ภ.ง.ด.3)</b> ให้อัตโนมัติ และควรกรอกเลขบัตร ปชช. 13 หลักในช่องเลขผู้เสียภาษี
+                </p>
+              )}
+            </div>
+          )}
+          {form.is_kol && form.kind !== 'customer' && (
+            <>
+              <Field label="แพลตฟอร์มหลัก">
+                <select className="input" value={form.kol_platform || ''}
+                        onChange={(e) => set('kol_platform', e.target.value)}>
+                  <option value="">— เลือก —</option>
+                  {KOL_PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </Field>
+              <Field label="ชื่อ/ลิงก์ช่อง (@handle)">
+                <input className="input" value={form.kol_handle || ''} onChange={(e) => set('kol_handle', e.target.value)} />
+              </Field>
+              <Field label="แบรนด์ที่เคยรับงาน" span>
+                <input className="input" value={form.kol_brands || ''} onChange={(e) => set('kol_brands', e.target.value)}
+                       placeholder="เช่น แบรนด์ A, แบรนด์ B" />
+              </Field>
+              <Field label="หมายเหตุ/เรตราคา" span>
+                <textarea rows={2} className="input" value={form.kol_note || ''} onChange={(e) => set('kol_note', e.target.value)} />
+              </Field>
+              <Field label="หัก ณ ที่จ่าย (%)">
+                <input type="number" step="0.01" className="input"
+                       placeholder="3" value={form.default_wht_rate ?? ''}
+                       onChange={(e) => set('default_wht_rate', e.target.value)} />
+                <p className="mt-1 text-xxs leading-relaxed text-ink-400">ว่าง = 3% (ค่าบริการ)</p>
+              </Field>
+              <div className="col-span-2 grid grid-cols-2 gap-2">
+                <label className="flex items-center gap-2 text-xs text-ink-600">
+                  <input type="checkbox" className="h-4 w-4 rounded border-ink-300"
+                         checked={!!form.doc_id_card} onChange={(e) => set('doc_id_card', e.target.checked)} />
+                  เก็บสำเนาบัตรประชาชนแล้ว
+                </label>
+                <label className="flex items-center gap-2 text-xs text-ink-600">
+                  <input type="checkbox" className="h-4 w-4 rounded border-ink-300"
+                         checked={!!form.doc_bank_book} onChange={(e) => set('doc_bank_book', e.target.checked)} />
+                  เก็บสำเนาบุ๊คธนาคารแล้ว
+                </label>
+              </div>
+            </>
+          )}
+
+          {/* ข้อมูลบัญชีธนาคาร (ใช้กับ KOL/ผู้ขายที่ต้องโอนจ่าย) */}
+          {form.kind !== 'customer' && (
+            <>
+              <Field label="ธนาคาร">
+                <input className="input" value={form.bank_name || ''} onChange={(e) => set('bank_name', e.target.value)} />
+              </Field>
+              <Field label="เลขบัญชี">
+                <input className="input" value={form.bank_account_no || ''}
+                       onChange={(e) => set('bank_account_no', e.target.value.replace(/[^\d-]/g, ''))} />
+              </Field>
+              <Field label="ชื่อบัญชี" span>
+                <input className="input" value={form.bank_account_name || ''} onChange={(e) => set('bank_account_name', e.target.value)} />
+              </Field>
             </>
           )}
         </div>

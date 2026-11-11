@@ -15,6 +15,13 @@ interface Option {
   units?: { code: string; factor: number; sale_price?: number; purchase_price?: number }[];
   /** ประเภทภาษีที่ผูกกับตัวสินค้าเอง เช่น สินค้ายกเว้นภาษีตามกฎหมาย */
   vat?: VatTreatment;
+  /** ผู้ขายเป็น KOL/Influencer — เตือนหัก ณ ที่จ่าย + เอกสารประกอบ */
+  is_kol?: boolean;
+  /** หัก ณ ที่จ่ายเริ่มต้นของผู้ขายรายนี้ (เติมลงบรรทัดอัตโนมัติ) */
+  default_wht_code?: string | null;
+  default_wht_rate?: number | null;
+  doc_id_card?: boolean;
+  doc_bank_book?: boolean;
 }
 
 /**
@@ -187,6 +194,20 @@ export function DocumentEditor(p: EditorProps) {
     update(i, { wht_code: code, wht_rate: preset?.rate ?? 0 });
   }
 
+  const selectedContact = p.contacts.find((c) => c.id === contactId);
+
+  // เลือกผู้ขายที่ตั้งหัก ณ ที่จ่ายเริ่มต้นไว้ (เช่น KOL 3%) → เติมให้บรรทัดที่ยังไม่ได้ตั้ง
+  function onPickContact(id: string) {
+    setContactId(id);
+    const c = p.contacts.find((x) => x.id === id);
+    if (p.section === 'purchase' && c?.default_wht_code) {
+      setRows((prev) => prev.map((r) =>
+        r.wht_code === 'NONE'
+          ? { ...r, wht_code: c.default_wht_code as string, wht_rate: Number(c.default_wht_rate ?? 0) }
+          : r));
+    }
+  }
+
   function submit(thenApprove = false) {
     setMsg(null);
     if (!description.trim()) {
@@ -301,13 +322,26 @@ export function DocumentEditor(p: EditorProps) {
           <div className="md:col-span-2">
             <label className="label">{p.labels.contact}</label>
             <select className="input" value={contactId} disabled={readOnly}
-                    onChange={(e) => setContactId(e.target.value)}>
+                    onChange={(e) => onPickContact(e.target.value)}>
               <option value="">— {p.labels.select} —</option>
               {p.contacts.map((c) => (
                 <option key={c.id} value={c.id}>{c.label}{c.sub ? ` (${c.sub})` : ''}</option>
               ))}
             </select>
           </div>
+          {/* เตือนเมื่อผู้ขายเป็น KOL/Influencer — หัก ณ ที่จ่าย + เอกสารประกอบ */}
+          {p.section === 'purchase' && selectedContact?.is_kol && (
+            <div className="md:col-span-4 rounded-lg bg-amber-50 px-3.5 py-2.5 text-xs leading-relaxed text-amber-900 ring-1 ring-inset ring-amber-200">
+              <span className="font-semibold">ผู้ขายนี้เป็น KOL/Influencer</span> — ตั้งหัก ณ ที่จ่าย{' '}
+              <b>{Number(selectedContact.default_wht_rate ?? 3)}%</b> (ค่าบริการ · ภ.ง.ด.3) ให้แล้ว
+              {(!selectedContact.doc_id_card || !selectedContact.doc_bank_book) && (
+                <span className="ml-1 text-rose-700">
+                  · ยังขาดเอกสาร: {[!selectedContact.doc_id_card && 'สำเนาบัตรประชาชน',
+                    !selectedContact.doc_bank_book && 'สำเนาบุ๊คธนาคาร'].filter(Boolean).join(' และ ')}
+                </span>
+              )}
+            </div>
+          )}
           <div>
             <label className="label">{p.labels.docDate}</label>
             <input type="date" className="input" value={docDate} disabled={readOnly}

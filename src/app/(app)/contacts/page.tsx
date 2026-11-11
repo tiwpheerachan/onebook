@@ -89,7 +89,7 @@ export default async function ContactsPage({
   const rows: ContactRow[] = raw.map((r) => ({
     id: r.id, code: r.code, name: r.name, tax_id: r.tax_id, kind: r.kind,
     phone: r.phone, credit_days: r.credit_days, credit_limit: r.credit_limit,
-    is_active: r.is_active,
+    is_active: r.is_active, is_kol: r.is_kol,
     groups: members
       .filter((m: any) => m.contact_id === r.id)
       .map((m: any) => groupById.get(m.group_id))
