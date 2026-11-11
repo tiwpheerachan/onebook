@@ -32,6 +32,12 @@ export async function saveContact(form: any): Promise<Res> {
     credit_limit: Number(form.credit_limit) || 0,
     sales_rep_id: form.sales_rep_id || null,
     sales_zone_id: form.sales_zone_id || null,
+    // ขายข้ามบริษัท: ผูกผู้ติดต่อนี้กับบริษัทในเครือ → ซื้อจาก vendor นี้แล้วออกใบขายให้บริษัทนั้นอัตโนมัติ
+    linked_company_id: form.linked_company_id || null,
+    intercompany_markup_pct:
+      form.linked_company_id && form.intercompany_markup_pct !== '' && form.intercompany_markup_pct != null
+        ? Number(form.intercompany_markup_pct)
+        : null,
     is_active: form.is_active ?? true,
   };
   const q = form.id

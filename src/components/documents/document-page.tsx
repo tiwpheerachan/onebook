@@ -14,6 +14,7 @@ import { ASSET_CATEGORIES, CAPITALIZE_THRESHOLD } from '@/lib/asset-categories';
 import { DocumentEditor } from './document-editor';
 import { ConvertButton } from './convert-button';
 import { ReserveButton } from './reserve-button';
+import { IntercompanyPanel } from './intercompany-panel';
 import { AttachmentPanel } from './attachment-panel';
 import { DepositPanel } from './deposit-panel';
 import { MatchPanel, type MatchResult } from './match-panel';
@@ -69,6 +70,8 @@ export async function DocumentPage({
   }
 
   let acctSrc: { id: string; doc_number: string; kind: string } | null = null;
+  // สถานะขายข้ามบริษัท: { state:'mirror'|'has_mirror'|'pending', ... }
+  let icState: any = null;
   // ผลจับคู่สามทาง เรียกตัวตรวจตัวเดียวกับที่ใช้ตอนอนุมัติ
   let match: MatchResult | null = null;
   // ผลเช็กงบของใบขอซื้อ/ใบสั่งซื้อ
@@ -96,6 +99,9 @@ export async function DocumentPage({
         .select('id, doc_number, kind').eq('id', data.accounting_doc_id).maybeSingle();
       acctSrc = (src as any) || null;
     }
+    // สถานะขายข้ามบริษัท (อีกบริษัทอาจมองไม่เห็นผ่าน RLS จึงใช้ RPC)
+    const { data: ics } = await supabase.rpc('rpt_intercompany_state', { p_document: id });
+    icState = (ics as any) || null;
     const { data: ls } = await supabase.from('document_lines').select('*').eq('document_id', id).order('line_no');
     lines = ls || [];
     const { data: at } = await supabase
@@ -240,6 +246,28 @@ export async function DocumentPage({
             {d.ui.delivery.viewSource}
           </a>
         </p>
+      )}
+
+      {/* ===== ขายข้ามบริษัท ===== */}
+      {icState?.state === 'mirror' && (
+        <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-violet-50 px-3.5 py-2.5 text-xs leading-relaxed text-violet-900 ring-1 ring-inset ring-violet-200">
+          <GitBranch className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+          <span>ใบขายข้ามบริษัทนี้สร้างจากใบซื้อ <b>{icState.doc_number}</b> ของ <b>{icState.company_name}</b></span>
+        </p>
+      )}
+      {icState?.state === 'has_mirror' && (
+        <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-violet-50 px-3.5 py-2.5 text-xs leading-relaxed text-violet-900 ring-1 ring-inset ring-violet-200">
+          <GitBranch className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+          <span>มีใบกำกับภาษีขายข้ามบริษัท <b>{icState.doc_number}</b> ที่ <b>{icState.company_name}</b> (ฉบับ{icState.status === 'draft' ? 'ร่าง' : icState.status})</span>
+        </p>
+      )}
+      {icState?.state === 'pending' && can(ctx, 'documents', 'approve') && (
+        <IntercompanyPanel
+          sourceId={doc.id}
+          companyName={icState.company_name || 'บริษัทในเครือ'}
+          defaultMarkup={Number(icState.default_markup ?? 5)}
+          costBase={Number(icState.cost_base ?? 0)}
+        />
       )}
 
       <DocumentEditor

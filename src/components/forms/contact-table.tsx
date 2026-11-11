@@ -61,7 +61,7 @@ function SortHead({
  */
 export function ContactTable({
   rows, groups, currentGroup, groupName, canEdit, canCreateDoc, labels, page, perPage, total,
-  reps = [], zones = [],
+  reps = [], zones = [], companies = [],
 }: {
   rows: ContactRow[];
   groups: GroupRow[];
@@ -72,6 +72,7 @@ export function ContactTable({
   labels: Record<string, string>;
   reps?: { id: string; label: string }[];
   zones?: { id: string; label: string }[];
+  companies?: { id: string; label: string }[];
   page: number;
   perPage: number;
   total: number;
@@ -191,7 +192,7 @@ export function ContactTable({
                     <span className="flex items-center justify-end gap-1">
                       {canCreateDoc && <ContactRowActions actions={buildRowActions(r.id, r.kind, d)} />}
                       <ContactManager canCreate={false} canEdit={canEdit} editRow={r}
-                                      labels={labels} reps={reps} zones={zones} />
+                                      labels={labels} reps={reps} zones={zones} companies={companies} />
                     </span>
                   </td>
                 </tr>

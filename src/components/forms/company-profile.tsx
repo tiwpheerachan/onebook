@@ -193,6 +193,28 @@ export function CompanyProfileEditor({
           </select>
           <p className="mt-1 text-xxs leading-relaxed text-ink-400">{d.ui.budget.enforceHint}</p>
         </div>
+
+        <p className="section-title mb-3 mt-6">ขายข้ามบริษัท</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="label">ปรับราคาขายเริ่มต้น (%)</label>
+            <input type="number" step="0.01" className="input num"
+                   value={form.intercompany_markup_pct ?? 5}
+                   onChange={(e) => set('intercompany_markup_pct', e.target.value)} />
+            <p className="mt-1 text-xxs leading-relaxed text-ink-400">บวก = เพิ่มราคา, ติดลบ = ลด (เช่น 5 = +5%)</p>
+          </div>
+          <div>
+            <label className="label">วิธีออกใบขาย</label>
+            <select className="input" value={form.intercompany_auto ? '1' : '0'}
+                    onChange={(e) => set('intercompany_auto', e.target.value === '1')}>
+              <option value="0">รอยืนยันก่อน (เด้งถามทุกครั้ง)</option>
+              <option value="1">ออกอัตโนมัติเมื่ออนุมัติใบซื้อ</option>
+            </select>
+            <p className="mt-1 text-xxs leading-relaxed text-ink-400">
+              เมื่อซื้อจากบริษัทในเครือ ระบบออกใบกำกับภาษีขาย (ฉบับร่าง) ให้บริษัทนั้น
+            </p>
+          </div>
+        </div>
       </SlidePanel>
     </>
   );

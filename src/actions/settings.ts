@@ -178,6 +178,9 @@ export async function updateCompanyProfile(form: Record<string, any>) {
       match_qty_tolerance_pct: Math.max(0, Number(form.match_qty_tolerance_pct) || 0),
       match_price_tolerance_pct: Math.max(0, Number(form.match_price_tolerance_pct) || 0),
       budget_enforce: ['off', 'warn', 'block'].includes(form.budget_enforce) ? form.budget_enforce : 'warn',
+      // ขายข้ามบริษัท — auto = ออกใบขายทันทีเมื่ออนุมัติ, ไม่งั้นรอผู้ใช้กดยืนยัน
+      intercompany_auto: !!form.intercompany_auto,
+      intercompany_markup_pct: Number(form.intercompany_markup_pct) || 0,
     })
     .eq('id', form.id);
 

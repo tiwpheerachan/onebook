@@ -13,16 +13,19 @@ const blank = {
   address: '', district: '', province: '', postcode: '', phone: '', email: '',
   contact_person: '', credit_days: 30, credit_limit: 0, is_active: true,
   sales_rep_id: '', sales_zone_id: '',
+  linked_company_id: '', intercompany_markup_pct: '',
 };
 
 export function ContactManager({
-  canCreate, canEdit, editRow, labels, reps = [], zones = [],
+  canCreate, canEdit, editRow, labels, reps = [], zones = [], companies = [],
 }: {
   canCreate: boolean; canEdit: boolean; editRow?: any;
   labels: Record<string, string>;
   /** ตัวเลือกพนักงานขายและเขต — ว่างได้ถ้าบริษัทยังไม่ได้ตั้ง */
   reps?: { id: string; label: string }[];
   zones?: { id: string; label: string }[];
+  /** บริษัทอื่นในเครือ (ไม่รวมบริษัทปัจจุบัน) — ใช้ผูกขายข้ามบริษัท */
+  companies?: { id: string; label: string }[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -131,6 +134,35 @@ export function ContactManager({
             {/* 0 = ไม่จำกัด ต้องบอกให้ชัด ไม่งั้นคนตั้ง 0 โดยเข้าใจว่าห้ามขายเชื่อ */}
             <p className="mt-1 text-xxs leading-relaxed text-ink-400">{labels.creditHint}</p>
           </Field>
+
+          {/* ===== ขายข้ามบริษัท (inter-company) ===== */}
+          {companies.length > 0 && form.kind !== 'customer' && (
+            <>
+              <div className="col-span-2 mt-2 border-t border-ink-100 pt-3">
+                <p className="text-xs font-semibold text-ink-700">ขายข้ามบริษัทอัตโนมัติ</p>
+                <p className="mt-0.5 text-xxs leading-relaxed text-ink-400">
+                  ถ้าผู้ขายรายนี้คือบริษัทในเครือ เมื่ออนุมัติใบซื้อ/ค่าใช้จ่ายจากรายนี้
+                  ระบบจะออก “ใบกำกับภาษีขาย” (ฉบับร่าง) ให้บริษัทนั้นโดยอัตโนมัติ พร้อมบวกราคาตามที่ตั้ง
+                </p>
+              </div>
+              <Field label="เป็นบริษัทในเครือ">
+                <select className="input" value={form.linked_company_id || ''}
+                        onChange={(e) => set('linked_company_id', e.target.value)}>
+                  <option value="">— ไม่ใช่ (ผู้ขายภายนอก) —</option>
+                  {companies.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                </select>
+              </Field>
+              {form.linked_company_id && (
+                <Field label="บวกราคาขาย (%)">
+                  <input type="number" step="0.01" className="input"
+                         placeholder="5"
+                         value={form.intercompany_markup_pct ?? ''}
+                         onChange={(e) => set('intercompany_markup_pct', e.target.value)} />
+                  <p className="mt-1 text-xxs leading-relaxed text-ink-400">ว่าง = ใช้ค่าเริ่มต้น 5%</p>
+                </Field>
+              )}
+            </>
+          )}
         </div>
       </SlidePanel>
     </>

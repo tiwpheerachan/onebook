@@ -165,6 +165,37 @@ export async function saveDocument(payload: DocPayload): Promise<ActionResult> {
   return { ok: true, id: docId, doc_number: docNumber };
 }
 
+/**
+ * สร้างใบกำกับภาษีขายข้ามบริษัท (ฉบับร่าง) จากใบซื้อ/ค่าใช้จ่ายที่ผู้ขายเป็นบริษัทในเครือ
+ * ผู้ใช้กดยืนยันเอง (ระบุ markup ที่ตกลงกันได้) — ปรับราคา +/- % ตามที่ส่งมา
+ */
+export async function generateIntercompanySale(
+  sourceId: string, markupPct?: number | null,
+): Promise<{ ok: boolean; error?: string; doc_number?: string; company_name?: string }> {
+  const ctx = await getSessionContext();
+  if (!ctx) return { ok: false, error: t().ui.act.noSession };
+  if (!can(ctx, 'documents', 'approve') && !can(ctx, 'documents', 'create'))
+    return { ok: false, error: t().ui.act.noPermission };
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('gen_intercompany_sale', {
+    p_source: sourceId,
+    p_markup: markupPct == null || Number.isNaN(markupPct) ? null : Number(markupPct),
+  });
+  if (error) return { ok: false, error: translate(error.message) };
+  const r = (data as any) || {};
+  if (!r.ok) {
+    const map: Record<string, string> = {
+      FORBIDDEN: t().ui.docError.forbidden,
+      DOC_NOT_FOUND: t().ui.act.srcDocNotFound,
+      NOT_APPLICABLE: 'สร้างไม่ได้ — ผู้ขายไม่ใช่บริษัทในเครือ หรือมีใบขายอยู่แล้ว',
+    };
+    return { ok: false, error: map[r.error] || r.error || 'error' };
+  }
+  revalidatePath('/sales');
+  revalidatePath('/purchase');
+  return { ok: true, doc_number: r.doc_number, company_name: r.company_name };
+}
+
 export async function approveDocument(id: string): Promise<{ ok: boolean; error?: string }> {
   const ctx = await getSessionContext();
   if (!ctx || !can(ctx, 'documents', 'approve')) return { ok: false, error: t().ui.docError.noApprove };

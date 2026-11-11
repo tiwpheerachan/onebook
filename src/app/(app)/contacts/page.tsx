@@ -53,6 +53,11 @@ export default async function ContactsPage({
   const reps = (repOpts || []).map((r: any) => ({ id: r.id, label: `${r.code} · ${r.name}` }));
   const zones = (zoneOpts || []).map((z: any) => ({ id: z.id, label: `${z.code} · ${z.name}` }));
 
+  // บริษัทอื่นในเครือ (ไม่รวมบริษัทปัจจุบัน) — ใช้ผูก "ขายข้ามบริษัท" บนผู้ติดต่อ
+  const { data: coOpts } = await supabase.from('companies')
+    .select('id, code, name_th').neq('id', ctx.company.id).eq('is_active', true).order('name_th');
+  const companies = (coOpts || []).map((c: any) => ({ id: c.id, label: `${c.name_th}${c.code ? ` (${c.code})` : ''}` }));
+
   let q = supabase
     .from('contacts')
     .select('*', { count: 'exact' })
@@ -121,7 +126,7 @@ export default async function ContactsPage({
           <>
             <SearchBox placeholder={d.common.search} defaultValue={searchParams.q} />
             <ContactManager canCreate={can(ctx, 'contacts', 'create')} canEdit={canEdit}
-                            labels={labels} reps={reps} zones={zones} />
+                            labels={labels} reps={reps} zones={zones} companies={companies} />
           </>
         }
       />
@@ -159,6 +164,7 @@ export default async function ContactsPage({
             labels={labels}
             reps={reps}
             zones={zones}
+            companies={companies}
             page={page}
             perPage={perPage}
             total={total}
