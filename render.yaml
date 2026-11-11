@@ -55,6 +55,22 @@ services:
       - key: SESSION_IDLE_TIMEOUT_MINUTES
         value: "30"
 
+      # ---------- PEAK sync (ดึงเอกสารจาก PEAK อ่านอย่างเดียว) ----------
+      # PEAK_SYNC_SECRET: กุญแจป้องกัน endpoint /api/peak/ingest และ /api/peak/sync
+      #   ให้ Claude routine / cron ยิงเข้ามาได้ — ตั้งค่าเอง (ค่าลับ)
+      - key: PEAK_SYNC_SECRET
+        sync: false
+      # (ไม่บังคับ) เชื่อม PEAK Open API ตรงจากเซิร์ฟเวอร์ แทนให้ routine ดึง —
+      #   ต้องมี production ServerURL + User Token จาก PEAK ก่อนจึงเปิดใช้งาน
+      - key: PEAK_SERVER_URL
+        sync: false
+      - key: PEAK_CONNECT_ID
+        sync: false
+      - key: PEAK_CONNECT_KEY
+        sync: false
+      - key: PEAK_USER_TOKEN
+        sync: false
+
       # ---------- ข้อมูลองค์กร ----------
       - key: NEXT_PUBLIC_APP_NAME
         value: "ONEBOOK"
