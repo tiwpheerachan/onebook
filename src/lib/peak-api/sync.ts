@@ -35,7 +35,7 @@ function num(v: any): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function mapRow(doc_type: string, it: any) {
+export function mapRow(doc_type: string, it: any) {
   const status = it.status;
   const isVoid = it.isVoid === 1 || String(status).toLowerCase() === 'void';
   return {
@@ -57,6 +57,28 @@ function mapRow(doc_type: string, it: any) {
     document_link: it.documentLink ?? it.link ?? null,
     synced_at: new Date().toISOString(),
   };
+}
+
+/**
+ * รับรายการเอกสาร "ดิบ" จาก PEAK (เช่นที่ Claude routine ดึงผ่าน MCP แล้วส่งมา)
+ * → map + dedup upsert เข้า peak_documents · ใช้โดย /api/peak/ingest
+ */
+export async function upsertPeakItems(
+  doc_type: string, items: any[],
+): Promise<{ upserted: number; skipped: number }> {
+  const sb = createAdminClient();
+  const rows = (items || []).filter((it) => it && it.code != null).map((it) => mapRow(doc_type, it));
+  const skipped = (items?.length || 0) - rows.length;
+  if (rows.length === 0) return { upserted: 0, skipped };
+  // แบ่งก้อนละ 500 กัน payload ใหญ่
+  let upserted = 0;
+  for (let i = 0; i < rows.length; i += 500) {
+    const batch = rows.slice(i, i + 500);
+    const { error } = await sb.from('peak_documents').upsert(batch, { onConflict: 'doc_type,code' });
+    if (error) throw new Error(error.message);
+    upserted += batch.length;
+  }
+  return { upserted, skipped };
 }
 
 export interface SyncResult {
