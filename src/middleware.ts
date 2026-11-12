@@ -11,7 +11,8 @@ import { frameAncestors } from '@/lib/frame-policy';
 //   · logout   ต้องผ่านเพื่อไปล้างคุกกี้ให้เรียบร้อย
 // /scan = หน้าสแกน QR ของทรัพย์สิน เปิดดูได้โดยไม่ต้องล็อกอิน (คืนเฉพาะข้อมูลระบุตัว ไม่มีตัวเลขบัญชี)
 // /api/integrations = ช่องให้ระบบภายนอก (เช่น แอปทรัพย์สิน) ดึงข้อมูล — ยืนยันด้วย token ในตัว route เอง
-const PUBLIC_PATHS = ['/login', '/blocked', '/_next', '/favicon.ico', '/api/health', '/api/auth', '/scan', '/api/integrations'];
+// /api/peak = ช่องให้ตัวซิงก์ PEAK (routine/cron) ส่ง/สั่งดึงเอกสาร — ยืนยันด้วย PEAK_SYNC_SECRET ในตัว route เอง
+const PUBLIC_PATHS = ['/login', '/blocked', '/_next', '/favicon.ico', '/api/health', '/api/auth', '/scan', '/api/integrations', '/api/peak'];
 
 /**
  * ใครฝังหน้าจอนี้ได้บ้าง
