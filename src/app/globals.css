@@ -91,6 +91,47 @@ html, body {
 ::-webkit-scrollbar-thumb { @apply rounded-full bg-ink-300; }
 ::-webkit-scrollbar-track { @apply bg-transparent; }
 
+/* ── ขอบเรืองแสงวิ่งรอบ (border beam) สำหรับช่องค้นหา ── */
+/* ลำแสงสีวิ่งรอบขอบ : conic-gradient ที่มีสีช่วงสั้น ๆ แล้วหมุนมุมไปเรื่อย ๆ
+   ใช้ mask ตัดให้เหลือเฉพาะวงขอบบาง ๆ · วางทับบนกล่อง position:relative */
+@property --beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes border-beam-spin { to { --beam-angle: 360deg; } }
+
+.border-beam-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;                 /* ความหนาของเส้นแสง */
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg,
+    transparent 298deg,
+    #6366f1 318deg,               /* indigo */
+    #8b5cf6 334deg,               /* violet */
+    #ec4899 348deg,               /* pink */
+    #06b6d4 358deg,               /* cyan */
+    transparent 360deg
+  );
+  /* โชว์เฉพาะกรอบ : เอา content-box ลบออกจาก border-box */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: border-beam-spin 3.2s linear infinite;
+}
+/* เครื่องที่ไม่รองรับ @property จะไม่หมุน — ให้เหลือกรอบ brand จาง ๆ แทน ไม่ให้ดูพัง */
+@supports not (background: conic-gradient(from var(--beam-angle), #000, #000)) {
+  .border-beam-overlay { background: #818cf8; opacity: 0.5; animation: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .border-beam-overlay { animation: none; }
+}
+
 /* ── กระดาษ A4 สำหรับเอกสารที่ออกให้ลูกค้า (ดู components/documents/document-print.tsx) ── */
 .doc-sheet {
   display: flex;
