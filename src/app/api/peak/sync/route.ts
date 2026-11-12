@@ -8,10 +8,10 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 function authorized(req: Request): boolean {
-  const secret = process.env.PEAK_SYNC_SECRET;
+  const secret = (process.env.PEAK_SYNC_SECRET || '').trim();
   if (!secret) return false; // ไม่ตั้ง secret = ปิดไว้ก่อน (กันยิงมั่ว)
   const url = new URL(req.url);
-  const key = url.searchParams.get('key') || req.headers.get('x-peak-sync-key') || '';
+  const key = (url.searchParams.get('key') || req.headers.get('x-peak-sync-key') || '').trim();
   return key === secret;
 }
 

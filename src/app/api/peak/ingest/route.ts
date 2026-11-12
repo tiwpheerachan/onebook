@@ -13,10 +13,11 @@ const ALLOWED = new Set([
 ]);
 
 function authorized(req: Request): boolean {
-  const secret = process.env.PEAK_SYNC_SECRET;
+  // trim กัน whitespace/newline ที่อาจติดมาตอนตั้งค่า env
+  const secret = (process.env.PEAK_SYNC_SECRET || '').trim();
   if (!secret) return false;
   const url = new URL(req.url);
-  const key = url.searchParams.get('key') || req.headers.get('x-peak-sync-key') || '';
+  const key = (url.searchParams.get('key') || req.headers.get('x-peak-sync-key') || '').trim();
   return key === secret;
 }
 
