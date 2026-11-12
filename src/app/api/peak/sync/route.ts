@@ -8,10 +8,12 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 function authorized(req: Request): boolean {
-  const secret = (process.env.PEAK_SYNC_SECRET || '').trim();
+  // ตัดช่องว่าง + อักขระล่องหน (newline, zero-width, BOM) กันค่าที่ติดมาตอน paste ใน env
+  const norm = (s: string | null | undefined) => (s || '').replace(/[\s​-‍﻿]/g, '');
+  const secret = norm(process.env.PEAK_SYNC_SECRET);
   if (!secret) return false; // ไม่ตั้ง secret = ปิดไว้ก่อน (กันยิงมั่ว)
   const url = new URL(req.url);
-  const key = (url.searchParams.get('key') || req.headers.get('x-peak-sync-key') || '').trim();
+  const key = norm(url.searchParams.get('key') || req.headers.get('x-peak-sync-key'));
   return key === secret;
 }
 

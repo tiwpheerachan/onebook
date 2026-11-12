@@ -12,12 +12,15 @@ const ALLOWED = new Set([
   'quotation', 'credit_note_expense', 'billing_note_expense', 'purchase_order',
 ]);
 
+// ตัดช่องว่าง + อักขระล่องหน (newline, zero-width, BOM, nbsp) กันค่าที่ติดมาตอน paste ใน env
+const normKey = (s: string | null | undefined) =>
+  (s || '').replace(/[\s​-‍﻿]/g, '');
+
 function authorized(req: Request): boolean {
-  // trim กัน whitespace/newline ที่อาจติดมาตอนตั้งค่า env
-  const secret = (process.env.PEAK_SYNC_SECRET || '').trim();
+  const secret = normKey(process.env.PEAK_SYNC_SECRET);
   if (!secret) return false;
   const url = new URL(req.url);
-  const key = (url.searchParams.get('key') || req.headers.get('x-peak-sync-key') || '').trim();
+  const key = normKey(url.searchParams.get('key') || req.headers.get('x-peak-sync-key'));
   return key === secret;
 }
 
