@@ -25,7 +25,16 @@ function authorized(req: Request): boolean {
 }
 
 export async function POST(req: Request) {
-  if (!authorized(req)) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  if (!authorized(req)) {
+    // diagnostic ชั่วคราว: บอกว่า env มาถึงไหม + ความยาวตรงไหม (ไม่เผยค่าจริง) — จะลบออกภายหลัง
+    const s = normKey(process.env.PEAK_SYNC_SECRET);
+    const u = new URL(req.url);
+    const k = normKey(u.searchParams.get('key') || req.headers.get('x-peak-sync-key'));
+    return NextResponse.json({
+      ok: false, error: 'unauthorized',
+      diag: { envPresent: process.env.PEAK_SYNC_SECRET != null, secretLen: s.length, keyLen: k.length, match: !!s && s === k },
+    }, { status: 401 });
+  }
 
   let payload: any;
   try { payload = await req.json(); } catch { return NextResponse.json({ ok: false, error: 'bad json' }, { status: 400 }); }
